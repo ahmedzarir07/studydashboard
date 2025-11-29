@@ -93,7 +93,7 @@ export const physicsData: SubjectData = {
     },
     {
       id: 9,
-      name: "অধ্যায় ০৯- তরঙ্গ",
+      name: "অধ্যায় ০৮- তরঙ্গ",
       activities: ACTIVITIES.map((name) => ({ name, status: "" })),
     },
     {
