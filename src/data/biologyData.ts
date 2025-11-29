@@ -20,57 +20,62 @@ export const biologyData: SubjectData = {
   chapters: [
     {
       id: 1,
-      name: "অধ্যায় ০১- কোষ ও এর গঠন",
+      name: "অধ্যায় - ১: কোষ ও এর গঠন",
       activities: ACTIVITIES.map((name) => ({ name, status: "" })),
     },
     {
       id: 2,
-      name: "অধ্যায় ০২- কোষ বিভাজন",
+      name: "অধ্যায় - ২: কোষ বিভাজন",
       activities: ACTIVITIES.map((name) => ({ name, status: "" })),
     },
     {
       id: 3,
-      name: "অধ্যায় ০৩- কোষ রসায়ন",
+      name: "অধ্যায় - ৩: কোষ রসায়ন",
       activities: ACTIVITIES.map((name) => ({ name, status: "" })),
     },
     {
       id: 4,
-      name: "অধ্যায় ০৪- অনুজীবী",
+      name: "অধ্যায় - ৪: অণুর্জীব",
       activities: ACTIVITIES.map((name) => ({ name, status: "" })),
     },
     {
       id: 5,
-      name: "অধ্যায় ০৫- শৈবাল ও ছত্রাক",
+      name: "অধ্যায় ০৫-শৈবাল ও ছত্রাক",
       activities: ACTIVITIES.map((name) => ({ name, status: "" })),
     },
     {
       id: 6,
-      name: "অধ্যায় ০৬- ব্রায়োফাইটা ও টেরিডোফাইটা",
+      name: "অধ্যায় - ৬: ব্রায়োফাইটা ও টেরিডোফাইটা",
       activities: ACTIVITIES.map((name) => ({ name, status: "" })),
     },
     {
       id: 7,
-      name: "অধ্যায় ০৭- নগ্নবীজী ও আবৃতবীজী উদ্ভিদ",
+      name: "অধ্যায় - ৭: নগ্নবীজি ও আবৃতবীজি উদ্ভিদ",
       activities: ACTIVITIES.map((name) => ({ name, status: "" })),
     },
     {
       id: 8,
-      name: "অধ্যায় ০৮- টিস্যু ও টিস্যুতন্ত্র",
+      name: "অধ্যায় - ৮: টিস্যু ও টিসুতন্ত্র",
       activities: ACTIVITIES.map((name) => ({ name, status: "" })),
     },
     {
       id: 9,
-      name: "অধ্যায় ০৯- উদ্ভিদ শারীরতত্ব",
+      name: "অধ্যায় - ৯: উদ্ভিদ শারিরত্ব",
       activities: ACTIVITIES.map((name) => ({ name, status: "" })),
     },
     {
       id: 10,
-      name: "অধ্যায় ১০- উদ্ভিদের প্রজনন",
+      name: "অধ্যায় - ১০: উদ্ভিদ প্রজনন",
       activities: ACTIVITIES.map((name) => ({ name, status: "" })),
     },
     {
       id: 11,
-      name: "অধ্যায় ১১- জীবের পরিবেশ বিদ্যা ও বংশগতি",
+      name: "অধ্যায় - ১১: জীবপ্রযুক্তি",
+      activities: ACTIVITIES.map((name) => ({ name, status: "" })),
+    },
+    {
+      id: 12,
+      name: "অধ্যায় - ১২: জীবের পরিবেশ বিস্তার ও সংরক্ষন",
       activities: ACTIVITIES.map((name) => ({ name, status: "" })),
     },
   ],
