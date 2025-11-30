@@ -1,200 +1,379 @@
-import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import React, { useState } from 'react';
 
 export default function Resources() {
-  const initialOptions = [
-    { id: 'class', label_en: 'Class', label_bn: 'ক্লাস', selected: false },
-    { id: 'total_class', label_en: 'মোট ক্লাস', label_bn: 'মোট ক্লাস', selected: false },
-    { id: 'class_ka', label_en: 'ক', label_bn: 'ক', selected: false },
-    { id: 'class_kha', label_en: 'খ', label_bn: 'খ', selected: false },
-    { id: 'class_note', label_en: 'Class Note', label_bn: 'ক্লাস নোট', selected: false },
-    { id: 'mcq_practice', label_en: 'MCQ Practice', label_bn: 'MCQ Practice', selected: false },
-    { id: 'typewise_cq', label_en: 'Typewise CQ', label_bn: 'Typewise CQ', selected: false },
-    { id: 'cq_summary', label_en: 'CQ Summery', label_bn: 'CQ Summery', selected: false },
-    { id: 'mcq_summary', label_en: 'MCQ Summery', label_bn: 'MCQ Summery', selected: false },
-    { id: 'all_revision', label_en: 'ALL Revision', label_bn: 'ALL Revision', selected: false }
-  ];
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
 
-  const [options, setOptions] = useState(initialOptions);
-  const [darkMode] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-  const printableRef = useRef<HTMLDivElement>(null);
+  const toggleCard = (cardId: string) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [cardId]: !prev[cardId]
+    }));
+    console.log('card_expanded', { id: cardId, expanded: !expandedCards[cardId] });
+  };
 
-  function toggleOption(id: string) {
-    setOptions(prev => prev.map(o => o.id === id ? { ...o, selected: !o.selected } : o));
-  }
+  const handleStartJourney = () => {
+    console.log('start_journey_clicked');
+    document.getElementById('steps')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
-  function selectAllResources() {
-    setOptions(prev => prev.map(o => ({ ...o, selected: true })));
-  }
-
-  function deselectAll() {
-    setOptions(prev => prev.map(o => ({ ...o, selected: false })));
-  }
-
-  const selectedCount = options.filter(o => o.selected).length;
-  const totalClasses = 42;
-
-  function exportPDF() {
-    if (!printableRef.current) return;
-
-    const printContents = printableRef.current.innerHTML;
-    const popup = window.open('', '_blank', 'width=900,height=700');
-    if (!popup) {
-      alert('Popup blocked. Allow popups for this site to export PDF.');
-      return;
+  const handleKeyPress = (e: React.KeyboardEvent, cardId: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleCard(cardId);
     }
-    const doc = popup.document.open();
-    doc.write(`<!doctype html><html><head><title>Export PDF</title>`);
-    doc.write(`<style>body{font-family:system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; padding:20px; background:${darkMode ? '#0f172a' : '#fff'}; color:${darkMode ? '#e6eef8' : '#111'};} .card{border-radius:8px; padding:12px; margin-bottom:8px; box-shadow:0 1px 3px rgba(0,0,0,0.12);} h1{font-size:20px}</style>`);
-    doc.write('</head><body>');
-    doc.write(printContents);
-    doc.write('</body></html>');
-    doc.close();
-    popup.focus();
-    setTimeout(() => {
-      popup.print();
-    }, 500);
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
-      <nav className="border-b border-slate-700 bg-slate-900/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-slate-100">HSC Study Tracker</h1>
-            <div className="flex gap-4">
-              <Link to="/">
-                <Button variant="ghost" className="text-slate-300 hover:text-slate-100">হোম</Button>
-              </Link>
-              <Link to="/tracker">
-                <Button variant="ghost" className="text-slate-300 hover:text-slate-100">ট্র্যাকার</Button>
-              </Link>
-              <Link to="/resources">
-                <Button variant="ghost" className="text-slate-300 hover:text-slate-100">রিসোর্স</Button>
-              </Link>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+      color: '#e2e8f0',
+      fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      padding: '24px 16px'
+    }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Header Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+          borderRadius: '16px',
+          padding: '32px 24px',
+          marginBottom: '24px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '8px' }}>🎯</div>
+          <h1 style={{ fontSize: '32px', fontWeight: '700', margin: '0 0 12px 0', lineHeight: '1.2' }}>
+            Average Student → Topper Roadmap
+          </h1>
+          <p style={{ fontSize: '18px', opacity: 0.95, margin: '0 0 24px 0' }}>
+            ৫-ধাপের ইন্টারঅ্যাকটিভ সিস্টেম
+          </p>
+          <button
+            onClick={handleStartJourney}
+            style={{
+              background: '#1e293b',
+              color: '#fff',
+              padding: '14px 32px',
+              borderRadius: '8px',
+              border: 'none',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = '#334155'}
+            onMouseOut={(e) => e.currentTarget.style.background = '#1e293b'}
+            onFocus={(e) => e.currentTarget.style.outline = '2px solid #fff'}
+            onBlur={(e) => e.currentTarget.style.outline = 'none'}
+          >
+            জার্নি শুরু করুন
+          </button>
+        </div>
+
+        {/* Main Concept Card */}
+        <div style={{
+          background: '#1e293b',
+          borderRadius: '12px',
+          padding: '24px',
+          marginBottom: '24px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          borderLeft: '4px solid #10b981'
+        }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '600', margin: '0 0 16px 0', color: '#10b981' }}>
+            💡 ট্যালেন্ট নয়—স্ট্র্যাটেজিই আসল শক্তি
+          </h2>
+          <p style={{ fontSize: '16px', lineHeight: '1.6', margin: 0, color: '#cbd5e1' }}>
+            বেশির ভাগ স্টুডেন্ট মনোযোগ ধরে রাখতে পারে না, দ্রুত ভুলে যায়, এবং কোন প্ল্যান থাকে না। এই ৫টি ধাপ ৩–৪ মাসে আপনার পারফরম্যান্স চোখে দেখার মতো উন্নত করবে।
+          </p>
+        </div>
+
+        {/* Steps Grid */}
+        <div id="steps" style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '20px',
+          marginBottom: '24px'
+        }}>
+          {/* Step 1 */}
+          <div style={{
+            background: '#1e293b',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            transition: 'transform 0.2s'
+          }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '600', margin: '0 0 16px 0', color: '#f59e0b' }}>
+              📚 Step 1 — লং স্টাডি আওয়ার + ডিস্ট্রাকশন কন্ট্রোল
+            </h3>
+            <ul style={{ margin: '0 0 16px 0', paddingLeft: '20px', color: '#cbd5e1', lineHeight: '1.8' }}>
+              <li>ডিস্ট্রাকশন লিস্ট তৈরি করুন</li>
+              <li>একটি Big Goal Card টেবিলে রাখুন</li>
+            </ul>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => toggleCard('step1')}
+              onKeyDown={(e) => handleKeyPress(e, 'step1')}
+              style={{
+                cursor: 'pointer',
+                padding: '12px',
+                background: '#334155',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              {expandedCards['step1'] ? '▼ Hide Tip' : '▶ Show Tip'}
             </div>
+            {expandedCards['step1'] && (
+              <div style={{
+                marginTop: '12px',
+                padding: '16px',
+                background: '#0f172a',
+                borderRadius: '8px',
+                fontSize: '14px',
+                color: '#94a3b8',
+                borderLeft: '3px solid #f59e0b'
+              }}>
+                💡 ২৫ মিনিট → ৪০ → ৬০ মিনিট ফোকাস বাড়ান
+              </div>
+            )}
+          </div>
+
+          {/* Step 2 */}
+          <div style={{
+            background: '#1e293b',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '600', margin: '0 0 16px 0', color: '#8b5cf6' }}>
+              📅 Step 2 — মাসিক কনটেন্ট ক্যালেন্ডার (Planning)
+            </h3>
+            <ul style={{ margin: '0 0 16px 0', paddingLeft: '20px', color: '#cbd5e1', lineHeight: '1.8' }}>
+              <li>প্রতিটি চ্যাপ্টারের ঘন্টা হিসাব করুন</li>
+              <li>১০% Spare Hours যোগ করুন</li>
+              <li>৩০ দিনের ক্যালেন্ডার তৈরি করুন</li>
+            </ul>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => toggleCard('step2')}
+              onKeyDown={(e) => handleKeyPress(e, 'step2')}
+              style={{
+                cursor: 'pointer',
+                padding: '12px',
+                background: '#334155',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              {expandedCards['step2'] ? '▼ Hide Tip' : '▶ Show Tip'}
+            </div>
+            {expandedCards['step2'] && (
+              <div style={{
+                marginTop: '12px',
+                padding: '16px',
+                background: '#0f172a',
+                borderRadius: '8px',
+                fontSize: '14px',
+                color: '#94a3b8',
+                borderLeft: '3px solid #8b5cf6'
+              }}>
+                💡 আজ রাতেই নিজের ৩০ দিনের স্টাডি ক্যালেন্ডার বানান
+              </div>
+            )}
+          </div>
+
+          {/* Step 3 */}
+          <div style={{
+            background: '#1e293b',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '600', margin: '0 0 16px 0', color: '#ec4899' }}>
+              🎯 Step 3 — টপারদের স্মার্ট হ্যাবিট কপি করুন
+            </h3>
+            <ul style={{ margin: '0 0 16px 0', paddingLeft: '20px', color: '#cbd5e1', lineHeight: '1.8' }}>
+              <li>নোট নেয়ার স্টাইল দেখুন</li>
+              <li>কালার-কোডেড নোট ব্যবহার করুন</li>
+              <li>কোন চ্যাপ্টার বাদ যায় বুঝুন</li>
+            </ul>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => toggleCard('step3')}
+              onKeyDown={(e) => handleKeyPress(e, 'step3')}
+              style={{
+                cursor: 'pointer',
+                padding: '12px',
+                background: '#334155',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              {expandedCards['step3'] ? '▼ Hide Tip' : '▶ Show Tip'}
+            </div>
+            {expandedCards['step3'] && (
+              <div style={{
+                marginTop: '12px',
+                padding: '16px',
+                background: '#0f172a',
+                borderRadius: '8px',
+                fontSize: '14px',
+                color: '#94a3b8',
+                borderLeft: '3px solid #ec4899'
+              }}>
+                💡 আজ একজন টপার ফ্রেন্ডের নোট দেখে একটি অভ্যাস গ্রহণ করুন
+              </div>
+            )}
+          </div>
+
+          {/* Step 4 */}
+          <div style={{
+            background: '#1e293b',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '600', margin: '0 0 16px 0', color: '#06b6d4' }}>
+              ✍️ Step 4 — Answer Writing Strategy উন্নত করুন
+            </h3>
+            <ul style={{ margin: '0 0 16px 0', paddingLeft: '20px', color: '#cbd5e1', lineHeight: '1.8' }}>
+              <li>হেডিং, টেবিল, ডায়াগ্রাম ব্যবহার করুন</li>
+              <li>উত্তর গুছানোভাবে লিখুন</li>
+            </ul>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => toggleCard('step4')}
+              onKeyDown={(e) => handleKeyPress(e, 'step4')}
+              style={{
+                cursor: 'pointer',
+                padding: '12px',
+                background: '#334155',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              {expandedCards['step4'] ? '▼ Hide Tip' : '▶ Show Tip'}
+            </div>
+            {expandedCards['step4'] && (
+              <div style={{
+                marginTop: '12px',
+                padding: '16px',
+                background: '#0f172a',
+                borderRadius: '8px',
+                fontSize: '14px',
+                color: '#94a3b8',
+                borderLeft: '3px solid #06b6d4'
+              }}>
+                💡 পরবর্তী পরীক্ষায় শুধু প্রেজেন্টেশন বদলান
+              </div>
+            )}
+          </div>
+
+          {/* Step 5 */}
+          <div style={{
+            background: '#1e293b',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '600', margin: '0 0 16px 0', color: '#10b981' }}>
+              👥 Step 5 — নিজের স্টাডি কমিউনিটি বানান
+            </h3>
+            <ul style={{ margin: '0 0 16px 0', paddingLeft: '20px', color: '#cbd5e1', lineHeight: '1.8' }}>
+              <li>৩–৫ জনের স্টাডি সার্কেল বানান</li>
+              <li>সাপ্তাহিক রিভিউ করুন</li>
+            </ul>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => toggleCard('step5')}
+              onKeyDown={(e) => handleKeyPress(e, 'step5')}
+              style={{
+                cursor: 'pointer',
+                padding: '12px',
+                background: '#334155',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              {expandedCards['step5'] ? '▼ Hide Tip' : '▶ Show Tip'}
+            </div>
+            {expandedCards['step5'] && (
+              <div style={{
+                marginTop: '12px',
+                padding: '16px',
+                background: '#0f172a',
+                borderRadius: '8px',
+                fontSize: '14px',
+                color: '#94a3b8',
+                borderLeft: '3px solid #10b981'
+              }}>
+                💡 আজই একজন ভালো ছাত্রকে মেসেজ করুন
+              </div>
+            )}
+          </div>
+
+          {/* Results Card */}
+          <div style={{
+            background: '#1e293b',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            borderLeft: '4px solid #22c55e'
+          }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '600', margin: '0 0 16px 0', color: '#22c55e' }}>
+              ✅ Expected Results (৩–৪ মাস)
+            </h3>
+            <ul style={{ margin: 0, paddingLeft: '20px', color: '#cbd5e1', lineHeight: '1.8' }}>
+              <li>ফোকাস বাড়ে</li>
+              <li>ভুলে যাওয়া কমে</li>
+              <li>রুটিন কনসিস্টেন্ট হয়</li>
+              <li>মার্কস +১০ থেকে +২৫ বাড়ে</li>
+              <li>কনফিডেন্স বাড়ে</li>
+            </ul>
           </div>
         </div>
-      </nav>
 
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <header className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold">HSC রিসোর্স</h2>
-          <div className="flex items-center gap-4">
-            <span className="px-4 py-2 rounded-md bg-slate-700 text-sm font-medium">ডার্ক মোড</span>
-            <Button onClick={exportPDF} className="bg-indigo-600 hover:bg-indigo-500">PDF এক্সপোর্ট</Button>
-          </div>
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <section className="lg:col-span-2">
-            <Card className="bg-slate-800/50 border-slate-700 p-6">
-              <h3 className="text-xl font-semibold mb-6">রিসোর্স সিলেক্ট করুন</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                {options.map(opt => (
-                  <label key={opt.id} className="flex items-center gap-3 p-4 rounded-lg bg-slate-700/40 hover:bg-slate-700/60 cursor-pointer transition-colors">
-                    <input 
-                      type="checkbox" 
-                      checked={opt.selected} 
-                      onChange={() => toggleOption(opt.id)}
-                      className="w-5 h-5 rounded border-slate-600 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-800"
-                    />
-                    <div>
-                      <div className="text-base font-medium">{opt.label_bn}</div>
-                      <div className="text-sm text-slate-400">{opt.label_en}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-
-              <div className="flex gap-3 items-center">
-                <Button onClick={selectAllResources} className="bg-green-600 hover:bg-green-700">সব সিলেক্ট করুন</Button>
-                <Button onClick={deselectAll} variant="destructive">সব বাতিল করুন</Button>
-                <div className="ml-auto text-sm bg-slate-700/50 px-4 py-2 rounded-lg">
-                  সিলেক্ট করা: <strong className="text-lg ml-1">{selectedCount}</strong>
-                </div>
-              </div>
-            </Card>
-          </section>
-
-          <aside className="lg:col-span-1">
-            <Card className="bg-slate-800/50 border-slate-700 p-6">
-              <nav className="flex gap-2 mb-6">
-                <Button 
-                  onClick={() => setActiveTab('overview')} 
-                  variant={activeTab === 'overview' ? 'default' : 'ghost'}
-                  className={activeTab === 'overview' ? 'bg-indigo-600' : ''}
-                >
-                  ওভারভিউ
-                </Button>
-                <Button 
-                  onClick={() => setActiveTab('allresources')} 
-                  variant={activeTab === 'allresources' ? 'default' : 'ghost'}
-                  className={activeTab === 'allresources' ? 'bg-indigo-600' : ''}
-                >
-                  সব রিসোর্স
-                </Button>
-              </nav>
-
-              {activeTab === 'overview' && (
-                <div>
-                  <div className="mb-6">
-                    <div className="text-sm text-slate-400 mb-1">মোট ক্লাস</div>
-                    <div className="text-5xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">{totalClasses}</div>
-                  </div>
-
-                  <div>
-                    <div className="text-sm text-slate-400 mb-3">সিলেক্ট করা রিসোর্স</div>
-                    {options.filter(o => o.selected).length === 0 ? (
-                      <div className="text-sm text-slate-500 italic">কোনো আইটেম সিলেক্ট করা হয়নি</div>
-                    ) : (
-                      <ul className="space-y-2">
-                        {options.filter(o => o.selected).map(o => (
-                          <li key={o.id} className="text-sm bg-slate-700/30 px-3 py-2 rounded-lg flex items-center gap-2">
-                            <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
-                            <span className="font-medium">{o.label_bn}</span>
-                            <span className="text-slate-400 text-xs">— {o.label_en}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'allresources' && (
-                <div>
-                  <div className="text-sm text-slate-400 mb-3">সব রিসোর্স</div>
-                  <div className="space-y-3">
-                    {options.map(o => (
-                      <Card key={o.id} className="bg-slate-700/20 border-slate-600/30 p-3">
-                        <div className="font-medium mb-1">
-                          {o.label_bn} <span className="text-xs text-slate-400">({o.label_en})</span>
-                        </div>
-                        <div className="text-xs text-slate-400">
-                          স্ট্যাটাস: <span className={o.selected ? 'text-green-400' : 'text-slate-500'}>{o.selected ? 'সিলেক্ট করা' : 'সিলেক্ট নয়'}</span>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </Card>
-          </aside>
-        </div>
-
-        <div ref={printableRef} className="hidden">
-          <h1>HSC রিসোর্স এক্সপোর্ট</h1>
-          <p>মোট ক্লাস: {totalClasses}</p>
-          <p>সিলেক্ট করা রিসোর্স: {selectedCount}</p>
-          <ul>
-            {options.filter(o => o.selected).map(o => (
-              <li key={o.id}>{o.label_bn} — {o.label_en}</li>
-            ))}
-          </ul>
+        {/* Motivation Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #be123c 0%, #dc2626 100%)',
+          borderRadius: '16px',
+          padding: '32px 24px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+          textAlign: 'center'
+        }}>
+          <p style={{ fontSize: '24px', fontWeight: '600', margin: '0 0 16px 0', fontStyle: 'italic' }}>
+            "Consistency beats talent. Every single time."
+          </p>
+          <button
+            onClick={handleStartJourney}
+            style={{
+              background: '#fff',
+              color: '#be123c',
+              padding: '14px 32px',
+              borderRadius: '8px',
+              border: 'none',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onFocus={(e) => e.currentTarget.style.outline = '2px solid #fff'}
+            onBlur={(e) => e.currentTarget.style.outline = 'none'}
+          >
+            ৩০ দিনের প্ল্যান শুরু করুন
+          </button>
         </div>
       </div>
     </div>
