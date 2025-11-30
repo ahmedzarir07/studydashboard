@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Average Student → Topper Roadmap</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #e2e8f0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      padding: 24px 16px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header-card {
+      background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+      border-radius: 16px;
+      padding: 32px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    
+    .header-card h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0 0 12px 0;
+      line-height: 1.2;
+    }
+    
+    .header-card p {
+      font-size: 18px;
+      opacity: 0.95;
+      margin: 0 0 24px 0;
+    }
+    
+    .btn {
+      background: #1e293b;
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn:hover {
+      background: #334155;
+    }
+    
+    .btn:focus {
+      outline: 2px solid #fff;
+    }
+    
+    .btn-light {
+      background: #fff;
+      color: #be123c;
+    }
+    
+    .btn-light:hover {
+      transform: scale(1.05);
+    }
+    
+    .concept-card {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-left: 4px solid #10b981;
+    }
+    
+    .concept-card h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 0 0 16px 0;
+      color: #10b981;
+    }
+    
+    .concept-card p {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+    
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    
+    .step-card {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    
+    .step-card h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0 0 16px 0;
+    }
+    
+    .step-card ul {
+      margin: 0 0 16px 0;
+      padding-left: 20px;
+      color: #cbd5e1;
+      line-height: 1.8;
+    }
+    
+    .toggle-btn {
+      cursor: pointer;
+      padding: 12px;
+      background: #334155;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      color: #e2e8f0;
+      width: 100%;
+      text-align: left;
+    }
+    
+    .toggle-btn:hover {
+      background: #475569;
+    }
+    
+    .tip-box {
+      margin-top: 12px;
+      padding: 16px;
+      background: #0f172a;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #94a3b8;
+      display: none;
+    }
+    
+    .tip-box.active {
+      display: block;
+    }
+    
+    .results-card {
+      border-left: 4px solid #22c55e;
+    }
+    
+    .results-card h3 {
+      color: #22c55e;
+    }
+    
+    .motivation-card {
+      background: linear-gradient(135deg, #be123c 0%, #dc2626 100%);
+      border-radius: 16px;
+      padding: 32px 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    
+    .motivation-card p {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0 0 16px 0;
+      font-style: italic;
+    }
+    
+    @media (max-width: 900px) {
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .header-card h1 {
+        font-size: 24px;
+      }
+      
+      .header-card p {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header Card -->
+    <div class="header-card">
+      <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">🎯</div>
+      <h1>Average Student → Topper Roadmap</h1>
+      <p>৫-ধাপের ইন্টারঅ্যাকটিভ সিস্টেম</p>
+      <button class="btn" onclick="scrollToSteps()">জার্নি শুরু করুন</button>
+    </div>
+
+    <!-- Main Concept Card -->
+    <div class="concept-card">
+      <h2>💡 ট্যালেন্ট নয়—স্ট্র্যাটেজিই আসল শক্তি</h2>
+      <p>বেশির ভাগ স্টুডেন্ট মনোযোগ ধরে রাখতে পারে না, দ্রুত ভুলে যায়, এবং কোন প্ল্যান থাকে না। এই ৫টি ধাপ ৩–৪ মাসে আপনার পারফরম্যান্স চোখে দেখার মতো উন্নত করবে।</p>
+    </div>
+
+    <!-- Steps Grid -->
+    <div id="steps" class="steps-grid">
+      <!-- Step 1 -->
+      <div class="step-card">
+        <h3 style="color: #f59e0b;">📚 Step 1 — লং স্টাডি আওয়ার + ডিস্ট্রাকশন কন্ট্রোল</h3>
+        <ul>
+          <li>ডিস্ট্রাকশন লিস্ট তৈরি করুন</li>
+          <li>একটি Big Goal Card টেবিলে রাখুন</li>
+        </ul>
+        <button class="toggle-btn" onclick="toggleTip('step1')">▶ Show Tip</button>
+        <div id="tip-step1" class="tip-box" style="border-left: 3px solid #f59e0b;">
+          💡 ২৫ মিনিট → ৪০ → ৬০ মিনিট ফোকাস বাড়ান
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-card">
+        <h3 style="color: #8b5cf6;">📅 Step 2 — মাসিক কনটেন্ট ক্যালেন্ডার (Planning)</h3>
+        <ul>
+          <li>প্রতিটি চ্যাপ্টারের ঘন্টা হিসাব করুন</li>
+          <li>১০% Spare Hours যোগ করুন</li>
+          <li>৩০ দিনের ক্যালেন্ডার তৈরি করুন</li>
+        </ul>
+        <button class="toggle-btn" onclick="toggleTip('step2')">▶ Show Tip</button>
+        <div id="tip-step2" class="tip-box" style="border-left: 3px solid #8b5cf6;">
+          💡 আজ রাতেই নিজের ৩০ দিনের স্টাডি ক্যালেন্ডার বানান
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step-card">
+        <h3 style="color: #ec4899;">🎯 Step 3 — টপারদের স্মার্ট হ্যাবিট কপি করুন</h3>
+        <ul>
+          <li>নোট নেয়ার স্টাইল দেখুন</li>
+          <li>কালার-কোডেড নোট ব্যবহার করুন</li>
+          <li>কোন চ্যাপ্টার বাদ যায় বুঝুন</li>
+        </ul>
+        <button class="toggle-btn" onclick="toggleTip('step3')">▶ Show Tip</button>
+        <div id="tip-step3" class="tip-box" style="border-left: 3px solid #ec4899;">
+          💡 আজ একজন টপার ফ্রেন্ডের নোট দেখে একটি অভ্যাস গ্রহণ করুন
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step-card">
+        <h3 style="color: #06b6d4;">✍️ Step 4 — Answer Writing Strategy উন্নত করুন</h3>
+        <ul>
+          <li>হেডিং, টেবিল, ডায়াগ্রাম ব্যবহার করুন</li>
+          <li>উত্তর গুছানোভাবে লিখুন</li>
+        </ul>
+        <button class="toggle-btn" onclick="toggleTip('step4')">▶ Show Tip</button>
+        <div id="tip-step4" class="tip-box" style="border-left: 3px solid #06b6d4;">
+          💡 পরবর্তী পরীক্ষায় শুধু প্রেজেন্টেশন বদলান
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="step-card">
+        <h3 style="color: #10b981;">👥 Step 5 — নিজের স্টাডি কমিউনিটি বানান</h3>
+        <ul>
+          <li>৩–৫ জনের স্টাডি সার্কেল বানান</li>
+          <li>সাপ্তাহিক রিভিউ করুন</li>
+        </ul>
+        <button class="toggle-btn" onclick="toggleTip('step5')">▶ Show Tip</button>
+        <div id="tip-step5" class="tip-box" style="border-left: 3px solid #10b981;">
+          💡 আজই একজন ভালো ছাত্রকে মেসেজ করুন
+        </div>
+      </div>
+
+      <!-- Results Card -->
+      <div class="step-card results-card">
+        <h3 style="color: #22c55e;">✅ Expected Results (৩–৪ মাস)</h3>
+        <ul>
+          <li>ফোকাস বাড়ে</li>
+          <li>ভুলে যাওয়া কমে</li>
+          <li>রুটিন কনসিস্টেন্ট হয়</li>
+          <li>মার্কস +১০ থেকে +২৫ বাড়ে</li>
+          <li>কনফিডেন্স বাড়ে</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Motivation Card -->
+    <div class="motivation-card">
+      <p>"Consistency beats talent. Every single time."</p>
+      <button class="btn btn-light" onclick="scrollToSteps()">৩০ দিনের প্ল্যান শুরু করুন</button>
+    </div>
+  </div>
+
+  <script>
+    function toggleTip(stepId) {
+      const tipBox = document.getElementById('tip-' + stepId);
+      const btn = event.target;
+      
+      if (tipBox.classList.contains('active')) {
+        tipBox.classList.remove('active');
+        btn.textContent = '▶ Show Tip';
+        console.log('card_expanded', { id: stepId, expanded: false });
+      } else {
+        tipBox.classList.add('active');
+        btn.textContent = '▼ Hide Tip';
+        console.log('card_expanded', { id: stepId, expanded: true });
+      }
+    }
+    
+    function scrollToSteps() {
+      console.log('start_journey_clicked');
+      document.getElementById('steps').scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Keyboard support
+    document.addEventListener('keydown', function(e) {
+      if (e.target.classList.contains('toggle-btn')) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.target.click();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
