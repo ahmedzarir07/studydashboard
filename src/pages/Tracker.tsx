@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Atom, BookOpen, Calculator, Dna } from "lucide-react";
+import { Atom, BookOpen, Calculator, Dna, Monitor } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ProgressTracker } from "@/components/ProgressTracker";
@@ -8,12 +8,14 @@ import { physicsData } from "@/data/physicsData";
 import { chemistryData } from "@/data/chemistryData";
 import { higherMathData } from "@/data/higherMathData";
 import { biologyData } from "@/data/biologyData";
+import { ictData } from "@/data/ictData";
 
 const subjects = [
   { data: physicsData, icon: BookOpen, gradient: "from-blue-600 to-cyan-600" },
   { data: chemistryData, icon: Atom, gradient: "from-green-600 to-emerald-600" },
   { data: higherMathData, icon: Calculator, gradient: "from-purple-600 to-pink-600" },
   { data: biologyData, icon: Dna, gradient: "from-orange-600 to-red-600" },
+  { data: ictData, icon: Monitor, gradient: "from-teal-600 to-sky-600" },
 ];
 
 export default function Tracker() {
@@ -54,7 +56,7 @@ export default function Tracker() {
           const subject = subjects.find(s => s.data.id === value);
           if (subject) setActiveSubject(subject);
         }}>
-          <TabsList className="grid w-full grid-cols-4 mb-8 bg-slate-800/50 border border-slate-700">
+          <TabsList className="grid w-full grid-cols-5 mb-8 bg-slate-800/50 border border-slate-700">
             {subjects.map((subject) => (
               <TabsTrigger
                 key={subject.data.id}
