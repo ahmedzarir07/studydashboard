@@ -90,6 +90,9 @@ export default function Home() {
             <div className="px-6 py-3 bg-slate-800/50 border border-slate-700 rounded-lg">
               <span className="text-slate-300">Biology 1st Paper (12 chapters)</span>
             </div>
+            <div className="px-6 py-3 bg-slate-800/50 border border-slate-700 rounded-lg">
+              <span className="text-slate-300">ICT (6 chapters)</span>
+            </div>
           </div>
         </div>
       </main>
