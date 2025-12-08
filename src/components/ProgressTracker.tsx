@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -60,7 +60,18 @@ interface ProgressTrackerProps {
 
 export const ProgressTracker = ({ initialChapters }: ProgressTrackerProps) => {
   const [chapters, setChapters] = useState<Chapter[]>(initialChapters);
-  const [classNumbers, setClassNumbers] = useState<Record<number, string>>({});
+  
+  // Generate a unique key based on subject name from first chapter
+  const storageKey = `classNumbers-${initialChapters[0]?.name || 'default'}`;
+  
+  const [classNumbers, setClassNumbers] = useState<Record<number, string>>(() => {
+    const saved = localStorage.getItem(storageKey);
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify(classNumbers));
+  }, [classNumbers, storageKey]);
 
   const cycleStatus = (chapterId: number, activityIndex: number) => {
     const statusCycle: Status[] = ["", "Not Started", "In progress", "Done"];
@@ -125,14 +136,19 @@ export const ProgressTracker = ({ initialChapters }: ProgressTrackerProps) => {
                       {activity.name}
                     </div>
                     {activity.name === "মোট ক্লাস" ? (
-                      <Input
-                        type="number"
-                        min="0"
-                        placeholder="0"
-                        value={classNumbers[chapter.id] || ""}
-                        onChange={(e) => handleClassNumberChange(chapter.id, e.target.value)}
-                        className="h-7 w-full text-xs px-2"
-                      />
+                      <Badge
+                        variant="outline"
+                        className="cursor-pointer hover:bg-muted gap-1 text-xs p-0 overflow-hidden"
+                      >
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="—"
+                          value={classNumbers[chapter.id] || ""}
+                          onChange={(e) => handleClassNumberChange(chapter.id, e.target.value)}
+                          className="h-6 w-12 text-xs text-center border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </Badge>
                     ) : (
                       <StatusBadge
                         status={activity.status}
