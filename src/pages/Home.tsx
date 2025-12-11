@@ -186,26 +186,6 @@ export default function Home() {
           </Card>
         </div>
 
-        <div className="text-center">
-          <h3 className="text-2xl font-semibold text-foreground mb-6">Subjects</h3>
-          <div className="flex flex-wrap justify-center gap-4">
-            <div className="px-6 py-3 bg-card border border-border rounded-lg">
-              <span className="text-muted-foreground">Physics 1st Paper (10 chapters)</span>
-            </div>
-            <div className="px-6 py-3 bg-card border border-border rounded-lg">
-              <span className="text-muted-foreground">Chemistry 1st Paper (5 chapters)</span>
-            </div>
-            <div className="px-6 py-3 bg-card border border-border rounded-lg">
-              <span className="text-muted-foreground">Higher Math 1st Paper (10 chapters)</span>
-            </div>
-            <div className="px-6 py-3 bg-card border border-border rounded-lg">
-              <span className="text-muted-foreground">Biology 1st Paper (12 chapters)</span>
-            </div>
-            <div className="px-6 py-3 bg-card border border-border rounded-lg">
-              <span className="text-muted-foreground">ICT (6 chapters)</span>
-            </div>
-          </div>
-        </div>
       </main>
     </div>
   );
