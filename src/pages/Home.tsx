@@ -11,37 +11,62 @@ import { ictData } from "@/data/ictData";
 import { useState, useEffect } from "react";
 import { Status } from "@/types/tracker";
 
+interface SubjectProgress {
+  name: string;
+  progress: number;
+  color: string;
+}
+
 export default function Home() {
   const [overallProgress, setOverallProgress] = useState(0);
+  const [subjectProgresses, setSubjectProgresses] = useState<SubjectProgress[]>([]);
 
   useEffect(() => {
-    const allSubjects = [physicsData, chemistryData, higherMathData, biologyData, ictData];
+    const allSubjects = [
+      { data: physicsData, color: "hsl(var(--primary))" },
+      { data: chemistryData, color: "hsl(142 76% 36%)" },
+      { data: higherMathData, color: "hsl(262 83% 58%)" },
+      { data: biologyData, color: "hsl(25 95% 53%)" },
+      { data: ictData, color: "hsl(199 89% 48%)" },
+    ];
+    
     let totalCompleted = 0;
     let totalItems = 0;
+    const progresses: SubjectProgress[] = [];
 
-    allSubjects.forEach(subject => {
-      // Get the storage key using the first chapter's name (same as ProgressTracker)
+    allSubjects.forEach(({ data: subject, color }) => {
       const subjectKey = subject.chapters[0]?.name || 'default';
       const statusStorageKey = `activityStatus-${subjectKey}`;
       const savedStatuses = localStorage.getItem(statusStorageKey);
       const parsedStatuses: Record<number, Status[]> = savedStatuses ? JSON.parse(savedStatuses) : {};
 
+      let subjectCompleted = 0;
+      let subjectTotal = 0;
+
       subject.chapters.forEach(chapter => {
         chapter.activities.forEach((activity, idx) => {
           if (activity.name !== "Total Lec") {
             totalItems++;
-            // Use saved status from localStorage if available, otherwise use initial status
+            subjectTotal++;
             const savedStatus = parsedStatuses[chapter.id]?.[idx];
             const currentStatus = savedStatus ?? activity.status;
             if (currentStatus === "Done") {
               totalCompleted++;
+              subjectCompleted++;
             }
           }
         });
       });
+
+      progresses.push({
+        name: subject.name,
+        progress: subjectTotal > 0 ? Math.round((subjectCompleted / subjectTotal) * 100) : 0,
+        color,
+      });
     });
 
     setOverallProgress(totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0);
+    setSubjectProgresses(progresses);
   }, []);
 
   return (
@@ -67,9 +92,48 @@ export default function Home() {
 
       <main className="container mx-auto px-4 py-16">
         {/* Overall Progress Widget */}
-        <div className="flex justify-center mb-12">
+        <div className="flex flex-col items-center gap-8 mb-12">
           <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
             <CircularProgress percentage={overallProgress} />
+          </div>
+          
+          {/* Individual Subject Progress */}
+          <div className="flex flex-wrap justify-center gap-4">
+            {subjectProgresses.map((subject) => (
+              <div 
+                key={subject.name} 
+                className="bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-2 min-w-[120px]"
+              >
+                <div className="relative w-16 h-16">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="15.5"
+                      fill="none"
+                      className="stroke-muted"
+                      strokeWidth="3"
+                    />
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="15.5"
+                      fill="none"
+                      stroke={subject.color}
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeDasharray={`${subject.progress * 0.975} 100`}
+                    />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-foreground">
+                    {subject.progress}%
+                  </span>
+                </div>
+                <span className="text-xs text-muted-foreground text-center leading-tight">
+                  {subject.name.split(' ').slice(0, 2).join(' ')}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
