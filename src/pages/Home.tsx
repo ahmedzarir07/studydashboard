@@ -8,20 +8,32 @@ import { chemistryData } from "@/data/chemistryData";
 import { higherMathData } from "@/data/higherMathData";
 import { biologyData } from "@/data/biologyData";
 import { ictData } from "@/data/ictData";
-import { useMemo } from "react";
+import { useState, useEffect } from "react";
+import { Status } from "@/types/tracker";
 
 export default function Home() {
-  const overallProgress = useMemo(() => {
+  const [overallProgress, setOverallProgress] = useState(0);
+
+  useEffect(() => {
     const allSubjects = [physicsData, chemistryData, higherMathData, biologyData, ictData];
     let totalCompleted = 0;
     let totalItems = 0;
 
     allSubjects.forEach(subject => {
+      // Get the storage key using the first chapter's name (same as ProgressTracker)
+      const subjectKey = subject.chapters[0]?.name || 'default';
+      const statusStorageKey = `activityStatus-${subjectKey}`;
+      const savedStatuses = localStorage.getItem(statusStorageKey);
+      const parsedStatuses: Record<number, Status[]> = savedStatuses ? JSON.parse(savedStatuses) : {};
+
       subject.chapters.forEach(chapter => {
-        chapter.activities.forEach(activity => {
+        chapter.activities.forEach((activity, idx) => {
           if (activity.name !== "Total Lec") {
             totalItems++;
-            if (activity.status === "Done") {
+            // Use saved status from localStorage if available, otherwise use initial status
+            const savedStatus = parsedStatuses[chapter.id]?.[idx];
+            const currentStatus = savedStatus ?? activity.status;
+            if (currentStatus === "Done") {
               totalCompleted++;
             }
           }
@@ -29,7 +41,7 @@ export default function Home() {
       });
     });
 
-    return totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0;
+    setOverallProgress(totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0);
   }, []);
 
   return (
