@@ -1,7 +1,5 @@
 import { Link } from "react-router-dom";
-import { BookOpen, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CircularProgress } from "@/components/CircularProgress";
 import { physicsData } from "@/data/physicsData";
 import { chemistryData } from "@/data/chemistryData";
@@ -74,7 +72,7 @@ export default function Home() {
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-foreground">HSC Study Tracker</h1>
+            <h1 className="text-2xl font-bold text-foreground">Study Progress</h1>
             <div className="flex gap-4">
               <Link to="/">
                 <Button variant="ghost" className="text-muted-foreground hover:text-foreground">Home</Button>
@@ -137,53 +135,13 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="text-center mb-16">
-          <h2 className="text-5xl font-bold text-foreground mb-4">
-            HSC Study Tracker
+        <div className="text-center">
+          <h2 className="text-4xl font-bold text-foreground mb-4">
+            Study Progress
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Complete study tracking system for Physics, Chemistry, Higher Math, and Biology
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Track your progress across Physics, Chemistry, Higher Math, Biology, and ICT
           </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto mb-16">
-          <Card className="bg-card border-border hover:bg-card/80 transition-colors">
-            <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center mb-4">
-                <BookOpen className="w-6 h-6 text-primary" />
-              </div>
-              <CardTitle className="text-foreground">Study Tracker</CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Track all chapters and activities across four subjects
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link to="/tracker">
-                <Button className="w-full bg-primary hover:bg-primary/90">
-                  Open Tracker
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border hover:bg-card/80 transition-colors">
-            <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center mb-4">
-                <FileText className="w-6 h-6 text-green-400" />
-              </div>
-              <CardTitle className="text-foreground">Resources</CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Manage class notes, MCQs, and other study resources
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link to="/resources">
-                <Button className="w-full bg-green-600 hover:bg-green-700">
-                  View Resources
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
         </div>
 
       </main>
