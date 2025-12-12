@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CircularProgress } from "@/components/CircularProgress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { physicsData } from "@/data/physicsData";
 import { physics2ndData } from "@/data/physics2ndData";
 import { chemistryData } from "@/data/chemistryData";
@@ -15,6 +16,7 @@ import { Status } from "@/types/tracker";
 
 interface SubjectProgress {
   name: string;
+  fullName: string;
   progress: number;
   color: string;
 }
@@ -66,6 +68,7 @@ export default function Home() {
 
       progresses.push({
         name: displayName,
+        fullName: subject.name,
         progress: subjectTotal > 0 ? Math.round((subjectCompleted / subjectTotal) * 100) : 0,
         color,
       });
@@ -104,44 +107,52 @@ export default function Home() {
           </div>
           
           {/* Individual Subject Progress */}
-          <div className="flex flex-wrap justify-center gap-4">
-            {subjectProgresses.map((subject, index) => (
-              <Link 
-                key={subject.name} 
-                to={`/tracker?tab=${index}`}
-                className="bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-2 min-w-[120px] hover:border-primary/50 hover:bg-card/80 transition-all cursor-pointer"
-              >
-                <div className="relative w-16 h-16">
-                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="15.5"
-                      fill="none"
-                      className="stroke-muted"
-                      strokeWidth="3"
-                    />
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="15.5"
-                      fill="none"
-                      stroke={subject.color}
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeDasharray={`${subject.progress * 0.975} 100`}
-                    />
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-foreground">
-                    {subject.progress}%
-                  </span>
-                </div>
-                <span className="text-xs text-muted-foreground text-center leading-tight">
-                  {subject.name}
-                </span>
-              </Link>
-            ))}
-          </div>
+          <TooltipProvider>
+            <div className="flex flex-wrap justify-center gap-4">
+              {subjectProgresses.map((subject, index) => (
+                <Tooltip key={subject.name}>
+                  <TooltipTrigger asChild>
+                    <Link 
+                      to={`/tracker?tab=${index}`}
+                      className="bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-2 min-w-[120px] hover:border-primary/50 hover:bg-card/80 transition-all cursor-pointer"
+                    >
+                      <div className="relative w-16 h-16">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15.5"
+                            fill="none"
+                            className="stroke-muted"
+                            strokeWidth="3"
+                          />
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15.5"
+                            fill="none"
+                            stroke={subject.color}
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeDasharray={`${subject.progress * 0.975} 100`}
+                          />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-foreground">
+                          {subject.progress}%
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground text-center leading-tight">
+                        {subject.name}
+                      </span>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{subject.fullName}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+          </TooltipProvider>
         </div>
 
         <div className="text-center">
