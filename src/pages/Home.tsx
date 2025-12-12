@@ -97,10 +97,11 @@ export default function Home() {
           
           {/* Individual Subject Progress */}
           <div className="flex flex-wrap justify-center gap-4">
-            {subjectProgresses.map((subject) => (
-              <div 
+            {subjectProgresses.map((subject, index) => (
+              <Link 
                 key={subject.name} 
-                className="bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-2 min-w-[120px]"
+                to={`/tracker?tab=${index}`}
+                className="bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-2 min-w-[120px] hover:border-primary/50 hover:bg-card/80 transition-all cursor-pointer"
               >
                 <div className="relative w-16 h-16">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
@@ -130,7 +131,7 @@ export default function Home() {
                 <span className="text-xs text-muted-foreground text-center leading-tight">
                   {subject.name.split(' ').slice(0, 2).join(' ')}
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
