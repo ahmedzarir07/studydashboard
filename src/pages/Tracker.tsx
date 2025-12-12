@@ -1,25 +1,43 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Atom, BookOpen, Calculator, Dna, Monitor } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ProgressTracker } from "@/components/ProgressTracker";
 import { physicsData } from "@/data/physicsData";
+import { physics2ndData } from "@/data/physics2ndData";
 import { chemistryData } from "@/data/chemistryData";
+import { chemistry2ndData } from "@/data/chemistry2ndData";
 import { higherMathData } from "@/data/higherMathData";
+import { higherMath2ndData } from "@/data/higherMath2ndData";
 import { biologyData } from "@/data/biologyData";
+import { biology2ndData } from "@/data/biology2ndData";
 import { ictData } from "@/data/ictData";
 
 const subjects = [
   { data: physicsData, icon: BookOpen, gradient: "from-blue-600 to-cyan-600" },
+  { data: physics2ndData, icon: BookOpen, gradient: "from-blue-500 to-cyan-500" },
   { data: chemistryData, icon: Atom, gradient: "from-green-600 to-emerald-600" },
+  { data: chemistry2ndData, icon: Atom, gradient: "from-green-500 to-emerald-500" },
   { data: higherMathData, icon: Calculator, gradient: "from-purple-600 to-pink-600" },
+  { data: higherMath2ndData, icon: Calculator, gradient: "from-purple-500 to-pink-500" },
   { data: biologyData, icon: Dna, gradient: "from-orange-600 to-red-600" },
+  { data: biology2ndData, icon: Dna, gradient: "from-orange-500 to-red-500" },
   { data: ictData, icon: Monitor, gradient: "from-teal-600 to-sky-600" },
 ];
 
 export default function Tracker() {
-  const [activeSubject, setActiveSubject] = useState(subjects[0]);
+  const [searchParams] = useSearchParams();
+  const tabIndex = searchParams.get('tab');
+  const initialSubject = tabIndex !== null ? subjects[parseInt(tabIndex)] || subjects[0] : subjects[0];
+  const [activeSubject, setActiveSubject] = useState(initialSubject);
+
+  useEffect(() => {
+    if (tabIndex !== null) {
+      const subject = subjects[parseInt(tabIndex)];
+      if (subject) setActiveSubject(subject);
+    }
+  }, [tabIndex]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -52,19 +70,20 @@ export default function Tracker() {
           </div>
         </div>
 
-        <Tabs defaultValue={physicsData.id} className="w-full" onValueChange={(value) => {
+        <Tabs value={activeSubject.data.id} className="w-full" onValueChange={(value) => {
           const subject = subjects.find(s => s.data.id === value);
           if (subject) setActiveSubject(subject);
         }}>
-          <TabsList className="grid w-full grid-cols-5 mb-8 bg-slate-800/50 border border-slate-700">
+          <TabsList className="flex flex-wrap w-full mb-8 bg-slate-800/50 border border-slate-700 h-auto gap-1 p-1">
             {subjects.map((subject) => (
               <TabsTrigger
                 key={subject.data.id}
                 value={subject.data.id}
-                className="flex items-center gap-2 data-[state=active]:bg-slate-700"
+                className="flex items-center gap-1 data-[state=active]:bg-slate-700 text-xs px-2 py-1.5"
               >
-                <subject.icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{subject.data.name.split(" ")[0]}</span>
+                <subject.icon className="w-3 h-3" />
+                <span className="hidden md:inline">{subject.data.name.replace(" Paper", "")}</span>
+                <span className="md:hidden">{subject.data.name.split(" ")[0].slice(0, 3)}{subject.data.name.includes("2nd") ? "2" : "1"}</span>
               </TabsTrigger>
             ))}
           </TabsList>

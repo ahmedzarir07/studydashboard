@@ -2,9 +2,13 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CircularProgress } from "@/components/CircularProgress";
 import { physicsData } from "@/data/physicsData";
+import { physics2ndData } from "@/data/physics2ndData";
 import { chemistryData } from "@/data/chemistryData";
+import { chemistry2ndData } from "@/data/chemistry2ndData";
 import { higherMathData } from "@/data/higherMathData";
+import { higherMath2ndData } from "@/data/higherMath2ndData";
 import { biologyData } from "@/data/biologyData";
+import { biology2ndData } from "@/data/biology2ndData";
 import { ictData } from "@/data/ictData";
 import { useState, useEffect } from "react";
 import { Status } from "@/types/tracker";
@@ -22,9 +26,13 @@ export default function Home() {
   useEffect(() => {
     const allSubjects = [
       { data: physicsData, color: "hsl(var(--primary))" },
+      { data: physics2ndData, color: "hsl(217 91% 60%)" },
       { data: chemistryData, color: "hsl(142 76% 36%)" },
+      { data: chemistry2ndData, color: "hsl(142 71% 45%)" },
       { data: higherMathData, color: "hsl(262 83% 58%)" },
+      { data: higherMath2ndData, color: "hsl(262 78% 68%)" },
       { data: biologyData, color: "hsl(25 95% 53%)" },
+      { data: biology2ndData, color: "hsl(25 90% 63%)" },
       { data: ictData, color: "hsl(199 89% 48%)" },
     ];
     
@@ -141,7 +149,7 @@ export default function Home() {
             Study Progress
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Track your progress across Physics, Chemistry, Higher Math, Biology, and ICT
+            Track your progress across all 9 subjects (1st and 2nd papers)
           </p>
         </div>
 
