@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      chapter_completions: {
+        Row: {
+          chapter: string
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chapter: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chapter?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      chapter_resources: {
+        Row: {
+          chapter: string
+          created_at: string
+          id: string
+          subject: string
+          title: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          chapter: string
+          created_at?: string
+          id?: string
+          subject: string
+          title: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          chapter?: string
+          created_at?: string
+          id?: string
+          subject?: string
+          title?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       study_records: {
         Row: {
           activity: string

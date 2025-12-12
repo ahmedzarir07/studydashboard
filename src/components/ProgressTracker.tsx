@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Circle, Clock, Loader2 } from "lucide-react";
+import { CheckCircle2, Circle, Clock, Loader2, LinkIcon, ExternalLink, CheckSquare, Square } from "lucide-react";
 import { Chapter, Status } from "@/types/tracker";
 import { useStudyRecords } from "@/hooks/useStudyRecords";
 import { useAuth } from "@/contexts/AuthContext";
+import { useChapterResources } from "@/hooks/useChapterResources";
+import { useChapterCompletions } from "@/hooks/useChapterCompletions";
+import { ResourceModal } from "@/components/ResourceModal";
 
 const StatusBadge = ({ status, onClick, disabled }: { status: Status; onClick: () => void; disabled?: boolean }) => {
   const getStatusConfig = (s: Status) => {
@@ -65,11 +69,16 @@ interface ProgressTrackerProps {
 export const ProgressTracker = ({ initialChapters, subjectId }: ProgressTrackerProps) => {
   const { user } = useAuth();
   const { loading, saveStatus, saveClassNumber, getStatus, getClassNumber } = useStudyRecords(subjectId);
+  const { getResource, saveResource, deleteResource, loading: resourcesLoading } = useChapterResources(subjectId);
+  const { isChapterCompleted, markChapterCompleted, loading: completionsLoading } = useChapterCompletions();
   
   // Local state for optimistic updates
   const [localStatuses, setLocalStatuses] = useState<Record<string, Status>>({});
   const [localClassNumbers, setLocalClassNumbers] = useState<Record<string, string>>({});
-
+  
+  // Resource modal state
+  const [resourceModalOpen, setResourceModalOpen] = useState(false);
+  const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
   // Sync local state with database records
   useEffect(() => {
     const statuses: Record<string, Status> = {};
@@ -143,7 +152,7 @@ export const ProgressTracker = ({ initialChapters, subjectId }: ProgressTrackerP
     );
   }
 
-  if (loading) {
+  if (loading || resourcesLoading || completionsLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -151,65 +160,148 @@ export const ProgressTracker = ({ initialChapters, subjectId }: ProgressTrackerP
     );
   }
 
+  const openResourceModal = (chapterName: string) => {
+    setSelectedChapter(chapterName);
+    setResourceModalOpen(true);
+  };
+
+  const handleToggleComplete = async (chapterName: string) => {
+    const isCompleted = isChapterCompleted(subjectId, chapterName);
+    await markChapterCompleted(subjectId, chapterName, !isCompleted);
+  };
+
+  const selectedResource = selectedChapter ? getResource(subjectId, selectedChapter) : null;
+
   return (
-    <div className="space-y-4">
-      {initialChapters.map((chapter) => {
-        const progress = getChapterProgress(chapter);
-        return (
-          <Card
-            key={chapter.id}
-            className="p-6 hover:shadow-md transition-shadow duration-300 bg-card border-border"
-          >
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-foreground">{chapter.name}</h3>
-                <div className="flex items-center gap-2">
-                  <div className="text-sm text-muted-foreground">{progress}%</div>
-                  <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-500"
-                      style={{ width: `${progress}%` }}
-                    />
+    <>
+      <div className="space-y-4">
+        {initialChapters.map((chapter) => {
+          const progress = getChapterProgress(chapter);
+          const resource = getResource(subjectId, chapter.name);
+          const completed = isChapterCompleted(subjectId, chapter.name);
+          
+          return (
+            <Card
+              key={chapter.id}
+              className={cn(
+                "p-6 hover:shadow-md transition-shadow duration-300 bg-card border-border",
+                completed && "border-success/50 bg-success/5"
+              )}
+            >
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 flex-shrink-0"
+                      onClick={() => handleToggleComplete(chapter.name)}
+                      title={completed ? "Mark as incomplete" : "Mark as complete"}
+                    >
+                      {completed ? (
+                        <CheckSquare className="h-5 w-5 text-success" />
+                      ) : (
+                        <Square className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </Button>
+                    <h3 className={cn(
+                      "text-lg font-semibold text-foreground truncate",
+                      completed && "line-through text-muted-foreground"
+                    )}>
+                      {chapter.name}
+                    </h3>
+                    {resource && (
+                      <Badge variant="secondary" className="gap-1 text-xs flex-shrink-0">
+                        <LinkIcon className="h-3 w-3" />
+                        <a
+                          href={resource.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {resource.title}
+                        </a>
+                        <ExternalLink className="h-3 w-3" />
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openResourceModal(chapter.name)}
+                      className="text-xs"
+                    >
+                      <LinkIcon className="h-3 w-3 mr-1" />
+                      Resource
+                    </Button>
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm text-muted-foreground">{progress}%</div>
+                      <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-500"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-10 gap-2">
-                {chapter.activities.map((activity, idx) => {
-                  const key = `${chapter.name}-${activity.name}`;
-                  return (
-                    <div key={idx} className="space-y-1">
-                      <div className="text-xs text-muted-foreground truncate" title={activity.name}>
-                        {activity.name}
-                      </div>
-                      {activity.name === "Total Lec" ? (
-                        <Badge
-                          variant="outline"
-                          className="cursor-pointer hover:bg-muted gap-1 text-xs p-0 overflow-hidden"
-                        >
-                          <Input
-                            type="number"
-                            min="0"
-                            placeholder="—"
-                            value={localClassNumbers[chapter.name] || ""}
-                            onChange={(e) => handleClassNumberChange(chapter.name, e.target.value)}
-                            className="h-6 w-12 text-xs text-center border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-10 gap-2">
+                  {chapter.activities.map((activity, idx) => {
+                    const key = `${chapter.name}-${activity.name}`;
+                    return (
+                      <div key={idx} className="space-y-1">
+                        <div className="text-xs text-muted-foreground truncate" title={activity.name}>
+                          {activity.name}
+                        </div>
+                        {activity.name === "Total Lec" ? (
+                          <Badge
+                            variant="outline"
+                            className="cursor-pointer hover:bg-muted gap-1 text-xs p-0 overflow-hidden"
+                          >
+                            <Input
+                              type="number"
+                              min="0"
+                              placeholder="—"
+                              value={localClassNumbers[chapter.name] || ""}
+                              onChange={(e) => handleClassNumberChange(chapter.name, e.target.value)}
+                              className="h-6 w-12 text-xs text-center border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                          </Badge>
+                        ) : (
+                          <StatusBadge
+                            status={localStatuses[key] || ""}
+                            onClick={() => cycleStatus(chapter.name, activity.name)}
                           />
-                        </Badge>
-                      ) : (
-                        <StatusBadge
-                          status={localStatuses[key] || ""}
-                          onClick={() => cycleStatus(chapter.name, activity.name)}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          </Card>
-        );
-      })}
-    </div>
+            </Card>
+          );
+        })}
+      </div>
+
+      <ResourceModal
+        open={resourceModalOpen}
+        onOpenChange={setResourceModalOpen}
+        chapterName={selectedChapter || ""}
+        subjectId={subjectId}
+        existingResource={selectedResource ? { title: selectedResource.title, url: selectedResource.url } : null}
+        onSave={async (title, url) => {
+          if (!selectedChapter) return { error: "No chapter selected" };
+          return saveResource(subjectId, selectedChapter, title, url);
+        }}
+        onDelete={() => {
+          if (selectedChapter) {
+            deleteResource(subjectId, selectedChapter);
+          }
+        }}
+      />
+    </>
   );
 };

@@ -15,6 +15,7 @@ import { higherMath2ndData } from "@/data/higherMath2ndData";
 import { biologyData } from "@/data/biologyData";
 import { biology2ndData } from "@/data/biology2ndData";
 import { ictData } from "@/data/ictData";
+import { MonthlySummary } from "@/components/MonthlySummary";
 
 const subjects = [
   { data: physicsData, icon: BookOpen, gradient: "from-blue-600 to-cyan-600" },
@@ -85,6 +86,13 @@ export default function Tracker() {
       </nav>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Monthly Summary */}
+        {user && (
+          <div className="mb-8 max-w-md">
+            <MonthlySummary />
+          </div>
+        )}
+
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-2">
             <div className={`p-3 rounded-lg bg-gradient-to-br ${activeSubject.gradient}`}>

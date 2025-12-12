@@ -15,6 +15,7 @@ import { biology2ndData } from "@/data/biology2ndData";
 import { ictData } from "@/data/ictData";
 import { useState, useEffect } from "react";
 import { LogIn, LogOut } from "lucide-react";
+import { MonthlySummary } from "@/components/MonthlySummary";
 
 interface SubjectProgress {
   name: string;
@@ -140,6 +141,13 @@ export default function Home() {
       </nav>
 
       <main className="container mx-auto px-4 py-16">
+        {/* Monthly Summary */}
+        {user && (
+          <div className="mb-8 max-w-md mx-auto">
+            <MonthlySummary />
+          </div>
+        )}
+
         {/* Overall Progress Widget */}
         <div className="flex flex-col items-center gap-8 mb-12">
           <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
