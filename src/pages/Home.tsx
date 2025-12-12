@@ -25,22 +25,22 @@ export default function Home() {
 
   useEffect(() => {
     const allSubjects = [
-      { data: physicsData, color: "hsl(var(--primary))" },
-      { data: physics2ndData, color: "hsl(217 91% 60%)" },
-      { data: chemistryData, color: "hsl(142 76% 36%)" },
-      { data: chemistry2ndData, color: "hsl(142 71% 45%)" },
-      { data: higherMathData, color: "hsl(262 83% 58%)" },
-      { data: higherMath2ndData, color: "hsl(262 78% 68%)" },
-      { data: biologyData, color: "hsl(25 95% 53%)" },
-      { data: biology2ndData, color: "hsl(25 90% 63%)" },
-      { data: ictData, color: "hsl(199 89% 48%)" },
+      { data: physicsData, color: "hsl(var(--primary))", displayName: "Physics 1st" },
+      { data: physics2ndData, color: "hsl(217 91% 60%)", displayName: "Physics 2nd" },
+      { data: chemistryData, color: "hsl(142 76% 36%)", displayName: "Chemistry 1st" },
+      { data: chemistry2ndData, color: "hsl(142 71% 45%)", displayName: "Chemistry 2nd" },
+      { data: higherMathData, color: "hsl(262 83% 58%)", displayName: "HM 1st" },
+      { data: higherMath2ndData, color: "hsl(262 78% 68%)", displayName: "HM 2nd" },
+      { data: biologyData, color: "hsl(25 95% 53%)", displayName: "Biology 1st" },
+      { data: biology2ndData, color: "hsl(25 90% 63%)", displayName: "Biology 2nd" },
+      { data: ictData, color: "hsl(199 89% 48%)", displayName: "ICT" },
     ];
     
     let totalCompleted = 0;
     let totalItems = 0;
     const progresses: SubjectProgress[] = [];
 
-    allSubjects.forEach(({ data: subject, color }) => {
+    allSubjects.forEach(({ data: subject, color, displayName }) => {
       const subjectKey = subject.chapters[0]?.name || 'default';
       const statusStorageKey = `activityStatus-${subjectKey}`;
       const savedStatuses = localStorage.getItem(statusStorageKey);
@@ -65,7 +65,7 @@ export default function Home() {
       });
 
       progresses.push({
-        name: subject.name,
+        name: displayName,
         progress: subjectTotal > 0 ? Math.round((subjectCompleted / subjectTotal) * 100) : 0,
         color,
       });
@@ -137,7 +137,7 @@ export default function Home() {
                   </span>
                 </div>
                 <span className="text-xs text-muted-foreground text-center leading-tight">
-                  {subject.name.split(' ').slice(0, 2).join(' ')}
+                  {subject.name}
                 </span>
               </Link>
             ))}
