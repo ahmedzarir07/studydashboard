@@ -3,10 +3,12 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Circle, Clock } from "lucide-react";
+import { CheckCircle2, Circle, Clock, Loader2 } from "lucide-react";
 import { Chapter, Status } from "@/types/tracker";
+import { useStudyRecords } from "@/hooks/useStudyRecords";
+import { useAuth } from "@/contexts/AuthContext";
 
-const StatusBadge = ({ status, onClick }: { status: Status; onClick: () => void }) => {
+const StatusBadge = ({ status, onClick, disabled }: { status: Status; onClick: () => void; disabled?: boolean }) => {
   const getStatusConfig = (s: Status) => {
     switch (s) {
       case "Done":
@@ -44,9 +46,10 @@ const StatusBadge = ({ status, onClick }: { status: Status; onClick: () => void 
       variant={config.variant}
       className={cn(
         "cursor-pointer transition-all duration-200 hover:scale-105 gap-1 text-xs",
-        config.className
+        config.className,
+        disabled && "opacity-50 cursor-not-allowed"
       )}
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
     >
       <Icon className="h-3 w-3" />
       {status || "—"}
@@ -56,82 +59,101 @@ const StatusBadge = ({ status, onClick }: { status: Status; onClick: () => void 
 
 interface ProgressTrackerProps {
   initialChapters: Chapter[];
+  subjectId: string;
 }
 
-export const ProgressTracker = ({ initialChapters }: ProgressTrackerProps) => {
-  // Generate unique keys based on subject name from first chapter
-  const subjectKey = initialChapters[0]?.name || 'default';
-  const classNumbersStorageKey = `classNumbers-${subjectKey}`;
-  const statusStorageKey = `activityStatus-${subjectKey}`;
+export const ProgressTracker = ({ initialChapters, subjectId }: ProgressTrackerProps) => {
+  const { user } = useAuth();
+  const { loading, saveStatus, saveClassNumber, getStatus, getClassNumber } = useStudyRecords(subjectId);
   
-  const [chapters, setChapters] = useState<Chapter[]>(() => {
-    const saved = localStorage.getItem(statusStorageKey);
-    if (saved) {
-      const savedStatuses = JSON.parse(saved);
-      return initialChapters.map((chapter) => ({
-        ...chapter,
-        activities: chapter.activities.map((activity, idx) => ({
-          ...activity,
-          status: savedStatuses[chapter.id]?.[idx] ?? activity.status,
-        })),
-      }));
-    }
-    return initialChapters;
-  });
-  
-  const [classNumbers, setClassNumbers] = useState<Record<number, string>>(() => {
-    const saved = localStorage.getItem(classNumbersStorageKey);
-    return saved ? JSON.parse(saved) : {};
-  });
+  // Local state for optimistic updates
+  const [localStatuses, setLocalStatuses] = useState<Record<string, Status>>({});
+  const [localClassNumbers, setLocalClassNumbers] = useState<Record<string, string>>({});
 
+  // Sync local state with database records
   useEffect(() => {
-    localStorage.setItem(classNumbersStorageKey, JSON.stringify(classNumbers));
-  }, [classNumbers, classNumbersStorageKey]);
-
-  useEffect(() => {
-    const statuses: Record<number, Status[]> = {};
-    chapters.forEach((chapter) => {
-      statuses[chapter.id] = chapter.activities.map((a) => a.status);
-    });
-    localStorage.setItem(statusStorageKey, JSON.stringify(statuses));
-  }, [chapters, statusStorageKey]);
-
-  const cycleStatus = (chapterId: number, activityIndex: number) => {
-    const statusCycle: Status[] = ["", "Not Started", "In progress", "Done"];
-    setChapters((prev) =>
-      prev.map((chapter) => {
-        if (chapter.id === chapterId) {
-          const newActivities = [...chapter.activities];
-          const currentStatus = newActivities[activityIndex].status;
-          const currentIndex = statusCycle.indexOf(currentStatus);
-          const nextIndex = (currentIndex + 1) % statusCycle.length;
-          newActivities[activityIndex] = {
-            ...newActivities[activityIndex],
-            status: statusCycle[nextIndex],
-          };
-          return { ...chapter, activities: newActivities };
+    const statuses: Record<string, Status> = {};
+    const classNumbers: Record<string, string> = {};
+    
+    initialChapters.forEach((chapter) => {
+      chapter.activities.forEach((activity) => {
+        const key = `${chapter.name}-${activity.name}`;
+        if (activity.name === "Total Lec") {
+          classNumbers[chapter.name] = getClassNumber(chapter.name);
+        } else {
+          statuses[key] = getStatus(chapter.name, activity.name);
         }
-        return chapter;
-      })
-    );
+      });
+    });
+    
+    setLocalStatuses(statuses);
+    setLocalClassNumbers(classNumbers);
+  }, [initialChapters, getStatus, getClassNumber]);
+
+  const cycleStatus = async (chapterName: string, activityName: string) => {
+    if (!user) return;
+    
+    const key = `${chapterName}-${activityName}`;
+    const statusCycle: Status[] = ["", "Not Started", "In progress", "Done"];
+    const currentStatus = localStatuses[key] || "";
+    const currentIndex = statusCycle.indexOf(currentStatus);
+    const nextIndex = (currentIndex + 1) % statusCycle.length;
+    const newStatus = statusCycle[nextIndex];
+    
+    // Optimistic update
+    setLocalStatuses((prev) => ({ ...prev, [key]: newStatus }));
+    
+    // Save to database
+    await saveStatus(chapterName, activityName, newStatus);
   };
 
-  const handleClassNumberChange = (chapterId: number, value: string) => {
-    setClassNumbers((prev) => ({
-      ...prev,
-      [chapterId]: value,
-    }));
+  const handleClassNumberChange = async (chapterName: string, value: string) => {
+    if (!user) return;
+    
+    // Optimistic update
+    setLocalClassNumbers((prev) => ({ ...prev, [chapterName]: value }));
+    
+    // Save to database
+    const numValue = value === "" ? null : parseInt(value, 10);
+    await saveClassNumber(chapterName, numValue);
   };
 
   const getChapterProgress = (chapter: Chapter) => {
-    const completedCount = chapter.activities.filter((a) => a.status === "Done").length;
-    const totalCount = chapter.activities.filter((a) => a.name !== "Total Lec").length;
-    return Math.round((completedCount / totalCount) * 100);
+    let completedCount = 0;
+    let totalCount = 0;
+    
+    chapter.activities.forEach((activity) => {
+      if (activity.name !== "Total Lec") {
+        totalCount++;
+        const key = `${chapter.name}-${activity.name}`;
+        if (localStatuses[key] === "Done") {
+          completedCount++;
+        }
+      }
+    });
+    
+    return totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   };
+
+  if (!user) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Please sign in to track your progress.</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      {chapters.map((chapter) => {
+      {initialChapters.map((chapter) => {
         const progress = getChapterProgress(chapter);
         return (
           <Card
@@ -153,33 +175,36 @@ export const ProgressTracker = ({ initialChapters }: ProgressTrackerProps) => {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-10 gap-2">
-                {chapter.activities.map((activity, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <div className="text-xs text-muted-foreground truncate" title={activity.name}>
-                      {activity.name}
-                    </div>
-                    {activity.name === "Total Lec" ? (
-                      <Badge
-                        variant="outline"
-                        className="cursor-pointer hover:bg-muted gap-1 text-xs p-0 overflow-hidden"
-                      >
-                        <Input
-                          type="number"
-                          min="0"
-                          placeholder="—"
-                          value={classNumbers[chapter.id] || ""}
-                          onChange={(e) => handleClassNumberChange(chapter.id, e.target.value)}
-                          className="h-6 w-12 text-xs text-center border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                {chapter.activities.map((activity, idx) => {
+                  const key = `${chapter.name}-${activity.name}`;
+                  return (
+                    <div key={idx} className="space-y-1">
+                      <div className="text-xs text-muted-foreground truncate" title={activity.name}>
+                        {activity.name}
+                      </div>
+                      {activity.name === "Total Lec" ? (
+                        <Badge
+                          variant="outline"
+                          className="cursor-pointer hover:bg-muted gap-1 text-xs p-0 overflow-hidden"
+                        >
+                          <Input
+                            type="number"
+                            min="0"
+                            placeholder="—"
+                            value={localClassNumbers[chapter.name] || ""}
+                            onChange={(e) => handleClassNumberChange(chapter.name, e.target.value)}
+                            className="h-6 w-12 text-xs text-center border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                        </Badge>
+                      ) : (
+                        <StatusBadge
+                          status={localStatuses[key] || ""}
+                          onClick={() => cycleStatus(chapter.name, activity.name)}
                         />
-                      </Badge>
-                    ) : (
-                      <StatusBadge
-                        status={activity.status}
-                        onClick={() => cycleStatus(chapter.id, idx)}
-                      />
-                    )}
-                  </div>
-                ))}
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </Card>

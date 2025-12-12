@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { Atom, BookOpen, Calculator, Dna, Monitor } from "lucide-react";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { Atom, BookOpen, Calculator, Dna, Monitor, LogIn, LogOut } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ProgressTracker } from "@/components/ProgressTracker";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { physicsData } from "@/data/physicsData";
 import { physics2ndData } from "@/data/physics2ndData";
 import { chemistryData } from "@/data/chemistryData";
@@ -28,6 +30,8 @@ const subjects = [
 
 export default function Tracker() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const tabIndex = searchParams.get('tab');
   const initialSubject = tabIndex !== null ? subjects[parseInt(tabIndex)] || subjects[0] : subjects[0];
   const [activeSubject, setActiveSubject] = useState(initialSubject);
@@ -39,13 +43,18 @@ export default function Tracker() {
     }
   }, [tabIndex]);
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <nav className="border-b border-slate-700 bg-slate-900/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-slate-100">Study Progress</h1>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
               <Link to="/">
                 <Button variant="ghost" className="text-slate-300 hover:text-slate-100">Home</Button>
               </Link>
@@ -55,6 +64,21 @@ export default function Tracker() {
               <Link to="/resources">
                 <Button variant="ghost" className="text-slate-300 hover:text-slate-100">Resources</Button>
               </Link>
+              {!loading && (
+                user ? (
+                  <Button variant="outline" size="sm" onClick={handleSignOut} className="text-slate-300 border-slate-600">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
+                ) : (
+                  <Link to="/auth">
+                    <Button variant="default" size="sm">
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Sign In
+                    </Button>
+                  </Link>
+                )
+              )}
             </div>
           </div>
         </div>
@@ -90,7 +114,7 @@ export default function Tracker() {
 
           {subjects.map((subject) => (
             <TabsContent key={subject.data.id} value={subject.data.id}>
-              <ProgressTracker initialChapters={subject.data.chapters} />
+              <ProgressTracker initialChapters={subject.data.chapters} subjectId={subject.data.id} />
             </TabsContent>
           ))}
         </Tabs>

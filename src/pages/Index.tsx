@@ -65,7 +65,7 @@ const Index = () => {
 
           {subjects.map((subject) => (
             <TabsContent key={subject.id} value={subject.id} className="mt-0">
-              <ProgressTracker initialChapters={subject.chapters} />
+              <ProgressTracker initialChapters={subject.chapters} subjectId={subject.id} />
             </TabsContent>
           ))}
         </Tabs>
