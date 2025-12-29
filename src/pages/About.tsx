@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Facebook, Instagram, Send, Github, Youtube, Mail } from "lucide-react";
+import { ArrowLeft, Facebook, Instagram, Send, Github, Youtube, Mail, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -109,6 +109,44 @@ export default function About() {
                   <span className="text-muted-foreground">{feature}</span>
                 </div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Links */}
+        <Card className="border-border/50 bg-card/60 mt-6">
+          <CardContent className="p-6 md:p-8">
+            <h2 className="text-lg font-semibold text-foreground mb-4">🔗 Quick Links</h2>
+            <div className="space-y-3">
+              <a 
+                href="https://trackinger.lovable.app" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+              >
+                <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                  <ExternalLink className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-foreground">Trackinger</p>
+                  <p className="text-xs text-muted-foreground">trackinger.lovable.app</p>
+                </div>
+              </a>
+
+              <a 
+                href="https://t.me/trackingerapp" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+              >
+                <div className="p-2 rounded-lg bg-[hsl(200_100%_50%)]/10 text-[hsl(200_100%_50%)]">
+                  <Send className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-foreground">Telegram Group</p>
+                  <p className="text-xs text-muted-foreground">t.me/trackingerapp</p>
+                </div>
+              </a>
             </div>
           </CardContent>
         </Card>
