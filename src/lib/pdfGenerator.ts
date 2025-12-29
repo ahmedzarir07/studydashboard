@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { format } from "date-fns";
 
+// PDF Generator utilities for Bangla and English text support
 interface SubjectProgress {
   name: string;
   fullName: string;
