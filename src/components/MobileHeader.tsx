@@ -39,6 +39,9 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
           <Link to="/downloads">
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">Downloads</Button>
           </Link>
+          <Link to="/about">
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">About</Button>
+          </Link>
           {!loading && (
             user ? (
               <Button variant="outline" size="sm" onClick={handleSignOut}>
