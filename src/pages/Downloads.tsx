@@ -1,6 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
-import { CircularProgress } from "@/components/CircularProgress";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { physicsData } from "@/data/physicsData";
@@ -13,12 +11,12 @@ import { biologyData } from "@/data/biologyData";
 import { biology2ndData } from "@/data/biology2ndData";
 import { ictData } from "@/data/ictData";
 import { useState, useEffect } from "react";
-import { MonthlySummary } from "@/components/MonthlySummary";
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, FileText, ClipboardList } from "lucide-react";
 import { generateOverallProgressPDF, generateDetailedProgressPDF } from "@/lib/pdfGenerator";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface SubjectProgress {
   name: string;
@@ -27,16 +25,17 @@ interface SubjectProgress {
   color: string;
 }
 
-export default function Home() {
+export default function Downloads() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [overallProgress, setOverallProgress] = useState(0);
   const [subjectProgresses, setSubjectProgresses] = useState<SubjectProgress[]>([]);
   const [recordMap, setRecordMap] = useState<Map<string, string>>(new Map());
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
-      setOverallProgress(0);
-      setSubjectProgresses([]);
+      navigate("/auth");
       return;
     }
 
@@ -97,10 +96,11 @@ export default function Home() {
 
       setOverallProgress(totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0);
       setSubjectProgresses(progresses);
+      setIsLoading(false);
     };
 
     fetchProgress();
-  }, [user]);
+  }, [user, navigate]);
 
   const handleDownloadOverallPDF = async () => {
     if (!user?.email) return;
@@ -141,110 +141,75 @@ export default function Home() {
     );
   };
 
+  if (!user) return null;
+
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
-      <MobileHeader title="Study Progress" />
+    <div className="min-h-screen bg-background pb-20">
+      <MobileHeader title="Downloads" />
 
-      <main className="px-4 py-6 max-w-4xl mx-auto">
-        {/* Desktop Download Buttons */}
-        {user && (
-          <div className="hidden md:flex justify-end gap-2 mb-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadOverallPDF}
-              className="gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Overall Progress (1 Page)
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadDetailedPDF}
-              className="gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Detailed Progress (Full Report)
-            </Button>
-          </div>
-        )}
+      <main className="px-4 py-6 max-w-md mx-auto">
+        <p className="text-sm text-muted-foreground mb-6 px-1">
+          Download your progress reports as PDF files.
+        </p>
 
-        {/* Monthly Summary */}
-        {user && (
-          <div className="mb-6">
-            <MonthlySummary />
-          </div>
-        )}
+        <div className="space-y-4">
+          {/* 1-Page Summary Card */}
+          <Card className="border-border/50 bg-card/60">
+            <CardContent className="p-5">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl bg-primary/10 text-primary">
+                  <FileText className="h-6 w-6" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground">
+                    1-Page Progress Summary
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    All subjects combined in a single-page overview with overall progress percentage.
+                  </p>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleDownloadOverallPDF}
+                    disabled={isLoading}
+                    className="mt-4 gap-2 w-full"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download PDF
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Overall Progress - Centered on mobile */}
-        <div className="flex flex-col items-center gap-6 mb-8">
-          <div className="bg-card/50 rounded-2xl p-6 md:p-8">
-            <CircularProgress percentage={overallProgress} size={140} />
-          </div>
-        </div>
-
-        {/* Subject Grid - Horizontal scroll on mobile, grid on desktop */}
-        <div className="mb-8">
-          <h2 className="text-base font-semibold text-foreground mb-4 px-1">
-            Subject Progress
-          </h2>
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-touch pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-5 md:overflow-visible">
-            <TooltipProvider>
-              {subjectProgresses.map((subject, index) => (
-                <Tooltip key={subject.name}>
-                  <TooltipTrigger asChild>
-                    <Link 
-                      to={`/tracker?tab=${index}`}
-                      className="flex-shrink-0 w-[100px] md:w-auto bg-card/60 rounded-xl p-4 flex flex-col items-center gap-2 active:scale-[0.97] transition-transform"
-                    >
-                      <div className="relative w-14 h-14 md:w-16 md:h-16">
-                        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                          <circle
-                            cx="18"
-                            cy="18"
-                            r="15.5"
-                            fill="none"
-                            className="stroke-muted/30"
-                            strokeWidth="3"
-                          />
-                          <circle
-                            cx="18"
-                            cy="18"
-                            r="15.5"
-                            fill="none"
-                            stroke={subject.color}
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                            strokeDasharray={`${subject.progress * 0.975} 100`}
-                          />
-                        </svg>
-                        <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-foreground">
-                          {subject.progress}%
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-muted-foreground text-center leading-tight whitespace-nowrap">
-                        {subject.name}
-                      </span>
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{subject.fullName}</p>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
-            </TooltipProvider>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="space-y-3 mb-8">
-          <Link 
-            to="/tracker" 
-            className="touch-button w-full bg-primary text-primary-foreground"
-          >
-            Start Studying
-          </Link>
+          {/* Full Report Card */}
+          <Card className="border-border/50 bg-card/60">
+            <CardContent className="p-5">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl bg-secondary text-secondary-foreground">
+                  <ClipboardList className="h-6 w-6" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground">
+                    Full Progress Report
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Detailed subject-wise and chapter-wise progress with activity status for each subject.
+                  </p>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleDownloadDetailedPDF}
+                    disabled={isLoading}
+                    className="mt-4 gap-2 w-full"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download PDF
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
 
