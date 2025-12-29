@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { physicsData } from "@/data/physicsData";
@@ -14,7 +14,7 @@ import { useState, useEffect } from "react";
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
-import { Download, FileText, ClipboardList, ExternalLink, Send } from "lucide-react";
+import { Download, FileText, ClipboardList, ExternalLink, Send, Info } from "lucide-react";
 import { generateOverallProgressPDF, generateDetailedProgressPDF } from "@/lib/pdfGenerator";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -251,6 +251,23 @@ export default function Downloads() {
                   <p className="text-xs text-muted-foreground">t.me/trackingerapp</p>
                 </div>
               </a>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 bg-card/60">
+            <CardContent className="p-4">
+              <Link 
+                to="/about"
+                className="flex items-center gap-3 text-foreground hover:text-primary transition-colors"
+              >
+                <div className="p-2 rounded-lg bg-secondary text-secondary-foreground">
+                  <Info className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium">About</p>
+                  <p className="text-xs text-muted-foreground">Learn more about this project</p>
+                </div>
+              </Link>
             </CardContent>
           </Card>
         </div>
