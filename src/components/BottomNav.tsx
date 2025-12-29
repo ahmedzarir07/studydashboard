@@ -1,12 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, BookOpen, Lightbulb, User } from "lucide-react";
+import { Home, BookOpen, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { path: "/", icon: Home, label: "Home" },
   { path: "/tracker", icon: BookOpen, label: "Study" },
-  { path: "/resources", icon: Lightbulb, label: "Tips" },
 ];
 
 export function BottomNav() {

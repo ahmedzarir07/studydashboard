@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import Home from "./pages/Home";
 import Tracker from "./pages/Tracker";
-import Resources from "./pages/Resources";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -23,7 +22,6 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/tracker" element={<Tracker />} />
-            <Route path="/resources" element={<Resources />} />
             <Route path="/auth" element={<Auth />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
