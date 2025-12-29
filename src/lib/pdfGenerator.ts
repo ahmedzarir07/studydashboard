@@ -32,24 +32,26 @@ interface SubjectDetail {
 }
 
 const A4_WIDTH = 794;
+const A4_HEIGHT = 1123;
 
-function createContainer(): HTMLDivElement {
+function createContainer(height?: number): HTMLDivElement {
   const el = document.createElement("div");
   el.style.position = "fixed";
   el.style.left = "-9999px";
   el.style.top = "0";
   el.style.width = A4_WIDTH + "px";
-  el.style.minHeight = "1123px";
+  el.style.height = (height || A4_HEIGHT) + "px";
   el.style.background = "white";
   el.style.color = "black";
   el.style.fontFamily = "'Noto Sans Bengali', 'Inter', sans-serif";
-  el.style.padding = "40px";
+  el.style.padding = "24px";
   el.style.boxSizing = "border-box";
+  el.style.overflow = "hidden";
   document.body.appendChild(el);
   return el;
 }
 
-async function captureAndAddToPDF(
+async function capturePageToPDF(
   container: HTMLDivElement,
   pdf: jsPDF,
   isFirstPage: boolean
@@ -58,56 +60,34 @@ async function captureAndAddToPDF(
     scale: 2,
     useCORS: true,
     backgroundColor: "#ffffff",
+    height: A4_HEIGHT,
+    windowHeight: A4_HEIGHT,
   });
 
   const pdfWidth = pdf.internal.pageSize.getWidth();
   const pdfHeight = pdf.internal.pageSize.getHeight();
-  const imgWidth = pdfWidth;
-  const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
   if (!isFirstPage) {
     pdf.addPage();
   }
 
-  let heightLeft = imgHeight;
-  let position = 0;
-
-  pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, position, imgWidth, imgHeight);
-  heightLeft -= pdfHeight;
-
-  while (heightLeft > 0) {
-    position = heightLeft - imgHeight;
-    pdf.addPage();
-    pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pdfHeight;
-  }
+  pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, pdfWidth, pdfHeight);
 }
 
-async function savePDF(container: HTMLDivElement, filename: string): Promise<void> {
+async function saveSinglePagePDF(container: HTMLDivElement, filename: string): Promise<void> {
   const canvas = await html2canvas(container, {
     scale: 2,
     useCORS: true,
     backgroundColor: "#ffffff",
+    height: A4_HEIGHT,
+    windowHeight: A4_HEIGHT,
   });
 
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pdfWidth = pdf.internal.pageSize.getWidth();
   const pdfHeight = pdf.internal.pageSize.getHeight();
-  const imgWidth = pdfWidth;
-  const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
-  let heightLeft = imgHeight;
-  let position = 0;
-
-  pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, position, imgWidth, imgHeight);
-  heightLeft -= pdfHeight;
-
-  while (heightLeft > 0) {
-    position = heightLeft - imgHeight;
-    pdf.addPage();
-    pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pdfHeight;
-  }
+  pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, pdfWidth, pdfHeight);
 
   pdf.save(filename);
   document.body.removeChild(container);
@@ -122,30 +102,30 @@ export async function generateOverallProgressPDF(
   const container = createContainer();
   
   const subjectListHTML = subjectProgresses.map(s => 
-    `<li style="font-size:14px;padding:6px 0;color:#000;border-bottom:1px solid #eee;">• ${s.fullName}: <strong>${s.progress}%</strong></li>`
+    `<li style="font-size:13px;padding:4px 0;color:#000;border-bottom:1px solid #eee;">• ${s.fullName}: <strong>${s.progress}%</strong></li>`
   ).join("");
   
   container.innerHTML = `
     <div style="font-family:'Noto Sans Bengali','Inter',sans-serif;">
-      <h1 style="font-size:24px;font-weight:bold;margin-bottom:8px;color:#000;">HSC Science — Overall Progress Report</h1>
-      <p style="font-size:12px;color:#666;margin-bottom:24px;">Generated: ${format(new Date(), "PPpp")}</p>
-      <p style="font-size:14px;margin-bottom:20px;color:#000;"><strong>Student:</strong> ${email}</p>
-      <div style="margin-bottom:24px;">
-        <h2 style="font-size:16px;font-weight:bold;margin-bottom:8px;color:#000;">Overall Completion</h2>
-        <p style="font-size:24px;font-weight:bold;color:#000;">${overallProgress}%</p>
+      <h1 style="font-size:22px;font-weight:bold;margin-bottom:6px;color:#000;">HSC Science — Overall Progress Report</h1>
+      <p style="font-size:11px;color:#666;margin-bottom:20px;">Generated: ${format(new Date(), "PPpp")}</p>
+      <p style="font-size:13px;margin-bottom:16px;color:#000;"><strong>Student:</strong> ${email}</p>
+      <div style="margin-bottom:20px;">
+        <h2 style="font-size:15px;font-weight:bold;margin-bottom:6px;color:#000;">Overall Completion</h2>
+        <p style="font-size:22px;font-weight:bold;color:#000;">${overallProgress}%</p>
       </div>
-      <div style="margin-bottom:24px;">
-        <h2 style="font-size:16px;font-weight:bold;margin-bottom:12px;color:#000;">Subject-wise Progress</h2>
+      <div style="margin-bottom:20px;">
+        <h2 style="font-size:15px;font-weight:bold;margin-bottom:10px;color:#000;">Subject-wise Progress</h2>
         <ul style="list-style:none;padding:0;margin:0;">${subjectListHTML}</ul>
       </div>
-      <div style="position:absolute;bottom:40px;left:40px;font-size:10px;color:#999;">HSC Science Study Tracker</div>
+      <div style="position:absolute;bottom:24px;left:24px;font-size:9px;color:#999;">HSC Science Study Tracker</div>
     </div>
   `;
 
-  await savePDF(container, `hsc-overall-progress-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  await saveSinglePagePDF(container, `hsc-overall-progress-${format(new Date(), "yyyy-MM-dd")}.pdf`);
 }
 
-// Detailed multi-page progress PDF
+// Detailed multi-page progress PDF - One subject per page, compact layout
 export async function generateDetailedProgressPDF(
   email: string,
   overallProgress: number,
@@ -158,73 +138,79 @@ export async function generateDetailedProgressPDF(
   // Page 1: Overall Summary
   const summaryContainer = createContainer();
   const subjectListHTML = subjectProgresses.map(s => 
-    `<li style="font-size:14px;padding:6px 0;color:#000;border-bottom:1px solid #eee;">• ${s.fullName}: <strong>${s.progress}%</strong></li>`
+    `<li style="font-size:12px;padding:3px 0;color:#000;border-bottom:1px solid #eee;">• ${s.fullName}: <strong>${s.progress}%</strong></li>`
   ).join("");
   
   summaryContainer.innerHTML = `
     <div style="font-family:'Noto Sans Bengali','Inter',sans-serif;">
-      <h1 style="font-size:24px;font-weight:bold;margin-bottom:8px;color:#000;">HSC Science — Detailed Progress Report</h1>
-      <p style="font-size:12px;color:#666;margin-bottom:24px;">Generated: ${format(new Date(), "PPpp")}</p>
-      <p style="font-size:14px;margin-bottom:20px;color:#000;"><strong>Student:</strong> ${email}</p>
-      <div style="margin-bottom:24px;">
-        <h2 style="font-size:16px;font-weight:bold;margin-bottom:8px;color:#000;">Overall Completion</h2>
-        <p style="font-size:24px;font-weight:bold;color:#000;">${overallProgress}%</p>
+      <h1 style="font-size:20px;font-weight:bold;margin-bottom:6px;color:#000;">HSC Science — Detailed Progress Report</h1>
+      <p style="font-size:10px;color:#666;margin-bottom:16px;">Generated: ${format(new Date(), "PPpp")}</p>
+      <p style="font-size:12px;margin-bottom:14px;color:#000;"><strong>Student:</strong> ${email}</p>
+      <div style="margin-bottom:16px;">
+        <h2 style="font-size:14px;font-weight:bold;margin-bottom:4px;color:#000;">Overall Completion</h2>
+        <p style="font-size:20px;font-weight:bold;color:#000;">${overallProgress}%</p>
       </div>
-      <div style="margin-bottom:24px;">
-        <h2 style="font-size:16px;font-weight:bold;margin-bottom:12px;color:#000;">Subject-wise Summary</h2>
+      <div style="margin-bottom:16px;">
+        <h2 style="font-size:14px;font-weight:bold;margin-bottom:8px;color:#000;">Subject-wise Summary</h2>
         <ul style="list-style:none;padding:0;margin:0;">${subjectListHTML}</ul>
       </div>
-      <div style="position:absolute;bottom:40px;left:40px;font-size:10px;color:#999;">HSC Science Study Tracker — Page 1</div>
+      <div style="position:absolute;bottom:24px;left:24px;font-size:9px;color:#999;">HSC Science Study Tracker — Page 1</div>
     </div>
   `;
 
-  await captureAndAddToPDF(summaryContainer, pdf, true);
+  await capturePageToPDF(summaryContainer, pdf, true);
   document.body.removeChild(summaryContainer);
 
-  // Pages for each subject
+  // One page per subject - compact 2-column layout
   let pageNumber = 2;
   for (const subject of subjectDetails) {
     const subjectContainer = createContainer();
     
+    // Build compact chapter cards
     const chaptersHTML = subject.chapters.map(chapter => {
       const activitiesHTML = chapter.activities
         .filter(a => a.name !== "Total Lec")
         .map(activity => {
           const status = recordMap.get(`${subject.id}-${chapter.name}-${activity.name}`) || "Not Started";
-          let statusColor = "#888";
-          let statusBg = "#f5f5f5";
-          let statusText = "Not Started";
+          let statusColor = "#666";
+          let statusBg = "#f0f0f0";
+          let statusIcon = "○";
           
           if (status === "Done") {
             statusColor = "#16a34a";
             statusBg = "#dcfce7";
-            statusText = "Done";
+            statusIcon = "✓";
           } else if (status === "In Progress") {
             statusColor = "#ca8a04";
             statusBg = "#fef9c3";
-            statusText = "In Progress";
+            statusIcon = "◐";
           }
           
-          return `<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;background:${statusBg};color:${statusColor};font-size:10px;border-radius:4px;">${activity.name}: ${statusText}</span>`;
+          return `<span style="display:inline-block;margin:1px 2px;padding:1px 4px;background:${statusBg};color:${statusColor};font-size:8px;border-radius:2px;white-space:nowrap;">${statusIcon} ${activity.name}</span>`;
         }).join("");
 
       return `
-        <div style="margin-bottom:16px;padding:12px;border:1px solid #e5e5e5;border-radius:8px;">
-          <h4 style="font-size:13px;font-weight:600;margin-bottom:8px;color:#000;">${chapter.name}</h4>
-          <div style="display:flex;flex-wrap:wrap;">${activitiesHTML}</div>
+        <div style="break-inside:avoid;margin-bottom:6px;padding:6px;border:1px solid #ddd;border-radius:4px;background:#fafafa;">
+          <div style="font-size:9px;font-weight:600;margin-bottom:3px;color:#000;line-height:1.2;">${chapter.name}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:1px;">${activitiesHTML}</div>
         </div>
       `;
     }).join("");
 
     subjectContainer.innerHTML = `
-      <div style="font-family:'Noto Sans Bengali','Inter',sans-serif;">
-        <h2 style="font-size:20px;font-weight:bold;margin-bottom:16px;color:#000;border-bottom:2px solid #3b82f6;padding-bottom:8px;">${subject.name}</h2>
-        <div>${chaptersHTML}</div>
-        <div style="position:absolute;bottom:40px;left:40px;font-size:10px;color:#999;">HSC Science Study Tracker — Page ${pageNumber}</div>
+      <div style="font-family:'Noto Sans Bengali','Inter',sans-serif;height:100%;position:relative;">
+        <div style="border-bottom:2px solid #3b82f6;padding-bottom:6px;margin-bottom:10px;">
+          <h2 style="font-size:14px;font-weight:bold;color:#000;margin:0;">${subject.name}</h2>
+          <p style="font-size:9px;color:#666;margin:2px 0 0 0;">Page ${pageNumber} of ${subjectDetails.length + 1}</p>
+        </div>
+        <div style="column-count:2;column-gap:12px;column-fill:balance;">
+          ${chaptersHTML}
+        </div>
+        <div style="position:absolute;bottom:0;left:0;font-size:8px;color:#999;">HSC Science Study Tracker</div>
       </div>
     `;
 
-    await captureAndAddToPDF(subjectContainer, pdf, false);
+    await capturePageToPDF(subjectContainer, pdf, false);
     document.body.removeChild(subjectContainer);
     pageNumber++;
   }
