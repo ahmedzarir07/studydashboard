@@ -239,24 +239,18 @@ export default function Home() {
         </div>
 
         {/* Quick Actions */}
-        <div className="space-y-3">
+        <div className="space-y-3 mb-8">
           <Link 
             to="/tracker" 
             className="touch-button w-full bg-primary text-primary-foreground"
           >
             Start Studying
           </Link>
-          <Link 
-            to="/resources" 
-            className="touch-button w-full bg-card text-foreground border border-border"
-          >
-            View Study Tips
-          </Link>
         </div>
 
-        {/* Mobile Reports & Downloads Section */}
+        {/* Reports & Downloads Section */}
         {user && (
-          <div className="mt-8 md:hidden">
+          <div className="md:hidden">
             <h2 className="text-base font-semibold text-foreground mb-4 px-1">
               Reports & Downloads
             </h2>
@@ -273,7 +267,7 @@ export default function Home() {
                         1-Page Progress Summary
                       </h3>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        All subjects in a single-page overview
+                        All subjects combined in a single-page overview
                       </p>
                       <Button
                         variant="outline"
@@ -301,7 +295,7 @@ export default function Home() {
                         Full Progress Report
                       </h3>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Detailed subject & chapter-wise report
+                        Detailed subject-wise and chapter-wise progress
                       </p>
                       <Button
                         variant="outline"
