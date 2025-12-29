@@ -10,6 +10,7 @@ import Resources from "./pages/Resources";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
+// Initialize React Query client
 const queryClient = new QueryClient();
 
 const App = () => (
