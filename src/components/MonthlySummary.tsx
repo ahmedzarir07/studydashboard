@@ -17,9 +17,9 @@ export const MonthlySummary = () => {
   const monthlyCompletions = getMonthlyCompletions();
   const currentMonth = format(new Date(), "MMMM yyyy");
 
-  const handleDownloadMonthlyPDF = () => {
+  const handleDownloadMonthlyPDF = async () => {
     if (!user?.email) return;
-    generateMonthlyProgressPDF(user.email, currentMonth, monthlyCompletions);
+    await generateMonthlyProgressPDF(user.email, currentMonth, monthlyCompletions);
   };
 
   // Group by subject

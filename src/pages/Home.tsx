@@ -100,9 +100,9 @@ export default function Home() {
     fetchProgress();
   }, [user]);
 
-  const handleDownloadOverallPDF = () => {
+  const handleDownloadOverallPDF = async () => {
     if (!user?.email) return;
-    generateOverallProgressPDF(user.email, overallProgress, subjectProgresses);
+    await generateOverallProgressPDF(user.email, overallProgress, subjectProgresses);
   };
 
   return (
