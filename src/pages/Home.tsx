@@ -17,8 +17,9 @@ import { MonthlySummary } from "@/components/MonthlySummary";
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, FileText, ClipboardList } from "lucide-react";
 import { generateOverallProgressPDF, generateDetailedProgressPDF } from "@/lib/pdfGenerator";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface SubjectProgress {
   name: string;
@@ -252,33 +253,73 @@ export default function Home() {
             View Study Tips
           </Link>
         </div>
-      </main>
 
-      {/* Mobile Download Buttons - Sticky */}
-      {user && (
-        <div className="fixed bottom-16 left-0 right-0 px-4 py-2 bg-background/95 backdrop-blur-sm border-t border-border md:hidden z-40">
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadOverallPDF}
-              className="flex-1 gap-1 h-10 text-xs"
-            >
-              <Download className="h-3 w-3" />
-              1 Page
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadDetailedPDF}
-              className="flex-1 gap-1 h-10 text-xs"
-            >
-              <Download className="h-3 w-3" />
-              Full Report
-            </Button>
+        {/* Mobile Reports & Downloads Section */}
+        {user && (
+          <div className="mt-8 md:hidden">
+            <h2 className="text-base font-semibold text-foreground mb-4 px-1">
+              Reports & Downloads
+            </h2>
+            <div className="space-y-3">
+              {/* 1-Page Summary Card */}
+              <Card className="border-border/50 bg-card/60">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-4">
+                    <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-foreground text-sm">
+                        1-Page Progress Summary
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        All subjects in a single-page overview
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownloadOverallPDF}
+                        className="mt-3 gap-2 h-9 text-xs w-full"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Download PDF
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Full Report Card */}
+              <Card className="border-border/50 bg-card/60">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-4">
+                    <div className="p-2.5 rounded-xl bg-secondary/80 text-secondary-foreground">
+                      <ClipboardList className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-foreground text-sm">
+                        Full Progress Report
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Detailed subject & chapter-wise report
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownloadDetailedPDF}
+                        className="mt-3 gap-2 h-9 text-xs w-full"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Download PDF
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </main>
 
       <BottomNav />
     </div>
