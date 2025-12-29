@@ -18,7 +18,7 @@ import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { generateOverallProgressPDF } from "@/lib/pdfGenerator";
+import { generateOverallProgressPDF, generateDetailedProgressPDF } from "@/lib/pdfGenerator";
 
 interface SubjectProgress {
   name: string;
@@ -31,6 +31,7 @@ export default function Home() {
   const { user } = useAuth();
   const [overallProgress, setOverallProgress] = useState(0);
   const [subjectProgresses, setSubjectProgresses] = useState<SubjectProgress[]>([]);
+  const [recordMap, setRecordMap] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     if (!user) {
@@ -58,10 +59,11 @@ export default function Home() {
         .eq("user_id", user.id)
         .eq("type", "status");
 
-      const recordMap = new Map<string, string>();
+      const newRecordMap = new Map<string, string>();
       records?.forEach((r) => {
-        recordMap.set(`${r.subject}-${r.chapter}-${r.activity}`, r.status || "");
+        newRecordMap.set(`${r.subject}-${r.chapter}-${r.activity}`, r.status || "");
       });
+      setRecordMap(newRecordMap);
 
       let totalCompleted = 0;
       let totalItems = 0;
@@ -76,7 +78,7 @@ export default function Home() {
             if (activity.name !== "Total Lec") {
               totalItems++;
               subjectTotal++;
-              const status = recordMap.get(`${subject.id}-${chapter.name}-${activity.name}`);
+              const status = newRecordMap.get(`${subject.id}-${chapter.name}-${activity.name}`);
               if (status === "Done") {
                 totalCompleted++;
                 subjectCompleted++;
@@ -105,14 +107,48 @@ export default function Home() {
     await generateOverallProgressPDF(user.email, overallProgress, subjectProgresses);
   };
 
+  const handleDownloadDetailedPDF = async () => {
+    if (!user?.email) return;
+    
+    const allSubjects = [
+      { data: physicsData, displayName: "Physics 1st" },
+      { data: physics2ndData, displayName: "Physics 2nd" },
+      { data: chemistryData, displayName: "Chemistry 1st" },
+      { data: chemistry2ndData, displayName: "Chemistry 2nd" },
+      { data: higherMathData, displayName: "HM 1st" },
+      { data: higherMath2ndData, displayName: "HM 2nd" },
+      { data: biologyData, displayName: "Biology 1st" },
+      { data: biology2ndData, displayName: "Biology 2nd" },
+      { data: ictData, displayName: "ICT" },
+    ];
+
+    const subjectDetails = allSubjects.map(({ data, displayName }) => ({
+      id: data.id,
+      name: data.name,
+      displayName,
+      chapters: data.chapters.map(ch => ({
+        name: ch.name,
+        activities: ch.activities,
+      })),
+    }));
+
+    await generateDetailedProgressPDF(
+      user.email,
+      overallProgress,
+      subjectProgresses,
+      subjectDetails,
+      recordMap
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <MobileHeader title="Study Progress" />
 
       <main className="px-4 py-6 max-w-4xl mx-auto">
-        {/* Desktop Download Button */}
+        {/* Desktop Download Buttons */}
         {user && (
-          <div className="hidden md:flex justify-end mb-4">
+          <div className="hidden md:flex justify-end gap-2 mb-4">
             <Button
               variant="outline"
               size="sm"
@@ -120,7 +156,16 @@ export default function Home() {
               className="gap-2"
             >
               <Download className="h-4 w-4" />
-              Download Overall Progress (PDF)
+              Overall Progress (1 Page)
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadDetailedPDF}
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Detailed Progress (Full Report)
             </Button>
           </div>
         )}
@@ -209,18 +254,29 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Mobile Download Button - Sticky */}
+      {/* Mobile Download Buttons - Sticky */}
       {user && (
         <div className="fixed bottom-16 left-0 right-0 px-4 py-2 bg-background/95 backdrop-blur-sm border-t border-border md:hidden z-40">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDownloadOverallPDF}
-            className="w-full gap-2 h-11"
-          >
-            <Download className="h-4 w-4" />
-            Download Overall Progress (PDF)
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadOverallPDF}
+              className="flex-1 gap-1 h-10 text-xs"
+            >
+              <Download className="h-3 w-3" />
+              1 Page
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadDetailedPDF}
+              className="flex-1 gap-1 h-10 text-xs"
+            >
+              <Download className="h-3 w-3" />
+              Full Report
+            </Button>
+          </div>
         </div>
       )}
 
