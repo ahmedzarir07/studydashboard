@@ -5,9 +5,10 @@ const ACTIVITIES = [
   "Total Lec",
   "Notes",
   "MCQ Practice",
-  "CQ Types",
-  "CQ Summary",
   "MCQ Summary",
+  "CQ Practice",
+  "CQ Summary",
+  "Book Problems",
   "Revision",
   "Exam",
 ];

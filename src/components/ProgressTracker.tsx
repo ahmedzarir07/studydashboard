@@ -21,6 +21,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useChapterResources } from "@/hooks/useChapterResources";
 import { useChapterCompletions } from "@/hooks/useChapterCompletions";
 import { ResourceModal } from "@/components/ResourceModal";
+import { getSubjectConfig } from "@/config/activityWeights";
+import { normalizeActivity } from "@/config/activityMapping";
 import {
   Collapsible,
   CollapsibleContent,
@@ -139,21 +141,71 @@ export const ProgressTracker = ({ initialChapters, subjectId }: ProgressTrackerP
     await saveClassNumber(chapterName, numValue);
   };
 
+  // Weighted progress calculation with section caps
   const getChapterProgress = (chapter: Chapter) => {
-    let completedCount = 0;
-    let totalCount = 0;
+    const config = getSubjectConfig(subjectId);
     
+    // Track progress for each section
+    const sectionProgress: Record<string, number> = {
+      core: 0,
+      mcq: 0,
+      cq: 0,
+      final: 0,
+    };
+    
+    // Calculate raw progress per section
     chapter.activities.forEach((activity) => {
-      if (activity.name !== "Total Lec") {
-        totalCount++;
-        const key = `${chapter.name}-${activity.name}`;
-        if (localStatuses[key] === "Done") {
-          completedCount++;
+      if (activity.name === "Total Lec") return;
+      
+      const key = `${chapter.name}-${activity.name}`;
+      const status = localStatuses[key];
+      const normalizedName = normalizeActivity(activity.name);
+      
+      // Find which section this activity belongs to
+      Object.entries(config.sections).forEach(([sectionKey, section]) => {
+        const weight = section.activities[normalizedName];
+        if (weight) {
+          if (status === "Done") {
+            sectionProgress[sectionKey] += weight;
+          } else if (status === "In progress") {
+            sectionProgress[sectionKey] += weight * 0.5;
+          }
         }
+      });
+    });
+    
+    // Apply section caps and scaling
+    let totalProgress = 0;
+    
+    Object.entries(config.sections).forEach(([sectionKey, section]) => {
+      const rawProgress = sectionProgress[sectionKey];
+      
+      // Cap the section progress
+      const cappedProgress = Math.min(rawProgress, section.internalMax || section.max);
+      
+      // Apply scaling for science CQ section (50% internal -> 35% effective)
+      if (section.internalMax) {
+        totalProgress += (cappedProgress / section.internalMax) * section.max;
+      } else {
+        const finalProgress = Math.min(cappedProgress, section.max);
+        totalProgress += finalProgress;
       }
     });
     
-    return { completedCount, totalCount, percentage: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0 };
+    const percentage = Math.round(totalProgress);
+    
+    return { 
+      percentage,
+      isExamReady: percentage >= 70
+    };
+  };
+
+  // Get progress bar color based on percentage
+  const getProgressColor = (percentage: number): string => {
+    if (percentage >= 100) return "bg-emerald-500";
+    if (percentage >= 70) return "bg-green-500";
+    if (percentage >= 40) return "bg-yellow-500";
+    return "bg-red-500";
   };
 
   const toggleChapter = (chapterName: string) => {
@@ -200,10 +252,11 @@ export const ProgressTracker = ({ initialChapters, subjectId }: ProgressTrackerP
     <>
       <div className="space-y-3">
         {initialChapters.map((chapter) => {
-          const { completedCount, totalCount, percentage } = getChapterProgress(chapter);
+          const { percentage, isExamReady } = getChapterProgress(chapter);
           const resource = getResource(subjectId, chapter.name);
           const completed = isChapterCompleted(subjectId, chapter.name);
           const isExpanded = expandedChapters.has(chapter.name);
+          const progressColor = getProgressColor(percentage);
           
           return (
             <Collapsible 
@@ -244,16 +297,26 @@ export const ProgressTracker = ({ initialChapters, subjectId }: ProgressTrackerP
                         {chapter.name}
                       </h3>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-muted-foreground">
-                          {completedCount}/{totalCount}
-                        </span>
-                        <div className="flex-1 max-w-[80px] h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div className="flex-1 max-w-[100px] h-2 bg-muted rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-primary transition-all"
+                            className={cn("h-full transition-all", progressColor)}
                             style={{ width: `${percentage}%` }}
                           />
                         </div>
-                        <span className="text-xs text-muted-foreground">{percentage}%</span>
+                        <span className={cn(
+                          "text-sm font-medium",
+                          percentage >= 100 ? "text-emerald-500" :
+                          percentage >= 70 ? "text-green-500" :
+                          percentage >= 40 ? "text-yellow-500" :
+                          "text-red-500"
+                        )}>
+                          {percentage}%
+                        </span>
+                        {isExamReady && percentage < 100 && (
+                          <Badge variant="outline" className="text-xs bg-green-500/10 text-green-500 border-green-500/30">
+                            Ready
+                          </Badge>
+                        )}
                       </div>
                     </div>
 

@@ -7,10 +7,10 @@ const ACTIVITIES = [
   "খ",
   "Notes",
   "MCQ Practice",
-  "Typewise CQ",
-  "CQ Summery",
-  "MCQ Summery",
-  "ALL Revision",
+  "MCQ Summary",
+  "CQ Summary",
+  "Written CQ",
+  "Revision",
   "Exam",
 ];
 
