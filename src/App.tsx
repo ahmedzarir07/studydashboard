@@ -9,6 +9,7 @@ import Tracker from "./pages/Tracker";
 import Downloads from "./pages/Downloads";
 import About from "./pages/About";
 import Auth from "./pages/Auth";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 // Initialize React Query client
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/downloads" element={<Downloads />} />
             <Route path="/about" element={<About />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/admin" element={<Admin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
