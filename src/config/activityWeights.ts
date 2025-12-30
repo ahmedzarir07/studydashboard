@@ -37,7 +37,7 @@ export const scienceConfig: SubjectConfig = {
     },
     cq: {
       max: 35,
-      internalMax: 50, // Internal activities total 50%, but contribute max 35%
+      internalMax: 55, // Internal activities total 55% (5+10+10+25+3+2), scaled to max 35%
       activities: {
         "ক": 5,
         "খ": 10,
