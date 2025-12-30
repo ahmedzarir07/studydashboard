@@ -146,15 +146,46 @@ export const englishWritingConfig: SubjectConfig = {
   },
 };
 
+// English 2nd Paper - Grammar (60%) + Composition (40%)
+// Grammar chapters (1-12): Practice, Rules Summary, Mock Test, Revision
+// Composition chapters (13-16): Practice, Draft Writing, Final Copy, Revision
+export const english2ndConfig: SubjectConfig = {
+  sections: {
+    core: {
+      max: 30,
+      activities: {
+        "Practice": 30,
+      },
+    },
+    mcq: {
+      max: 25,
+      activities: {
+        "Rules Summary": 15,
+        "Draft Writing": 10,
+      },
+    },
+    cq: {
+      max: 45,
+      activities: {
+        "Mock Test": 15,
+        "Final Copy": 15,
+        "Revision": 15,
+      },
+    },
+  },
+};
+
 // Get the appropriate config based on subject ID
 export const getSubjectConfig = (subjectId: string): SubjectConfig => {
   const mathSubjects = ["highermath", "highermath2nd"];
   const englishReadingSubjects = ["english1st-reading"];
   const englishWritingSubjects = ["english1st-writing"];
+  const english2ndSubjects = ["english2nd"];
   
   if (mathSubjects.includes(subjectId)) return mathConfig;
   if (englishReadingSubjects.includes(subjectId)) return englishReadingConfig;
   if (englishWritingSubjects.includes(subjectId)) return englishWritingConfig;
+  if (english2ndSubjects.includes(subjectId)) return english2ndConfig;
   
   return scienceConfig;
 };
