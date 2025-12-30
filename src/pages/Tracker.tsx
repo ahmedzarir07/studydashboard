@@ -15,6 +15,7 @@ import { ictData } from "@/data/ictData";
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { ProgressTracker } from "@/components/ProgressTracker";
+import { SubjectProgressBar } from "@/components/SubjectProgressBar";
 import { cn } from "@/lib/utils";
 
 const subjects = [
@@ -74,6 +75,13 @@ export default function Tracker() {
           </div>
         </div>
 
+        {/* Subject Progress Bar */}
+        <SubjectProgressBar 
+          subjectId={activeSubject.data.id}
+          chapters={activeSubject.data.chapters}
+          subjectName={activeSubject.data.name}
+          color={activeSubject.color}
+        />
 
         {/* Chapter List */}
         <Suspense fallback={
