@@ -1,6 +1,8 @@
 // Weighted Progress System Configuration
 // Science subjects: CQ internal = 50%, but capped at 35% contribution
 // Math subjects: No scaling needed, totals 100%
+// English Reading: 7 activities per unit, normalized to 100%
+// English Writing: 4 activities per chapter, normalized to 100%
 
 export interface SectionConfig {
   max: number;
@@ -85,8 +87,74 @@ export const mathConfig: SubjectConfig = {
   },
 };
 
+// English 1st Paper - Reading Section
+// 7 activities per unit, marks distribution: MCQ(5), Open-ended(10), Info Transfer(10), 
+// Summarizing(5), Cloze with clues(10), Cloze without clues(10), Rearranging(10) = 60 total
+// Normalized to 100%
+export const englishReadingConfig: SubjectConfig = {
+  sections: {
+    core: {
+      max: 25,
+      activities: {
+        "MCQ": 8,          // 5/60 ≈ 8%
+        "Summarizing": 8,  // 5/60 ≈ 8%
+        "Rearranging": 9,  // Remaining from core
+      },
+    },
+    mcq: {
+      max: 25,
+      activities: {
+        "Open-ended": 17,  // 10/60 ≈ 17%
+        "Info Transfer": 8,
+      },
+    },
+    cq: {
+      max: 50,
+      activities: {
+        "Info Transfer": 9, // Split across sections
+        "Cloze (with clues)": 17,    // 10/60 ≈ 17%
+        "Cloze (without clues)": 17, // 10/60 ≈ 17%
+        "Rearranging": 7,  // Additional weight
+      },
+    },
+  },
+};
+
+// English 1st Paper - Writing Section
+// 4 activities per chapter: Practice, Summary, Final Draft, Revision
+export const englishWritingConfig: SubjectConfig = {
+  sections: {
+    core: {
+      max: 30,
+      activities: {
+        "Practice": 30,
+      },
+    },
+    mcq: {
+      max: 20,
+      activities: {
+        "Summary": 20,
+      },
+    },
+    cq: {
+      max: 50,
+      activities: {
+        "Final Draft": 35,
+        "Revision": 15,
+      },
+    },
+  },
+};
+
 // Get the appropriate config based on subject ID
 export const getSubjectConfig = (subjectId: string): SubjectConfig => {
   const mathSubjects = ["highermath", "highermath2nd"];
-  return mathSubjects.includes(subjectId) ? mathConfig : scienceConfig;
+  const englishReadingSubjects = ["english1st-reading"];
+  const englishWritingSubjects = ["english1st-writing"];
+  
+  if (mathSubjects.includes(subjectId)) return mathConfig;
+  if (englishReadingSubjects.includes(subjectId)) return englishReadingConfig;
+  if (englishWritingSubjects.includes(subjectId)) return englishWritingConfig;
+  
+  return scienceConfig;
 };
