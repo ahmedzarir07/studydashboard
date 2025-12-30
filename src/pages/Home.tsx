@@ -170,13 +170,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Monthly Summary */}
-        {user && (
-          <div className="mb-6">
-            <MonthlySummary />
-          </div>
-        )}
-
         {/* Overall Progress - Centered on mobile */}
         <div className="flex flex-col items-center gap-6 mb-8">
           <div className="bg-card/50 rounded-2xl p-6 md:p-8">
@@ -246,6 +239,13 @@ export default function Home() {
             Start Studying
           </Link>
         </div>
+
+        {/* Monthly Summary - At bottom */}
+        {user && (
+          <div className="mb-6">
+            <MonthlySummary />
+          </div>
+        )}
       </main>
 
       <BottomNav />
