@@ -50,36 +50,36 @@ export const scienceConfig: SubjectConfig = {
 };
 
 // Higher Math 1st & 2nd Paper
-// Core Study: 40% | MCQ: 25% | CQ/Problems: 30% | Final Layer: 5%
+// Core Study: 30% | MCQ: 20% | CQ/Problems: 40% | Final Layer: 10%
 export const mathConfig: SubjectConfig = {
   sections: {
     core: {
-      max: 40,
+      max: 30,
       activities: {
-        "Lecture": 20,
-        "Notes": 20,
+        "Lecture": 15,
+        "Notes": 15,
       },
     },
     mcq: {
-      max: 25,
+      max: 20,
       activities: {
         "MCQ Practice": 15,
-        "MCQ Summary": 10,
+        "MCQ Summary": 5,
       },
     },
     cq: {
-      max: 30,
+      max: 40,
       activities: {
-        "CQ Practice": 10,
-        "CQ Summary": 10,
-        "Book Problems": 10,
+        "CQ Practice": 15,
+        "CQ Summary": 5,
+        "Book Problems": 20,
       },
     },
     final: {
-      max: 5,
+      max: 10,
       activities: {
-        "Revision": 3,
-        "Exam": 2,
+        "Revision": 5,
+        "Exam": 5,
       },
     },
   },
