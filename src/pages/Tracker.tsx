@@ -11,7 +11,7 @@ import { higherMath2ndData } from "@/data/higherMath2ndData";
 import { biologyData } from "@/data/biologyData";
 import { biology2ndData } from "@/data/biology2ndData";
 import { ictData } from "@/data/ictData";
-import { MonthlySummary } from "@/components/MonthlySummary";
+
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { ProgressTracker } from "@/components/ProgressTracker";
@@ -74,12 +74,6 @@ export default function Tracker() {
           </div>
         </div>
 
-        {/* Monthly Summary - Collapsible on mobile */}
-        {user && (
-          <div className="mb-4">
-            <MonthlySummary />
-          </div>
-        )}
 
         {/* Chapter List */}
         <Suspense fallback={
