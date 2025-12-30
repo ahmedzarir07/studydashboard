@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, BookOpen, Download, Info, Shield } from "lucide-react";
+import { Home, BookOpen, Download, Info, Shield, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
@@ -8,8 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 const navItems = [
   { path: "/", icon: Home, label: "Home" },
   { path: "/tracker", icon: BookOpen, label: "Study" },
-  { path: "/downloads", icon: Download, label: "Downloads" },
-  { path: "/about", icon: Info, label: "About" },
+  { path: "/planning", icon: CalendarDays, label: "Plan" },
+  { path: "/downloads", icon: Download, label: "Files" },
 ];
 
 export function BottomNav() {

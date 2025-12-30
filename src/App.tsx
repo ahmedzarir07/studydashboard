@@ -10,8 +10,8 @@ import Downloads from "./pages/Downloads";
 import About from "./pages/About";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import MonthlyPlanning from "./pages/MonthlyPlanning";
 import NotFound from "./pages/NotFound";
-
 // Initialize React Query client
 const queryClient = new QueryClient();
 
@@ -25,6 +25,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/tracker" element={<Tracker />} />
+            <Route path="/planning" element={<MonthlyPlanning />} />
             <Route path="/downloads" element={<Downloads />} />
             <Route path="/about" element={<About />} />
             <Route path="/auth" element={<Auth />} />

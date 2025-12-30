@@ -80,6 +80,45 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_study_plans: {
+        Row: {
+          chapter: string
+          created_at: string
+          goals: string | null
+          id: string
+          month_year: string
+          notes: string | null
+          planned_activities: string[]
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chapter: string
+          created_at?: string
+          goals?: string | null
+          id?: string
+          month_year: string
+          notes?: string | null
+          planned_activities?: string[]
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chapter?: string
+          created_at?: string
+          goals?: string | null
+          id?: string
+          month_year?: string
+          notes?: string | null
+          planned_activities?: string[]
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
