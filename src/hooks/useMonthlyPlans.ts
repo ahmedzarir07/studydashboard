@@ -90,6 +90,22 @@ export const useMonthlyPlans = (monthYear?: string) => {
     fetchPlans();
   };
 
+  const movePlansToMonth = async (targetMonthYear: string) => {
+    if (!user || plans.length === 0) return;
+
+    // Update all plans for current month to target month
+    const { error } = await supabase
+      .from("monthly_study_plans")
+      .update({ month_year: targetMonthYear })
+      .eq("user_id", user.id)
+      .eq("month_year", currentMonth);
+
+    if (!error) {
+      fetchPlans();
+    }
+    return error;
+  };
+
   const getPlan = useCallback(
     (subject: string, chapter: string) => {
       return plans.find((p) => p.subject === subject && p.chapter === chapter);
@@ -109,6 +125,7 @@ export const useMonthlyPlans = (monthYear?: string) => {
     loading,
     savePlan,
     deletePlan,
+    movePlansToMonth,
     getPlan,
     getSubjectPlans,
     refetch: fetchPlans,

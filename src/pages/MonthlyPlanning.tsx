@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
-import { Download, Calendar, Loader2 } from "lucide-react";
+import { Download, Calendar, Loader2, ArrowRightLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useMonthlyPlans } from "@/hooks/useMonthlyPlans";
@@ -9,11 +9,13 @@ import { BottomNav } from "@/components/BottomNav";
 import { MonthSelector } from "@/components/MonthSelector";
 import { MonthlyPlanStats } from "@/components/MonthlyPlanStats";
 import { PlanningChapterCard } from "@/components/PlanningChapterCard";
+import { MoveMonthDialog } from "@/components/MoveMonthDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { generateMonthlyPlanPDF } from "@/lib/monthlyPlanPdfGenerator";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import { physicsData } from "@/data/physicsData";
 import { physics2ndData } from "@/data/physics2ndData";
@@ -44,9 +46,10 @@ export default function MonthlyPlanning() {
   const [activeSubjectIndex, setActiveSubjectIndex] = useState(0);
   const [studyRecords, setStudyRecords] = useState<Map<string, string[]>>(new Map());
   const [loadingRecords, setLoadingRecords] = useState(true);
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
 
   const monthYear = format(selectedMonth, "yyyy-MM");
-  const { plans, loading, savePlan, deletePlan, getPlan, refetch } = useMonthlyPlans(monthYear);
+  const { plans, loading, savePlan, deletePlan, movePlansToMonth, getPlan, refetch } = useMonthlyPlans(monthYear);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -113,6 +116,15 @@ export default function MonthlyPlanning() {
     );
   };
 
+  const handleMovePlans = async (targetMonthYear: string) => {
+    const error = await movePlansToMonth(targetMonthYear);
+    if (error) {
+      toast.error("Failed to move plans");
+    } else {
+      toast.success(`Moved ${plans.length} plans to ${format(new Date(targetMonthYear + "-01"), "MMMM yyyy")}`);
+    }
+  };
+
   const completedActivitiesMap = useMemo(() => {
     return studyRecords;
   }, [studyRecords]);
@@ -135,7 +147,18 @@ export default function MonthlyPlanning() {
         />
 
         {/* Download Button */}
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end gap-2 mt-4">
+          {plans.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setMoveDialogOpen(true)}
+              className="gap-2"
+            >
+              <ArrowRightLeft className="h-4 w-4" />
+              Move to Another Month
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -144,9 +167,18 @@ export default function MonthlyPlanning() {
             className="gap-2"
           >
             <Download className="h-4 w-4" />
-            Download Plan PDF
+            Download PDF
           </Button>
         </div>
+
+        {/* Move Month Dialog */}
+        <MoveMonthDialog
+          open={moveDialogOpen}
+          onOpenChange={setMoveDialogOpen}
+          currentMonth={selectedMonth}
+          plansCount={plans.length}
+          onMove={handleMovePlans}
+        />
 
         {/* Stats Overview */}
         <div className="mt-4">
