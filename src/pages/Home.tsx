@@ -14,6 +14,7 @@ import { biology2ndData } from "@/data/biology2ndData";
 import { ictData } from "@/data/ictData";
 import { english1stData } from "@/data/english1stData";
 import { english2ndData } from "@/data/english2ndData";
+import { bangla1stData } from "@/data/bangla1stData";
 import { useState, useEffect } from "react";
 import { MonthlySummary } from "@/components/MonthlySummary";
 import { MobileHeader } from "@/components/MobileHeader";
@@ -55,6 +56,7 @@ export default function Home() {
         { data: ictData, color: "hsl(199 89% 48%)", displayName: "ICT" },
         { data: english1stData, color: "hsl(340 82% 52%)", displayName: "English 1st" },
         { data: english2ndData, color: "hsl(280 70% 55%)", displayName: "English 2nd" },
+        { data: bangla1stData, color: "hsl(45 93% 47%)", displayName: "বাংলা ১ম" },
       ];
 
       const { data: records } = await supabase
@@ -126,6 +128,7 @@ export default function Home() {
       { data: ictData, displayName: "ICT" },
       { data: english1stData, displayName: "English 1st" },
       { data: english2ndData, displayName: "English 2nd" },
+      { data: bangla1stData, displayName: "বাংলা ১ম" },
     ];
 
     const subjectDetails = allSubjects.map(({ data, displayName }) => ({
