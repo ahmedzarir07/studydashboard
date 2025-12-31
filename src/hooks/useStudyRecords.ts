@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -58,36 +58,9 @@ export const useStudyRecords = (subjectId: string) => {
       if (error) throw error;
       return (data as StudyRecord[]) ?? [];
     },
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
   });
-
-  // Keep query fresh if the backend pushes changes (multi-tab / multi-device)
-  useEffect(() => {
-    if (!user || !subjectId) return;
-
-    const channel = supabase
-      .channel(`study_records_${user.id}_${subjectId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "study_records",
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const changed = (payload.new ?? payload.old) as Partial<StudyRecord> | undefined;
-          if (changed?.subject !== subjectId) return;
-          queryClient.invalidateQueries({ queryKey });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, subjectId, queryClient, queryKey]);
 
   const saveStatusMutation = useMutation({
     mutationFn: async ({ chapter, activity, status }: SaveStatusInput) => {
