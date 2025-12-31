@@ -28,6 +28,7 @@ import { biology2ndData } from "@/data/biology2ndData";
 import { ictData } from "@/data/ictData";
 import { english1stData } from "@/data/english1stData";
 import { english2ndData } from "@/data/english2ndData";
+import { bangla1stData } from "@/data/bangla1stData";
 
 const allSubjects = [
   { data: physicsData, label: "Phy 1" },
@@ -41,6 +42,7 @@ const allSubjects = [
   { data: ictData, label: "ICT" },
   { data: english1stData, label: "Eng 1" },
   { data: english2ndData, label: "Eng 2" },
+  { data: bangla1stData, label: "বাংলা ১" },
 ];
 
 export default function MonthlyPlanning() {
