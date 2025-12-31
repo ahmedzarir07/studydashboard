@@ -69,6 +69,13 @@ const PLANNABLE_ACTIVITIES = [
   "Theme",
   // Bangla 1st Paper - উপন্যাস
   "Chapter Reading",
+  // Bangla 2nd Paper - ব্যাকরণ
+  "Rule Notes",
+  // Bangla 2nd Paper - নির্মিত
+  "Format Templates",
+  // Bangla 2nd Paper - প্রবন্ধ
+  "Outline",
+  "Model Essays",
 ];
 
 export function PlanningChapterCard({

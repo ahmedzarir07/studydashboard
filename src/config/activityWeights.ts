@@ -409,5 +409,101 @@ export const getSubjectConfig = (subjectId: string, chapterId?: number): Subject
     return bangla1stGadyaConfig; // গদ্য (01-12)
   }
   
+  // Bangla 2nd Paper has 3 different configs based on chapter
+  if (subjectId === "bangla2nd") {
+    if (chapterId && chapterId === 12) {
+      return bangla2ndEssayConfig; // প্রবন্ধ-নিবন্ধ (12)
+    } else if (chapterId && chapterId >= 7) {
+      return bangla2ndWrittenConfig; // নির্মিত অংশ (07-11)
+    }
+    return bangla2ndGrammarConfig; // ব্যাকরণ অংশ (01-06)
+  }
+  
   return scienceConfig;
+};
+
+// Bangla 2nd Paper - 3 Groups with different activity structures
+// Group A (01-06): ব্যাকরণ - Lecture 25%, Rule Notes 15%, Practice 30%, MCQ 10%, Error Log 10%, Revision 10%
+// Group B (07-11): নির্মিত - Lecture 25%, Format Templates 15%, Practice Drafts 30%, Model Answers 10%, Final Draft 10%, Revision 10%
+// Group C (12): প্রবন্ধ - Lecture 20%, Outline 20%, Practice Writing 30%, Model Essays 10%, Final Draft 10%, Revision 10%
+
+// Group A: ব্যাকরণ অংশ (01-06) - Grammar
+export const bangla2ndGrammarConfig: SubjectConfig = {
+  sections: {
+    core: {
+      max: 40,
+      activities: {
+        "Lecture": 25,
+        "Rule Notes": 15,
+      },
+    },
+    mcq: {
+      max: 40,
+      activities: {
+        "Practice": 30,
+        "MCQ Practice": 10,
+      },
+    },
+    cq: {
+      max: 20,
+      activities: {
+        "Error Log": 10,
+        "Revision": 10,
+      },
+    },
+  },
+};
+
+// Group B: নির্মিত অংশ (07-11) - Written Skills
+export const bangla2ndWrittenConfig: SubjectConfig = {
+  sections: {
+    core: {
+      max: 40,
+      activities: {
+        "Lecture": 25,
+        "Format Templates": 15,
+      },
+    },
+    mcq: {
+      max: 40,
+      activities: {
+        "Practice Drafts": 30,
+        "Model Answers": 10,
+      },
+    },
+    cq: {
+      max: 20,
+      activities: {
+        "Final Draft": 10,
+        "Revision": 10,
+      },
+    },
+  },
+};
+
+// Group C: প্রবন্ধ-নিবন্ধ (12) - Essay
+export const bangla2ndEssayConfig: SubjectConfig = {
+  sections: {
+    core: {
+      max: 40,
+      activities: {
+        "Lecture": 20,
+        "Outline": 20,
+      },
+    },
+    mcq: {
+      max: 40,
+      activities: {
+        "Practice Writing": 30,
+        "Model Essays": 10,
+      },
+    },
+    cq: {
+      max: 20,
+      activities: {
+        "Final Draft": 10,
+        "Revision": 10,
+      },
+    },
+  },
 };

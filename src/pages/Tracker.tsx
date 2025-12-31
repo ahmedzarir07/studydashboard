@@ -14,6 +14,7 @@ import { ictData } from "@/data/ictData";
 import { english1stData } from "@/data/english1stData";
 import { english2ndData } from "@/data/english2ndData";
 import { bangla1stData } from "@/data/bangla1stData";
+import { bangla2ndData } from "@/data/bangla2ndData";
 
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
@@ -34,6 +35,7 @@ const subjects = [
   { data: english1stData, icon: FileText, label: "Eng 1", color: "hsl(340 82% 52%)" },
   { data: english2ndData, icon: Languages, label: "Eng 2", color: "hsl(280 70% 55%)" },
   { data: bangla1stData, icon: BookMarked, label: "বাংলা ১", color: "hsl(45 93% 47%)" },
+  { data: bangla2ndData, icon: BookMarked, label: "বাংলা ২", color: "hsl(35 90% 50%)" },
 ];
 
 export default function Tracker() {

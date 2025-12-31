@@ -20,6 +20,7 @@ import { ictData } from "@/data/ictData";
 import { english1stData } from "@/data/english1stData";
 import { english2ndData } from "@/data/english2ndData";
 import { bangla1stData } from "@/data/bangla1stData";
+import { bangla2ndData } from "@/data/bangla2ndData";
 
 const allSubjects = [
   { data: physicsData, label: "Physics 1st", short: "Phy 1", color: "hsl(217 91% 60%)" },
@@ -34,6 +35,7 @@ const allSubjects = [
   { data: english1stData, label: "English 1st", short: "Eng 1", color: "hsl(340 82% 52%)" },
   { data: english2ndData, label: "English 2nd", short: "Eng 2", color: "hsl(280 70% 55%)" },
   { data: bangla1stData, label: "বাংলা ১ম পত্র", short: "বাংলা ১", color: "hsl(45 93% 47%)" },
+  { data: bangla2ndData, label: "বাংলা ২য় পত্র", short: "বাংলা ২", color: "hsl(35 90% 50%)" },
 ];
 
 interface SubjectProgress {
