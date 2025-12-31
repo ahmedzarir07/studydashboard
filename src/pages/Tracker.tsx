@@ -57,32 +57,32 @@ export default function Tracker() {
     <div className="h-screen flex flex-col bg-background">
       <MobileHeader title={activeSubject.data.name} />
 
-      <main className="flex-1 overflow-y-auto px-4 py-4 pb-24 md:pb-8">
+      <main className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-24 md:pb-8">
         <div className="max-w-5xl mx-auto">
-          {/* Subject Pills - Horizontal scroll on mobile */}
-          <div className="mb-4 -mx-4 px-4 md:mx-0 md:px-0">
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth-touch pb-2">
-              {subjects.map((subject, index) => {
-                const isActive = index === activeIndex;
-                const Icon = subject.icon;
-                return (
-                  <button
-                    key={subject.data.id}
-                    onClick={() => setActiveIndex(index)}
-                    className={cn(
-                      "flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all min-h-[40px]",
-                      isActive 
-                        ? "bg-primary text-primary-foreground" 
-                        : "bg-card/60 text-muted-foreground active:bg-card"
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{subject.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+        {/* Subject Pills - Horizontal scroll */}
+        <div className="mb-4 -mx-4 px-4 md:mx-0 md:px-0">
+          <div className="flex gap-2 overflow-x-auto scroll-smooth-touch pb-2">
+            {subjects.map((subject, index) => {
+              const isActive = index === activeIndex;
+              const Icon = subject.icon;
+              return (
+                <button
+                  key={subject.data.id}
+                  onClick={() => setActiveIndex(index)}
+                  className={cn(
+                    "flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all min-h-[40px]",
+                    isActive 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-card/60 text-muted-foreground active:bg-card"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{subject.label}</span>
+                </button>
+              );
+            })}
           </div>
+        </div>
 
           {/* Subject Progress Bar */}
           <SubjectProgressBar 

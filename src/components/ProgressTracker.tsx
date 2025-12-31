@@ -271,75 +271,88 @@ export const ProgressTracker = ({ initialChapters, subjectId }: ProgressTrackerP
                 )}
               >
                 {/* Chapter Header */}
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center gap-3 p-4 min-h-[64px]">
-                    {/* Complete checkbox */}
-                    <button
-                      className="flex-shrink-0 p-1 -m-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleComplete(chapter.name);
-                      }}
-                    >
-                      {completed ? (
-                        <CheckSquare className="h-6 w-6 text-success" />
-                      ) : (
-                        <Square className="h-6 w-6 text-muted-foreground" />
-                      )}
-                    </button>
-                    
-                    {/* Chapter info */}
-                    <div className="flex-1 min-w-0 text-left">
-                      <h3 className={cn(
-                        "font-medium text-foreground truncate text-base",
-                        completed && "line-through text-muted-foreground"
-                      )}>
-                        {chapter.name}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex-1 max-w-[100px] h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className={cn("h-full transition-all", progressColor)}
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                        <span className={cn(
-                          "text-sm font-medium",
-                          percentage >= 100 ? "text-emerald-500" :
-                          percentage >= 70 ? "text-green-500" :
-                          percentage >= 40 ? "text-yellow-500" :
-                          "text-red-500"
+                <CollapsibleTrigger asChild>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    className="w-full"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleChapter(chapter.name);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center gap-3 p-4 min-h-[64px] cursor-pointer">
+                      {/* Complete checkbox */}
+                      <button
+                        type="button"
+                        className="flex-shrink-0 p-1 -m-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleComplete(chapter.name);
+                        }}
+                      >
+                        {completed ? (
+                          <CheckSquare className="h-6 w-6 text-success" />
+                        ) : (
+                          <Square className="h-6 w-6 text-muted-foreground" />
+                        )}
+                      </button>
+                      
+                      {/* Chapter info */}
+                      <div className="flex-1 min-w-0 text-left">
+                        <h3 className={cn(
+                          "font-medium text-foreground truncate text-base",
+                          completed && "line-through text-muted-foreground"
                         )}>
-                          {percentage}%
-                        </span>
-                        {isExamReady && percentage < 100 && (
-                          <Badge variant="outline" className="text-xs bg-green-500/10 text-green-500 border-green-500/30">
-                            Ready
-                          </Badge>
+                          {chapter.name}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex-1 max-w-[100px] h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={cn("h-full transition-all", progressColor)}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          <span className={cn(
+                            "text-sm font-medium",
+                            percentage >= 100 ? "text-emerald-500" :
+                            percentage >= 70 ? "text-green-500" :
+                            percentage >= 40 ? "text-yellow-500" :
+                            "text-red-500"
+                          )}>
+                            {percentage}%
+                          </span>
+                          {isExamReady && percentage < 100 && (
+                            <Badge variant="outline" className="text-xs bg-green-500/10 text-green-500 border-green-500/30">
+                              Ready
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Resource badge */}
+                      {resource && (
+                        <a
+                          href={resource.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-shrink-0 p-2 -m-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <ExternalLink className="h-5 w-5 text-accent" />
+                        </a>
+                      )}
+                      
+                      {/* Expand icon */}
+                      <div className="flex-shrink-0">
+                        {isExpanded ? (
+                          <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-muted-foreground" />
                         )}
                       </div>
-                    </div>
-
-                    {/* Resource badge */}
-                    {resource && (
-                      <a
-                        href={resource.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-shrink-0 p-2 -m-2"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <ExternalLink className="h-5 w-5 text-accent" />
-                      </a>
-                    )}
-                    
-                    {/* Expand icon */}
-                    <div className="flex-shrink-0">
-                      {isExpanded ? (
-                        <ChevronUp className="h-5 w-5 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                      )}
                     </div>
                   </div>
                 </CollapsibleTrigger>
