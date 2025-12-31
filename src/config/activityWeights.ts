@@ -112,7 +112,7 @@ export const english1stReadingConfig: SubjectConfig = {
     cq: {
       max: 20,
       activities: {
-        "Notes": 10,
+        "Vocabulary": 10,
         "Revision": 10,
       },
     },

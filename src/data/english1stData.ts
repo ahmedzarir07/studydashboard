@@ -6,7 +6,7 @@ const READING_UNIT_ACTIVITIES = [
   "MCQ Practice",
   "SQ",
   "Info Transfer",
-  "Notes",
+  "Vocabulary",
   "Revision",
 ];
 
