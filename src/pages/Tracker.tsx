@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Atom, BookOpen, Calculator, Dna, Monitor, Loader2, FileText, Languages } from "lucide-react";
+import { Atom, BookOpen, Calculator, Dna, Monitor, Loader2, FileText, Languages, BookMarked } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { physicsData } from "@/data/physicsData";
 import { physics2ndData } from "@/data/physics2ndData";
@@ -13,6 +13,7 @@ import { biology2ndData } from "@/data/biology2ndData";
 import { ictData } from "@/data/ictData";
 import { english1stData } from "@/data/english1stData";
 import { english2ndData } from "@/data/english2ndData";
+import { bangla1stData } from "@/data/bangla1stData";
 
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
@@ -32,6 +33,7 @@ const subjects = [
   { data: ictData, icon: Monitor, label: "ICT", color: "hsl(199 89% 48%)" },
   { data: english1stData, icon: FileText, label: "Eng 1", color: "hsl(340 82% 52%)" },
   { data: english2ndData, icon: Languages, label: "Eng 2", color: "hsl(280 70% 55%)" },
+  { data: bangla1stData, icon: BookMarked, label: "বাংলা ১", color: "hsl(45 93% 47%)" },
 ];
 
 export default function Tracker() {

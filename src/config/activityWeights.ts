@@ -259,6 +259,118 @@ export const english2ndCreativeConfig: SubjectConfig = {
   },
 };
 
+// Bangla 1st Paper - 4 Groups with different activity structures
+// Group A (01-12): গদ্য - Lecture 25%, Text Reading 15%, MCQ 15%, CQ 20%, Notes 10%, Revision 15%
+// Group B (13-24): কবিতা - Lecture 30%, Poem Reading 15%, MCQ 15%, CQ 20%, Theme 10%, Revision 10%
+// Group C (25): নাটক - Lecture 30%, Text Reading 15%, MCQ 15%, CQ 25%, Revision 15%
+// Group D (26): উপন্যাস - Lecture 30%, Chapter Reading 15%, MCQ 15%, CQ 25%, Revision 15%
+
+// Group A: গদ্য (01-12) - Prose
+export const bangla1stGadyaConfig: SubjectConfig = {
+  sections: {
+    core: {
+      max: 40,
+      activities: {
+        "Lecture": 25,
+        "Text Reading": 15,
+      },
+    },
+    mcq: {
+      max: 35,
+      activities: {
+        "MCQ Practice": 15,
+        "CQ Practice": 20,
+      },
+    },
+    cq: {
+      max: 25,
+      activities: {
+        "Notes": 10,
+        "Revision": 15,
+      },
+    },
+  },
+};
+
+// Group B: কবিতা (13-24) - Poetry
+export const bangla1stKobitaConfig: SubjectConfig = {
+  sections: {
+    core: {
+      max: 45,
+      activities: {
+        "Lecture": 30,
+        "Poem Reading": 15,
+      },
+    },
+    mcq: {
+      max: 35,
+      activities: {
+        "MCQ Practice": 15,
+        "CQ Practice": 20,
+      },
+    },
+    cq: {
+      max: 20,
+      activities: {
+        "Theme": 10,
+        "Revision": 10,
+      },
+    },
+  },
+};
+
+// Group C: নাটক (25) - Drama
+export const bangla1stNatokConfig: SubjectConfig = {
+  sections: {
+    core: {
+      max: 45,
+      activities: {
+        "Lecture": 30,
+        "Text Reading": 15,
+      },
+    },
+    mcq: {
+      max: 40,
+      activities: {
+        "MCQ Practice": 15,
+        "CQ Practice": 25,
+      },
+    },
+    cq: {
+      max: 15,
+      activities: {
+        "Revision": 15,
+      },
+    },
+  },
+};
+
+// Group D: উপন্যাস (26) - Novel
+export const bangla1stUponnashConfig: SubjectConfig = {
+  sections: {
+    core: {
+      max: 45,
+      activities: {
+        "Lecture": 30,
+        "Chapter Reading": 15,
+      },
+    },
+    mcq: {
+      max: 40,
+      activities: {
+        "MCQ Practice": 15,
+        "CQ Practice": 25,
+      },
+    },
+    cq: {
+      max: 15,
+      activities: {
+        "Revision": 15,
+      },
+    },
+  },
+};
+
 // Get the appropriate config based on subject ID and chapter
 export const getSubjectConfig = (subjectId: string, chapterId?: number): SubjectConfig => {
   const mathSubjects = ["highermath", "highermath2nd"];
@@ -283,6 +395,18 @@ export const getSubjectConfig = (subjectId: string, chapterId?: number): Subject
       return english2ndFunctionalConfig; // Functional Writing (13-14)
     }
     return english2ndGrammarConfig; // Grammar Core (01-12)
+  }
+  
+  // Bangla 1st Paper has 4 different configs based on chapter
+  if (subjectId === "bangla1st") {
+    if (chapterId && chapterId === 26) {
+      return bangla1stUponnashConfig; // উপন্যাস (26)
+    } else if (chapterId && chapterId === 25) {
+      return bangla1stNatokConfig; // নাটক (25)
+    } else if (chapterId && chapterId >= 13) {
+      return bangla1stKobitaConfig; // কবিতা (13-24)
+    }
+    return bangla1stGadyaConfig; // গদ্য (01-12)
   }
   
   return scienceConfig;
