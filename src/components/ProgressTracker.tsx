@@ -143,7 +143,7 @@ export const ProgressTracker = ({ initialChapters, subjectId }: ProgressTrackerP
 
   // Weighted progress calculation with section caps
   const getChapterProgress = (chapter: Chapter) => {
-    const config = getSubjectConfig(subjectId);
+    const config = getSubjectConfig(subjectId, chapter.id);
     
     // Track progress for each section
     const sectionProgress: Record<string, number> = {
