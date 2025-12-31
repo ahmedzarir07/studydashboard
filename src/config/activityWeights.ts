@@ -423,7 +423,7 @@ export const getSubjectConfig = (subjectId: string, chapterId?: number): Subject
 };
 
 // Bangla 2nd Paper - 3 Groups with different activity structures
-// Group A (01-06): ব্যাকরণ - Lecture 25%, Rule Notes 15%, Practice 30%, MCQ 10%, Error Log 10%, Revision 10%
+// Group A (01-06): ব্যাকরণ - Lecture 25%, Rule Notes 15%, Practice 40%, Error Log 10%, Revision 10%
 // Group B (07-11): নির্মিত - Lecture 25%, Format Templates 15%, Practice Drafts 30%, Model Answers 10%, Final Draft 10%, Revision 10%
 // Group C (12): প্রবন্ধ - Lecture 20%, Outline 20%, Practice Writing 30%, Model Essays 10%, Final Draft 10%, Revision 10%
 
@@ -440,8 +440,7 @@ export const bangla2ndGrammarConfig: SubjectConfig = {
     mcq: {
       max: 40,
       activities: {
-        "Practice": 30,
-        "MCQ Practice": 10,
+        "Practice": 40,
       },
     },
     cq: {
