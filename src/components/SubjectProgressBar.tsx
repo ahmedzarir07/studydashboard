@@ -26,11 +26,11 @@ export const SubjectProgressBar = ({
   const overallProgress = useMemo(() => {
     if (!user || loading) return 0;
 
-    const config = getSubjectConfig(subjectId);
     let totalProgress = 0;
     let chapterCount = 0;
 
     chapters.forEach((chapter) => {
+      const config = getSubjectConfig(subjectId, chapter.id);
       const sectionProgress: Record<string, number> = {
         core: 0,
         mcq: 0,
