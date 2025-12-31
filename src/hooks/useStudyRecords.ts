@@ -146,9 +146,6 @@ export const useStudyRecords = (subjectId: string) => {
 
       queryClient.setQueryData(queryKey, merged);
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
-    },
   });
 
   const saveClassNumberMutation = useMutation({
@@ -232,9 +229,6 @@ export const useStudyRecords = (subjectId: string) => {
       }
 
       queryClient.setQueryData(queryKey, merged);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
     },
   });
 
