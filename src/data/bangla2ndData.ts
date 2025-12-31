@@ -5,7 +5,6 @@ const GRAMMAR_ACTIVITIES = [
   "Lecture",
   "Rule Notes",
   "Practice",
-  "MCQ Practice",
   "Error Log",
   "Revision",
 ];
