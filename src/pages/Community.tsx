@@ -1,4 +1,4 @@
-import { usePublicProgress } from "@/hooks/usePublicProgress";
+import { usePublicProgress, AggregatedUserProgress } from "@/hooks/usePublicProgress";
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Card } from "@/components/ui/card";
@@ -16,10 +16,14 @@ import {
   ChevronRight,
   BookOpen,
   Trophy,
-  Sparkles
+  Sparkles,
+  Mail,
+  Clock,
+  Shield
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const subjectLabels: Record<string, string> = {
   physics1: "Physics 1st",
@@ -38,7 +42,7 @@ const subjectLabels: Record<string, string> = {
 };
 
 export default function Community() {
-  const { aggregatedProgress, loading, error } = usePublicProgress();
+  const { aggregatedProgress, isAdmin, loading, error } = usePublicProgress();
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 
   const toggleUser = (profileId: string) => {
@@ -79,12 +83,18 @@ export default function Community() {
           <div className="p-2 rounded-xl bg-primary/10">
             <Users className="h-6 w-6 text-primary" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold text-foreground">Community Progress</h1>
             <p className="text-sm text-muted-foreground">
               See how other students are progressing
             </p>
           </div>
+          {isAdmin && (
+            <Badge variant="outline" className="flex items-center gap-1 border-yellow-500 text-yellow-500">
+              <Shield className="h-3 w-3" />
+              Admin View
+            </Badge>
+          )}
         </div>
 
         {error && (
@@ -136,9 +146,15 @@ export default function Community() {
                         <p className="font-medium text-foreground truncate">
                           {user.displayName}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          {totalCompleted} activities completed
-                        </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{totalCompleted} activities completed</span>
+                          {isAdmin && user.email && (
+                            <span className="flex items-center gap-1 text-primary">
+                              <Mail className="h-3 w-3" />
+                              {user.email}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <Badge variant="secondary">{overallProgress}%</Badge>
                     </div>
@@ -170,9 +186,21 @@ export default function Community() {
                           <p className="font-medium text-foreground truncate">
                             {user.displayName}
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            {subjectKeys.length} subjects
-                          </p>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                            <span>{subjectKeys.length} subjects</span>
+                            {isAdmin && user.email && (
+                              <span className="flex items-center gap-1 text-primary">
+                                <Mail className="h-3 w-3" />
+                                {user.email}
+                              </span>
+                            )}
+                            {isAdmin && user.lastActiveAt && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                Last active: {format(new Date(user.lastActiveAt), "MMM d, yyyy")}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <Progress 
