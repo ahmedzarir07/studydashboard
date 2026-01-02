@@ -219,6 +219,7 @@ export type Database = {
           chapter: string | null
           completed: boolean | null
           completed_at: string | null
+          display_name: string | null
           id: string | null
           profile_id: string | null
           subject: string | null
@@ -230,6 +231,7 @@ export type Database = {
         Row: {
           activity: string | null
           chapter: string | null
+          display_name: string | null
           id: string | null
           profile_id: string | null
           status: string | null
