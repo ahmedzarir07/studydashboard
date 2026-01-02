@@ -25,6 +25,7 @@ interface PublicChapterProgress {
 }
 
 interface UserProfile {
+  id: string;
   user_id: string;
   email: string | null;
   display_name: string | null;
@@ -83,7 +84,7 @@ export const usePublicProgress = () => {
         // Fetch all profiles with emails (visible to everyone)
         const { data: profilesData } = await supabase
           .from("profiles")
-          .select("user_id, email, display_name, last_active_at, created_at");
+          .select("id, user_id, email, display_name, last_active_at, created_at");
         
         setUserProfiles(profilesData || []);
         
@@ -126,19 +127,22 @@ export const usePublicProgress = () => {
   const aggregatedProgress: AggregatedUserProgress[] = (() => {
     const userMap = new Map<string, AggregatedUserProgress>();
 
-    // Create a lookup for admin data
+    // Create a lookup for profile data (support both profile.id and profile.user_id keys)
     const profileLookup = new Map<string, UserProfile>();
     userProfiles.forEach((profile) => {
+      profileLookup.set(profile.id, profile);
       profileLookup.set(profile.user_id, profile);
     });
 
     // Process study records
     studyProgress.forEach((record) => {
+      if (!record.profile_id) return;
+
       if (!userMap.has(record.profile_id)) {
         const profile = profileLookup.get(record.profile_id);
         userMap.set(record.profile_id, {
           profileId: record.profile_id,
-          displayName: record.display_name || "Anonymous Student",
+          displayName: profile?.display_name || record.display_name || profile?.email || "Anonymous Student",
           email: profile?.email,
           lastActiveAt: profile?.last_active_at,
           createdAt: profile?.created_at,
@@ -185,11 +189,13 @@ export const usePublicProgress = () => {
 
     // Process chapter completions
     chapterProgress.forEach((record) => {
+      if (!record.profile_id) return;
+
       if (!userMap.has(record.profile_id)) {
         const profile = profileLookup.get(record.profile_id);
         userMap.set(record.profile_id, {
           profileId: record.profile_id,
-          displayName: record.display_name || "Anonymous Student",
+          displayName: profile?.display_name || record.display_name || profile?.email || "Anonymous Student",
           email: profile?.email,
           lastActiveAt: profile?.last_active_at,
           createdAt: profile?.created_at,
