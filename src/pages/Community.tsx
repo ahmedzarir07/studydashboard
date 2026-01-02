@@ -216,7 +216,7 @@ export default function Community() {
                 <h2 className="font-semibold text-foreground">Top Students</h2>
               </div>
               <div className="space-y-3">
-                {aggregatedProgress.slice(0, 3).map((user, index) => {
+                {filteredAndSortedProgress.slice(0, 3).map((user, index) => {
                   const overallProgress = getOverallProgress(user.subjects);
                   const totalCompleted = Object.values(user.subjects).reduce(
                     (sum, s) => sum + s.completedActivities, 0
