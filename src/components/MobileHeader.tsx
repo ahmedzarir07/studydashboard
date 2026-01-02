@@ -39,6 +39,9 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
           <Link to="/overview">
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">Overview</Button>
           </Link>
+          <Link to="/community">
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">Community</Button>
+          </Link>
           <Link to="/planning">
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">Planning</Button>
           </Link>
