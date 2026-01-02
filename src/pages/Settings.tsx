@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+
 import { Loader2, Settings as SettingsIcon, Globe, User, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
@@ -112,30 +112,17 @@ export default function Settings() {
             </div>
           </Card>
 
-          {/* Privacy Section */}
+          {/* Privacy Info */}
           <Card className="p-6">
             <div className="flex items-center gap-3 mb-4">
               <Globe className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold text-foreground">Privacy</h2>
+              <h2 className="text-lg font-semibold text-foreground">Community</h2>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label htmlFor="public-toggle" className="text-base font-medium">
-                  Share my progress publicly
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Allow others to see your study progress on the Community page.
-                  Your email will never be shared.
-                </p>
-              </div>
-              <Switch
-                id="public-toggle"
-                checked={settings.isPublic}
-                onCheckedChange={togglePublicProgress}
-                disabled={saving}
-              />
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Your study progress is shared on the Community page so you can see how you compare with other students.
+              Your email is never shared — only your display name appears publicly.
+            </p>
           </Card>
 
           {/* Sign Out */}
