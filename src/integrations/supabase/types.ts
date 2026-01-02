@@ -21,6 +21,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           id: string
+          is_public: boolean
           subject: string
           updated_at: string
           user_id: string
@@ -31,6 +32,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           id?: string
+          is_public?: boolean
           subject: string
           updated_at?: string
           user_id: string
@@ -41,6 +43,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           id?: string
+          is_public?: boolean
           subject?: string
           updated_at?: string
           user_id?: string
@@ -122,6 +125,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          display_name: string | null
           email: string | null
           id: string
           last_active_at: string | null
@@ -129,6 +133,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          display_name?: string | null
           email?: string | null
           id?: string
           last_active_at?: string | null
@@ -136,6 +141,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          display_name?: string | null
           email?: string | null
           id?: string
           last_active_at?: string | null
@@ -150,6 +156,7 @@ export type Database = {
           class_number: number | null
           created_at: string
           id: string
+          is_public: boolean
           status: string | null
           subject: string
           type: string
@@ -162,6 +169,7 @@ export type Database = {
           class_number?: number | null
           created_at?: string
           id?: string
+          is_public?: boolean
           status?: string | null
           subject: string
           type: string
@@ -174,6 +182,7 @@ export type Database = {
           class_number?: number | null
           created_at?: string
           id?: string
+          is_public?: boolean
           status?: string | null
           subject?: string
           type?: string
@@ -205,7 +214,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_chapter_progress: {
+        Row: {
+          chapter: string | null
+          completed: boolean | null
+          completed_at: string | null
+          id: string | null
+          profile_id: string | null
+          subject: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
+      public_study_progress: {
+        Row: {
+          activity: string | null
+          chapter: string | null
+          id: string | null
+          profile_id: string | null
+          status: string | null
+          subject: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
