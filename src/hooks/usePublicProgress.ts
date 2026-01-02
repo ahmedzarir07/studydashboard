@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PublicStudyProgress {
   id: string;
@@ -23,9 +24,20 @@ interface PublicChapterProgress {
   updated_at: string;
 }
 
-interface AggregatedUserProgress {
+interface UserProfile {
+  user_id: string;
+  email: string | null;
+  display_name: string | null;
+  last_active_at: string | null;
+  created_at: string;
+}
+
+export interface AggregatedUserProgress {
   profileId: string;
   displayName: string;
+  email?: string | null;
+  lastActiveAt?: string | null;
+  createdAt?: string;
   subjects: {
     [subjectId: string]: {
       completedActivities: number;
@@ -44,15 +56,39 @@ interface AggregatedUserProgress {
 }
 
 export const usePublicProgress = () => {
+  const { user } = useAuth();
   const [studyProgress, setStudyProgress] = useState<PublicStudyProgress[]>([]);
   const [chapterProgress, setChapterProgress] = useState<PublicChapterProgress[]>([]);
+  const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchPublicProgress = async () => {
+    const checkAdminAndFetch = async () => {
       try {
         setLoading(true);
+        
+        // Check if current user is admin
+        if (user) {
+          const { data: roleData } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          
+          const adminStatus = roleData?.role === "admin";
+          setIsAdmin(adminStatus);
+
+          // If admin, fetch all profiles with emails
+          if (adminStatus) {
+            const { data: profilesData } = await supabase
+              .from("profiles")
+              .select("user_id, email, display_name, last_active_at, created_at");
+            
+            setUserProfiles(profilesData || []);
+          }
+        }
         
         // Fetch public study progress from view
         const { data: studyData, error: studyError } = await supabase
@@ -86,19 +122,29 @@ export const usePublicProgress = () => {
       }
     };
 
-    fetchPublicProgress();
-  }, []);
+    checkAdminAndFetch();
+  }, [user]);
 
   // Aggregate progress by user
   const aggregatedProgress: AggregatedUserProgress[] = (() => {
     const userMap = new Map<string, AggregatedUserProgress>();
 
+    // Create a lookup for admin data
+    const profileLookup = new Map<string, UserProfile>();
+    userProfiles.forEach((profile) => {
+      profileLookup.set(profile.user_id, profile);
+    });
+
     // Process study records
     studyProgress.forEach((record) => {
       if (!userMap.has(record.profile_id)) {
+        const profile = profileLookup.get(record.profile_id);
         userMap.set(record.profile_id, {
           profileId: record.profile_id,
           displayName: record.display_name || "Anonymous Student",
+          email: isAdmin ? profile?.email : undefined,
+          lastActiveAt: isAdmin ? profile?.last_active_at : undefined,
+          createdAt: isAdmin ? profile?.created_at : undefined,
           subjects: {},
           lastUpdated: record.updated_at,
         });
@@ -143,9 +189,13 @@ export const usePublicProgress = () => {
     // Process chapter completions
     chapterProgress.forEach((record) => {
       if (!userMap.has(record.profile_id)) {
+        const profile = profileLookup.get(record.profile_id);
         userMap.set(record.profile_id, {
           profileId: record.profile_id,
           displayName: record.display_name || "Anonymous Student",
+          email: isAdmin ? profile?.email : undefined,
+          lastActiveAt: isAdmin ? profile?.last_active_at : undefined,
+          createdAt: isAdmin ? profile?.created_at : undefined,
           subjects: {},
           lastUpdated: record.updated_at,
         });
@@ -190,6 +240,7 @@ export const usePublicProgress = () => {
     studyProgress,
     chapterProgress,
     aggregatedProgress,
+    isAdmin,
     loading,
     error,
   };
