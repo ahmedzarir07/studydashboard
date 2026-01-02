@@ -9,6 +9,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Loader2, 
   Users, 
@@ -19,7 +26,9 @@ import {
   Sparkles,
   Mail,
   Clock,
-  Shield
+  Shield,
+  Filter,
+  ArrowUpDown
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -41,9 +50,13 @@ const subjectLabels: Record<string, string> = {
   bangla2: "Bangla 2nd",
 };
 
+type SortOption = "activities" | "lastActive" | "registered" | "progress";
+
 export default function Community() {
   const { aggregatedProgress, isAdmin, loading, error } = usePublicProgress();
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<SortOption>("activities");
+  const [filterSubject, setFilterSubject] = useState<string>("all");
 
   const toggleUser = (profileId: string) => {
     const newExpanded = new Set(expandedUsers);
@@ -72,6 +85,39 @@ export default function Community() {
     });
     return total > 0 ? Math.round((completed / total) * 100) : 0;
   };
+
+  // Get all unique subjects across all users
+  const allSubjects = Array.from(
+    new Set(aggregatedProgress.flatMap((user) => Object.keys(user.subjects)))
+  );
+
+  // Filter and sort users
+  const filteredAndSortedProgress = [...aggregatedProgress]
+    .filter((user) => {
+      if (filterSubject === "all") return true;
+      return Object.keys(user.subjects).includes(filterSubject);
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "lastActive":
+          if (!a.lastActiveAt && !b.lastActiveAt) return 0;
+          if (!a.lastActiveAt) return 1;
+          if (!b.lastActiveAt) return -1;
+          return new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime();
+        case "registered":
+          if (!a.createdAt && !b.createdAt) return 0;
+          if (!a.createdAt) return 1;
+          if (!b.createdAt) return -1;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case "progress":
+          return getOverallProgress(b.subjects) - getOverallProgress(a.subjects);
+        case "activities":
+        default:
+          const aTotal = Object.values(a.subjects).reduce((sum, s) => sum + s.completedActivities, 0);
+          const bTotal = Object.values(b.subjects).reduce((sum, s) => sum + s.completedActivities, 0);
+          return bTotal - aTotal;
+      }
+    });
 
   return (
     <div className="min-h-screen bg-background flex flex-col pb-20 md:pb-0">
@@ -116,6 +162,53 @@ export default function Community() {
           </Card>
         ) : (
           <div className="space-y-4">
+            {/* Admin Filters */}
+            {isAdmin && (
+              <Card className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Filter className="h-4 w-4 text-primary" />
+                  <h3 className="font-medium text-foreground">Admin Filters</h3>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <div className="flex-1 min-w-[150px]">
+                    <label className="text-xs text-muted-foreground mb-1 block">Sort by</label>
+                    <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                      <SelectTrigger className="w-full">
+                        <ArrowUpDown className="h-4 w-4 mr-2" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="activities">Most Activities</SelectItem>
+                        <SelectItem value="progress">Highest Progress %</SelectItem>
+                        <SelectItem value="lastActive">Last Active</SelectItem>
+                        <SelectItem value="registered">Recently Registered</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1 min-w-[150px]">
+                    <label className="text-xs text-muted-foreground mb-1 block">Filter by Subject</label>
+                    <Select value={filterSubject} onValueChange={setFilterSubject}>
+                      <SelectTrigger className="w-full">
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Subjects</SelectItem>
+                        {allSubjects.map((subjectId) => (
+                          <SelectItem key={subjectId} value={subjectId}>
+                            {subjectLabels[subjectId] || subjectId}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Showing {filteredAndSortedProgress.length} of {aggregatedProgress.length} students
+                </p>
+              </Card>
+            )}
+
             {/* Leaderboard */}
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-4">
@@ -165,7 +258,7 @@ export default function Community() {
 
             {/* All Users */}
             <div className="space-y-3">
-              {aggregatedProgress.map((user) => {
+              {filteredAndSortedProgress.map((user) => {
                 const isExpanded = expandedUsers.has(user.profileId);
                 const overallProgress = getOverallProgress(user.subjects);
                 const subjectKeys = Object.keys(user.subjects);
