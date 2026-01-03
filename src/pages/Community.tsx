@@ -1,21 +1,13 @@
-import { usePublicProgress, AggregatedUserProgress } from "@/hooks/usePublicProgress";
+import { usePublicProgress } from "@/hooks/usePublicProgress";
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { 
   Loader2, 
   Users, 
@@ -23,16 +15,10 @@ import {
   ChevronRight,
   BookOpen,
   Trophy,
-  Sparkles,
-  Mail,
-  Clock,
-  Shield,
-  Filter,
-  ArrowUpDown
+  Sparkles
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 
 const subjectLabels: Record<string, string> = {
   physics1: "Physics 1st",
@@ -50,13 +36,9 @@ const subjectLabels: Record<string, string> = {
   bangla2: "Bangla 2nd",
 };
 
-type SortOption = "activities" | "lastActive" | "registered" | "progress";
-
 export default function Community() {
-  const { aggregatedProgress, isAdmin, loading, error } = usePublicProgress();
+  const { aggregatedProgress, loading, error } = usePublicProgress();
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
-  const [sortBy, setSortBy] = useState<SortOption>("activities");
-  const [filterSubject, setFilterSubject] = useState<string>("all");
 
   const toggleUser = (profileId: string) => {
     const newExpanded = new Set(expandedUsers);
@@ -86,38 +68,12 @@ export default function Community() {
     return total > 0 ? Math.round((completed / total) * 100) : 0;
   };
 
-  // Get all unique subjects across all users
-  const allSubjects = Array.from(
-    new Set(aggregatedProgress.flatMap((user) => Object.keys(user.subjects)))
-  );
-
-  // Filter and sort users
-  const filteredAndSortedProgress = [...aggregatedProgress]
-    .filter((user) => {
-      if (filterSubject === "all") return true;
-      return Object.keys(user.subjects).includes(filterSubject);
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "lastActive":
-          if (!a.lastActiveAt && !b.lastActiveAt) return 0;
-          if (!a.lastActiveAt) return 1;
-          if (!b.lastActiveAt) return -1;
-          return new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime();
-        case "registered":
-          if (!a.createdAt && !b.createdAt) return 0;
-          if (!a.createdAt) return 1;
-          if (!b.createdAt) return -1;
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        case "progress":
-          return getOverallProgress(b.subjects) - getOverallProgress(a.subjects);
-        case "activities":
-        default:
-          const aTotal = Object.values(a.subjects).reduce((sum, s) => sum + s.completedActivities, 0);
-          const bTotal = Object.values(b.subjects).reduce((sum, s) => sum + s.completedActivities, 0);
-          return bTotal - aTotal;
-      }
-    });
+  // Sort users by total activities completed
+  const sortedProgress = [...aggregatedProgress].sort((a, b) => {
+    const aTotal = Object.values(a.subjects).reduce((sum, s) => sum + s.completedActivities, 0);
+    const bTotal = Object.values(b.subjects).reduce((sum, s) => sum + s.completedActivities, 0);
+    return bTotal - aTotal;
+  });
 
   return (
     <div className="min-h-screen bg-background flex flex-col pb-20 md:pb-0">
@@ -135,12 +91,6 @@ export default function Community() {
               See how other students are progressing
             </p>
           </div>
-          {isAdmin && (
-            <Badge variant="outline" className="flex items-center gap-1 border-yellow-500 text-yellow-500">
-              <Shield className="h-3 w-3" />
-              Admin View
-            </Badge>
-          )}
         </div>
 
         {error && (
@@ -162,53 +112,6 @@ export default function Community() {
           </Card>
         ) : (
           <div className="space-y-4">
-            {/* Admin Filters */}
-            {isAdmin && (
-              <Card className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Filter className="h-4 w-4 text-primary" />
-                  <h3 className="font-medium text-foreground">Admin Filters</h3>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  <div className="flex-1 min-w-[150px]">
-                    <label className="text-xs text-muted-foreground mb-1 block">Sort by</label>
-                    <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                      <SelectTrigger className="w-full">
-                        <ArrowUpDown className="h-4 w-4 mr-2" />
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="activities">Most Activities</SelectItem>
-                        <SelectItem value="progress">Highest Progress %</SelectItem>
-                        <SelectItem value="lastActive">Last Active</SelectItem>
-                        <SelectItem value="registered">Recently Registered</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex-1 min-w-[150px]">
-                    <label className="text-xs text-muted-foreground mb-1 block">Filter by Subject</label>
-                    <Select value={filterSubject} onValueChange={setFilterSubject}>
-                      <SelectTrigger className="w-full">
-                        <BookOpen className="h-4 w-4 mr-2" />
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Subjects</SelectItem>
-                        {allSubjects.map((subjectId) => (
-                          <SelectItem key={subjectId} value={subjectId}>
-                            {subjectLabels[subjectId] || subjectId}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Showing {filteredAndSortedProgress.length} of {aggregatedProgress.length} students
-                </p>
-              </Card>
-            )}
-
             {/* Leaderboard */}
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-4">
@@ -216,11 +119,8 @@ export default function Community() {
                 <h2 className="font-semibold text-foreground">Top Students</h2>
               </div>
               <div className="space-y-3">
-                {filteredAndSortedProgress.slice(0, 3).map((user, index) => {
+                {sortedProgress.slice(0, 3).map((user, index) => {
                   const overallProgress = getOverallProgress(user.subjects);
-                  const totalCompleted = Object.values(user.subjects).reduce(
-                    (sum, s) => sum + s.completedActivities, 0
-                  );
 
                   return (
                     <div 
@@ -239,17 +139,21 @@ export default function Community() {
                         <p className="font-medium text-foreground truncate">
                           {user.displayName}
                         </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{totalCompleted} activities completed</span>
-                            {user.email && (
-                              <span className="flex items-center gap-1 text-primary">
-                                <Mail className="h-3 w-3" />
-                                {user.email}
-                              </span>
-                            )}
-                        </div>
                       </div>
-                      <Badge variant="secondary">{overallProgress}%</Badge>
+                      <div className="flex items-center gap-2">
+                        <Progress 
+                          value={overallProgress} 
+                          className="w-20 h-2"
+                        />
+                        <span className={cn(
+                          "text-sm font-medium min-w-[3ch]",
+                          overallProgress >= 70 ? "text-green-500" :
+                          overallProgress >= 40 ? "text-yellow-500" :
+                          "text-muted-foreground"
+                        )}>
+                          {overallProgress}%
+                        </span>
+                      </div>
                     </div>
                   );
                 })}
@@ -258,7 +162,7 @@ export default function Community() {
 
             {/* All Users */}
             <div className="space-y-3">
-              {filteredAndSortedProgress.map((user) => {
+              {sortedProgress.map((user) => {
                 const isExpanded = expandedUsers.has(user.profileId);
                 const overallProgress = getOverallProgress(user.subjects);
                 const subjectKeys = Object.keys(user.subjects);
@@ -279,21 +183,9 @@ export default function Community() {
                           <p className="font-medium text-foreground truncate">
                             {user.displayName}
                           </p>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                            <span>{subjectKeys.length} subjects</span>
-                            {user.email && (
-                              <span className="flex items-center gap-1 text-primary">
-                                <Mail className="h-3 w-3" />
-                                {user.email}
-                              </span>
-                            )}
-                            {user.lastActiveAt && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                Last active: {format(new Date(user.lastActiveAt), "MMM d, yyyy")}
-                              </span>
-                            )}
-                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {subjectKeys.length} subjects
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Progress 
