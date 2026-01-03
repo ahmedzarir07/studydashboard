@@ -68,11 +68,11 @@ export default function Community() {
     return total > 0 ? Math.round((completed / total) * 100) : 0;
   };
 
-  // Sort users by total activities completed
+  // Sort users by overall progress percentage
   const sortedProgress = [...aggregatedProgress].sort((a, b) => {
-    const aTotal = Object.values(a.subjects).reduce((sum, s) => sum + s.completedActivities, 0);
-    const bTotal = Object.values(b.subjects).reduce((sum, s) => sum + s.completedActivities, 0);
-    return bTotal - aTotal;
+    const aPct = getOverallProgress(a.subjects);
+    const bPct = getOverallProgress(b.subjects);
+    return bPct - aPct;
   });
 
   return (
