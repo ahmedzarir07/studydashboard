@@ -1,8 +1,10 @@
-import { usePublicProgress, SUBJECT_LABELS } from "@/hooks/usePublicProgress";
+import { usePublicProgress } from "@/hooks/usePublicProgress";
+import { ALL_SUBJECTS } from "@/hooks/useProgressSnapshot";
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { CircularProgress } from "@/components/CircularProgress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,12 +15,17 @@ import {
   Users, 
   ChevronDown, 
   ChevronRight,
-  BookOpen,
   Trophy,
   Sparkles
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+
+// Build subject metadata lookup
+const SUBJECT_META = ALL_SUBJECTS.reduce((acc, s) => {
+  acc[s.id] = { displayName: s.displayName, color: s.color, fullName: s.data.name };
+  return acc;
+}, {} as Record<string, { displayName: string; color: string; fullName: string }>);
 
 export default function Community() {
   const { aggregatedProgress, loading, error } = usePublicProgress();
@@ -112,29 +119,17 @@ export default function Community() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Progress 
-                        value={user.overallProgress} 
-                        className="w-20 h-2"
-                      />
-                      <span className={cn(
-                        "text-sm font-medium min-w-[3ch]",
-                        user.overallProgress >= 70 ? "text-green-500" :
-                        user.overallProgress >= 40 ? "text-yellow-500" :
-                        "text-muted-foreground"
-                      )}>
-                        {user.overallProgress}%
-                      </span>
+                      <CircularProgress percentage={user.overallProgress} size={40} />
                     </div>
                   </div>
                 ))}
               </div>
             </Card>
 
-            {/* All Users */}
-            <div className="space-y-3">
+            {/* All Users - Same view as Home */}
+            <div className="space-y-4">
               {aggregatedProgress.map((user) => {
                 const isExpanded = expandedUsers.has(user.profileId);
-                const subjectEntries = Object.entries(user.subjects).filter(([, progress]) => progress > 0);
 
                 return (
                   <Collapsible key={user.profileId}>
@@ -152,56 +147,71 @@ export default function Community() {
                           <p className="font-medium text-foreground truncate">
                             {user.displayName}
                           </p>
-                          <span className="text-xs text-muted-foreground">
-                            {subjectEntries.length} subjects with progress
-                          </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Progress 
-                            value={user.overallProgress} 
-                            className="w-20 h-2"
-                          />
-                          <span className={cn(
-                            "text-sm font-medium min-w-[3ch]",
-                            user.overallProgress >= 70 ? "text-green-500" :
-                            user.overallProgress >= 40 ? "text-yellow-500" :
-                            "text-muted-foreground"
-                          )}>
-                            {user.overallProgress}%
-                          </span>
-                        </div>
+                        <CircularProgress percentage={user.overallProgress} size={48} />
                       </CollapsibleTrigger>
 
                       <CollapsibleContent>
-                        <div className="px-4 pb-4 pt-0 space-y-2">
-                          {subjectEntries.length === 0 ? (
-                            <p className="text-sm text-muted-foreground text-center py-4">
-                              No progress data yet
-                            </p>
-                          ) : (
-                            subjectEntries.map(([subjectId, progress]) => (
-                              <div 
-                                key={subjectId}
-                                className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <BookOpen className="h-4 w-4 text-primary" />
-                                  <span className="text-sm font-medium text-foreground">
-                                    {SUBJECT_LABELS[subjectId] || subjectId}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Progress 
-                                    value={progress} 
-                                    className="w-16 h-2"
-                                  />
-                                  <span className="text-xs text-muted-foreground min-w-[3ch]">
-                                    {progress}%
-                                  </span>
-                                </div>
-                              </div>
-                            ))
-                          )}
+                        <div className="px-4 pb-4 pt-2">
+                          {/* Overall Progress - Same as Home */}
+                          <div className="flex flex-col items-center gap-4 mb-6">
+                            <div className="bg-card/50 rounded-2xl p-4">
+                              <CircularProgress percentage={user.overallProgress} size={100} />
+                            </div>
+                          </div>
+
+                          {/* Subject Grid - Same as Home */}
+                          <div className="mb-4">
+                            <h3 className="text-sm font-semibold text-foreground mb-3">
+                              Subject Progress
+                            </h3>
+                            <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-touch pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-5 md:overflow-visible">
+                              <TooltipProvider>
+                                {ALL_SUBJECTS.map(({ id, displayName, data, color }) => {
+                                  const progress = user.subjects[id] ?? 0;
+                                  return (
+                                    <Tooltip key={id}>
+                                      <TooltipTrigger asChild>
+                                        <div className="flex-shrink-0 w-[90px] md:w-auto bg-card/60 rounded-xl p-3 flex flex-col items-center gap-2">
+                                          <div className="relative w-12 h-12 md:w-14 md:h-14">
+                                            <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                              <circle
+                                                cx="18"
+                                                cy="18"
+                                                r="15.5"
+                                                fill="none"
+                                                className="stroke-muted/30"
+                                                strokeWidth="3"
+                                              />
+                                              <circle
+                                                cx="18"
+                                                cy="18"
+                                                r="15.5"
+                                                fill="none"
+                                                stroke={color}
+                                                strokeWidth="3"
+                                                strokeLinecap="round"
+                                                strokeDasharray={`${progress * 0.975} 100`}
+                                              />
+                                            </svg>
+                                            <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-foreground">
+                                              {progress}%
+                                            </span>
+                                          </div>
+                                          <span className="text-[10px] text-muted-foreground text-center leading-tight whitespace-nowrap">
+                                            {displayName}
+                                          </span>
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>{data.name}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  );
+                                })}
+                              </TooltipProvider>
+                            </div>
+                          </div>
                         </div>
                       </CollapsibleContent>
                     </Card>
