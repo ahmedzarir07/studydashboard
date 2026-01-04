@@ -237,6 +237,7 @@ export type Database = {
           status: string | null
           subject: string | null
           updated_at: string | null
+          user_id: string | null
         }
         Relationships: []
       }

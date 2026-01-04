@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { calculateUserProgress, ALL_SUBJECTS } from "./useProgressSnapshot";
 
 interface PublicStudyRecord {
+  user_id: string;
   profile_id: string;
   display_name: string | null;
   subject: string;
@@ -64,7 +65,7 @@ export const usePublicProgress = () => {
         // Fetch public study progress from view
         const { data: studyData, error: studyError } = await supabase
           .from("public_study_progress")
-          .select("profile_id, display_name, subject, chapter, activity, status, updated_at")
+          .select("user_id, profile_id, display_name, subject, chapter, activity, status, updated_at")
           .order("updated_at", { ascending: false });
 
         if (studyError) {
@@ -86,29 +87,28 @@ export const usePublicProgress = () => {
 
   // Aggregate progress by user using the SAME calculation as Home
   const aggregatedProgress: CommunityUserProgress[] = useMemo(() => {
-    // Create a lookup for profile data
+    // Create a lookup for profile data by user_id only
     const profileLookup = new Map<string, UserProfile>();
     userProfiles.forEach((profile) => {
-      profileLookup.set(profile.id, profile);
       profileLookup.set(profile.user_id, profile);
     });
 
-    // Group records by profile_id
+    // Group records by user_id (same as Home uses auth.user.id)
     const recordsByUser = new Map<string, PublicStudyRecord[]>();
     studyRecords.forEach((record) => {
-      if (!record.profile_id) return;
+      if (!record.user_id) return;
       
-      if (!recordsByUser.has(record.profile_id)) {
-        recordsByUser.set(record.profile_id, []);
+      if (!recordsByUser.has(record.user_id)) {
+        recordsByUser.set(record.user_id, []);
       }
-      recordsByUser.get(record.profile_id)!.push(record);
+      recordsByUser.get(record.user_id)!.push(record);
     });
 
     // Calculate progress for each user using the SAME function as Home
     const results: CommunityUserProgress[] = [];
 
-    recordsByUser.forEach((records, profileId) => {
-      const profile = profileLookup.get(profileId);
+    recordsByUser.forEach((records, userId) => {
+      const profile = profileLookup.get(userId);
       const displayName = profile?.display_name || records[0]?.display_name || profile?.email || "Anonymous Student";
       
       // Use the exact same calculation function as Home page
@@ -120,7 +120,7 @@ export const usePublicProgress = () => {
       }, null as string | null);
 
       results.push({
-        profileId,
+        profileId: userId,
         displayName,
         overallProgress,
         subjects,
