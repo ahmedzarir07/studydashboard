@@ -1,24 +1,27 @@
 import { usePublicProgress } from "@/hooks/usePublicProgress";
-import { ALL_SUBJECTS } from "@/hooks/useProgressSnapshot";
+import { ALL_SUBJECTS, useProgressSnapshot } from "@/hooks/useProgressSnapshot";
+import { useAuth } from "@/contexts/AuthContext";
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Card } from "@/components/ui/card";
 import { CircularProgress } from "@/components/CircularProgress";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { 
-  Loader2, 
-  Users, 
-  ChevronDown, 
+import {
+  Loader2,
+  Users,
+  ChevronDown,
   ChevronRight,
   Trophy,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 // Build subject metadata lookup
@@ -28,7 +31,15 @@ const SUBJECT_META = ALL_SUBJECTS.reduce((acc, s) => {
 }, {} as Record<string, { displayName: string; color: string; fullName: string }>);
 
 export default function Community() {
+  const { user } = useAuth();
   const { aggregatedProgress, loading, error } = usePublicProgress();
+  const mySnapshot = useProgressSnapshot();
+
+  const myPublicProgress = useMemo(() => {
+    if (!user) return null;
+    return aggregatedProgress.find((p) => p.profileId === user.id) ?? null;
+  }, [aggregatedProgress, user]);
+
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 
   const toggleUser = (profileId: string) => {
@@ -70,9 +81,45 @@ export default function Community() {
         {/* Info Banner */}
         <Card className="p-3 mb-6 bg-muted/50 border-muted">
           <p className="text-xs text-muted-foreground text-center">
-            Progress shown here uses the same calculation as Home.
+            Tip: many students use the default name. Set a display name in Settings to avoid confusion.
           </p>
         </Card>
+
+        {user && (
+          <Card className="p-4 mb-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold text-foreground">Your progress</h2>
+                <p className="text-xs text-muted-foreground">
+                  Home = your full progress. Community = what’s shown on the community list.
+                </p>
+              </div>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/settings">Settings</Link>
+              </Button>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3 rounded-xl border bg-card/50 p-3">
+                <CircularProgress percentage={mySnapshot.overallProgress} size={56} />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground">Home (full)</p>
+                  <p className="text-xs text-muted-foreground">Includes everything you’ve marked done</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 rounded-xl border bg-card/50 p-3">
+                <CircularProgress percentage={myPublicProgress?.overallProgress ?? 0} size={56} />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground">Community view</p>
+                  <p className="text-xs text-muted-foreground">
+                    {myPublicProgress ? "This is the row labeled ‘You’ below." : "Not found in list yet."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {error && (
           <Card className="p-4 mb-6 border-destructive">
@@ -128,15 +175,19 @@ export default function Community() {
 
             {/* All Users - Same view as Home */}
             <div className="space-y-4">
-              {aggregatedProgress.map((user) => {
-                const isExpanded = expandedUsers.has(user.profileId);
+              {aggregatedProgress.map((u) => {
+                const isExpanded = expandedUsers.has(u.profileId);
+                const isMe = !!user && u.profileId === user.id;
 
                 return (
-                  <Collapsible key={user.profileId}>
-                    <Card className="overflow-hidden">
+                  <Collapsible key={u.profileId}>
+                    <Card className={cn("overflow-hidden", isMe && "ring-1 ring-primary/30") }>
                       <CollapsibleTrigger
-                        onClick={() => toggleUser(user.profileId)}
-                        className="w-full p-4 flex items-center gap-3 hover:bg-muted/50 transition-colors"
+                        onClick={() => toggleUser(u.profileId)}
+                        className={cn(
+                          "w-full p-4 flex items-center gap-3 transition-colors",
+                          isMe ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-muted/50"
+                        )}
                       >
                         {isExpanded ? (
                           <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -145,10 +196,10 @@ export default function Community() {
                         )}
                         <div className="flex-1 min-w-0 text-left">
                           <p className="font-medium text-foreground truncate">
-                            {user.displayName}
+                            {isMe ? `${u.displayName} (You)` : u.displayName}
                           </p>
                         </div>
-                        <CircularProgress percentage={user.overallProgress} size={48} />
+                        <CircularProgress percentage={u.overallProgress} size={48} />
                       </CollapsibleTrigger>
 
                       <CollapsibleContent>
@@ -156,7 +207,7 @@ export default function Community() {
                           {/* Overall Progress - Same as Home */}
                           <div className="flex flex-col items-center gap-4 mb-6">
                             <div className="bg-card/50 rounded-2xl p-4">
-                              <CircularProgress percentage={user.overallProgress} size={100} />
+                              <CircularProgress percentage={u.overallProgress} size={100} />
                             </div>
                           </div>
 
@@ -168,7 +219,7 @@ export default function Community() {
                             <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-touch pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-5 md:overflow-visible">
                               <TooltipProvider>
                                 {ALL_SUBJECTS.map(({ id, displayName, data, color }) => {
-                                  const progress = user.subjects[id] ?? 0;
+                                  const progress = u.subjects[id] ?? 0;
                                   return (
                                     <Tooltip key={id}>
                                       <TooltipTrigger asChild>
