@@ -5,7 +5,6 @@ import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Card } from "@/components/ui/card";
 import { CircularProgress } from "@/components/CircularProgress";
-import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Collapsible,
@@ -21,7 +20,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 // Build subject metadata lookup
@@ -35,10 +33,28 @@ export default function Community() {
   const { aggregatedProgress, loading, error } = usePublicProgress();
   const mySnapshot = useProgressSnapshot();
 
-  const myPublicProgress = useMemo(() => {
-    if (!user) return null;
-    return aggregatedProgress.find((p) => p.profileId === user.id) ?? null;
-  }, [aggregatedProgress, user]);
+  // Merge lists: for current user, always use Home snapshot so progress matches exactly
+  const mergedProgress = useMemo(() => {
+    if (!user) return aggregatedProgress;
+
+    // Build subjects record from snapshot
+    const mySubjects: Record<string, number> = {};
+    mySnapshot.subjects.forEach((s) => {
+      mySubjects[s.id] = s.progress;
+    });
+
+    const myEntry = {
+      profileId: user.id,
+      displayName: aggregatedProgress.find((p) => p.profileId === user.id)?.displayName || "You",
+      overallProgress: mySnapshot.overallProgress,
+      subjects: mySubjects,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    // Replace or append
+    const others = aggregatedProgress.filter((p) => p.profileId !== user.id);
+    return [myEntry, ...others].sort((a, b) => b.overallProgress - a.overallProgress);
+  }, [aggregatedProgress, user, mySnapshot]);
 
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 
@@ -87,35 +103,11 @@ export default function Community() {
 
         {user && (
           <Card className="p-4 mb-6">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3 rounded-xl border bg-card/50 p-3">
+              <CircularProgress percentage={mySnapshot.overallProgress} size={56} />
               <div className="min-w-0">
-                <h2 className="text-sm font-semibold text-foreground">Your progress</h2>
-                <p className="text-xs text-muted-foreground">
-                  Home = your full progress. Community = what’s shown on the community list.
-                </p>
-              </div>
-              <Button asChild size="sm" variant="outline">
-                <Link to="/settings">Settings</Link>
-              </Button>
-            </div>
-
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 rounded-xl border bg-card/50 p-3">
-                <CircularProgress percentage={mySnapshot.overallProgress} size={56} />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground">Home (full)</p>
-                  <p className="text-xs text-muted-foreground">Includes everything you’ve marked done</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 rounded-xl border bg-card/50 p-3">
-                <CircularProgress percentage={myPublicProgress?.overallProgress ?? 0} size={56} />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground">Community view</p>
-                  <p className="text-xs text-muted-foreground">
-                    {myPublicProgress ? "This is the row labeled ‘You’ below." : "Not found in list yet."}
-                  </p>
-                </div>
+                <p className="text-sm font-medium text-foreground">Your progress (same as Home)</p>
+                <p className="text-xs text-muted-foreground">Look for "(You)" in the list below.</p>
               </div>
             </div>
           </Card>
@@ -127,7 +119,7 @@ export default function Community() {
           </Card>
         )}
 
-        {aggregatedProgress.length === 0 ? (
+        {mergedProgress.length === 0 ? (
           <Card className="p-8 text-center">
             <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -147,9 +139,9 @@ export default function Community() {
                 <h2 className="font-semibold text-foreground">Top Students</h2>
               </div>
               <div className="space-y-3">
-                {aggregatedProgress.slice(0, 3).map((user, index) => (
+                {mergedProgress.slice(0, 3).map((entry, index) => (
                   <div 
-                    key={user.profileId}
+                    key={entry.profileId}
                     className="flex items-center gap-3"
                   >
                     <div className={cn(
@@ -162,11 +154,11 @@ export default function Community() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-foreground truncate">
-                        {user.displayName}
+                        {user && entry.profileId === user.id ? `${entry.displayName} (You)` : entry.displayName}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <CircularProgress percentage={user.overallProgress} size={40} />
+                      <CircularProgress percentage={entry.overallProgress} size={40} />
                     </div>
                   </div>
                 ))}
@@ -175,7 +167,7 @@ export default function Community() {
 
             {/* All Users - Same view as Home */}
             <div className="space-y-4">
-              {aggregatedProgress.map((u) => {
+              {mergedProgress.map((u) => {
                 const isExpanded = expandedUsers.has(u.profileId);
                 const isMe = !!user && u.profileId === user.id;
 
