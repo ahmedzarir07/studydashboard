@@ -110,7 +110,11 @@ export const usePublicProgress = () => {
 
     recordsByUser.forEach((records, userId) => {
       const profile = profileLookup.get(userId);
-      const displayName = profile?.display_name || records[0]?.display_name || profile?.email || "Anonymous Student";
+
+      const displayName =
+        profile?.display_name ||
+        records[0]?.display_name ||
+        `Anonymous Student • ${userId.slice(0, 4)}`;
       
       // Use the exact same calculation function as Home page
       const { overallProgress, subjects } = calculateUserProgress(records);
