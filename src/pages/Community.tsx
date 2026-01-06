@@ -123,11 +123,10 @@ export default function Community() {
           <Card className="p-8 text-center">
             <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">
-              No public progress yet
+              No progress yet
             </h3>
             <p className="text-muted-foreground">
-              Be the first to share your study progress with the community!
-              Go to Settings to enable public sharing.
+              Start tracking your study progress to appear here!
             </p>
           </Card>
         ) : (

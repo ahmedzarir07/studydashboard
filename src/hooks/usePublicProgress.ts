@@ -1,12 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { calculateUserProgress, ALL_SUBJECTS } from "./useProgressSnapshot";
 
-interface PublicStudyRecord {
+interface StudyRecord {
   user_id: string;
-  profile_id: string;
-  display_name: string | null;
   subject: string;
   chapter: string;
   activity: string;
@@ -32,10 +29,8 @@ export interface CommunityUserProgress {
 }
 
 export const usePublicProgress = () => {
-  const { user } = useAuth();
-  const [studyRecords, setStudyRecords] = useState<PublicStudyRecord[]>([]);
+  const [studyRecords, setStudyRecords] = useState<StudyRecord[]>([]);
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,17 +39,6 @@ export const usePublicProgress = () => {
       try {
         setLoading(true);
         
-        // Check if current user is admin
-        if (user) {
-          const { data: roleData } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", user.id)
-            .maybeSingle();
-          
-          setIsAdmin(roleData?.role === "admin");
-        }
-        
         // Fetch all profiles
         const { data: profilesData } = await supabase
           .from("profiles")
@@ -62,21 +46,22 @@ export const usePublicProgress = () => {
         
         setUserProfiles(profilesData || []);
         
-        // Fetch public study progress from view
+        // Fetch ALL study records (not just public ones) - same as Home page
+        // RLS now allows anyone to read all records
         const { data: studyData, error: studyError } = await supabase
-          .from("public_study_progress")
-          .select("user_id, profile_id, display_name, subject, chapter, activity, status, updated_at")
-          // IMPORTANT: we need newest updates to win when building a map; ascending order prevents older rows overwriting newer status.
+          .from("study_records")
+          .select("user_id, subject, chapter, activity, status, updated_at")
+          .eq("type", "status")
           .order("updated_at", { ascending: true });
 
         if (studyError) {
-          console.error("Error fetching public study progress:", studyError);
+          console.error("Error fetching study records:", studyError);
           setError(studyError.message);
         } else {
           setStudyRecords(studyData || []);
         }
       } catch (err) {
-        console.error("Error fetching public progress:", err);
+        console.error("Error fetching community progress:", err);
         setError("Failed to load community progress");
       } finally {
         setLoading(false);
@@ -84,18 +69,18 @@ export const usePublicProgress = () => {
     };
 
     fetchData();
-  }, [user]);
+  }, []);
 
   // Aggregate progress by user using the SAME calculation as Home
   const aggregatedProgress: CommunityUserProgress[] = useMemo(() => {
-    // Create a lookup for profile data by user_id only
+    // Create a lookup for profile data by user_id
     const profileLookup = new Map<string, UserProfile>();
     userProfiles.forEach((profile) => {
       profileLookup.set(profile.user_id, profile);
     });
 
     // Group records by user_id (same as Home uses auth.user.id)
-    const recordsByUser = new Map<string, PublicStudyRecord[]>();
+    const recordsByUser = new Map<string, StudyRecord[]>();
     studyRecords.forEach((record) => {
       if (!record.user_id) return;
       
@@ -113,8 +98,7 @@ export const usePublicProgress = () => {
 
       const displayName =
         profile?.display_name ||
-        records[0]?.display_name ||
-        `Anonymous Student • ${userId.slice(0, 4)}`;
+        `Student • ${userId.slice(0, 4)}`;
       
       // Use the exact same calculation function as Home page
       const { overallProgress, subjects } = calculateUserProgress(records);
@@ -139,7 +123,6 @@ export const usePublicProgress = () => {
 
   return {
     aggregatedProgress,
-    isAdmin,
     loading,
     error,
   };
