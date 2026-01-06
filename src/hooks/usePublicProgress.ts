@@ -38,31 +38,41 @@ export const usePublicProgress = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch all profiles
         const { data: profilesData } = await supabase
           .from("profiles")
           .select("id, user_id, email, display_name, last_active_at, created_at");
-        
-        setUserProfiles(profilesData || []);
-        
-        // Fetch ALL study records (not just public ones) - same as Home page
-        // RLS now allows anyone to read all records
-        const { data: studyData, error: studyError } = await supabase
-          .from("study_records")
-          .select("user_id, subject, chapter, activity, status, updated_at")
-          .eq("type", "status")
-          .order("updated_at", { ascending: true });
 
-        if (studyError) {
-          console.error("Error fetching study records:", studyError);
-          setError(studyError.message);
-        } else {
-          setStudyRecords(studyData || []);
+        setUserProfiles(profilesData || []);
+
+        // Fetch ALL study records (not just first 1000)
+        // Note: PostgREST defaults to 1000 rows, so we page through everything.
+        const PAGE_SIZE = 1000;
+        const all: StudyRecord[] = [];
+        let from = 0;
+
+        while (true) {
+          const { data, error: pageError } = await supabase
+            .from("study_records")
+            .select("user_id, subject, chapter, activity, status, updated_at")
+            .eq("type", "status")
+            .order("updated_at", { ascending: true })
+            .range(from, from + PAGE_SIZE - 1);
+
+          if (pageError) throw pageError;
+
+          const page = data || [];
+          all.push(...page);
+
+          if (page.length < PAGE_SIZE) break;
+          from += PAGE_SIZE;
         }
-      } catch (err) {
+
+        setStudyRecords(all);
+      } catch (err: any) {
         console.error("Error fetching community progress:", err);
-        setError("Failed to load community progress");
+        setError(err?.message || "Failed to load community progress");
       } finally {
         setLoading(false);
       }
