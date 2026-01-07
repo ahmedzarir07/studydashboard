@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, BookOpen, Download, Shield, CalendarDays, BarChart3, UserCircle, Settings, Users } from "lucide-react";
+import { Home, BookOpen, Download, Shield, CalendarDays, BarChart3, UserCircle, Settings, Users, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
@@ -9,9 +9,9 @@ const navItems = [
   { path: "/", icon: Home, label: "Home" },
   { path: "/tracker", icon: BookOpen, label: "Study" },
   { path: "/overview", icon: BarChart3, label: "Stats" },
+  { path: "/ai-analysis", icon: Sparkles, label: "AI" },
   { path: "/community", icon: Users, label: "Community" },
   { path: "/planning", icon: CalendarDays, label: "Plan" },
-  { path: "/downloads", icon: Download, label: "Files" },
 ];
 
 const authItem = { path: "/auth", icon: UserCircle, label: "Sign Up" };
