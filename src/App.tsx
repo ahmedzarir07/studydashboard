@@ -14,6 +14,7 @@ import Admin from "./pages/Admin";
 import MonthlyPlanning from "./pages/MonthlyPlanning";
 import Settings from "./pages/Settings";
 import Community from "./pages/Community";
+import AIAnalysis from "./pages/AIAnalysis";
 import NotFound from "./pages/NotFound";
 // Initialize React Query client
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/ai-analysis" element={<AIAnalysis />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
