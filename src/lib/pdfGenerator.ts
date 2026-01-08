@@ -31,26 +31,60 @@ interface SubjectDetail {
   chapters: ChapterDetail[];
 }
 
-// A4 dimensions at 96 DPI - increased for better quality
+// A4 dimensions at 96 DPI
 const A4_WIDTH = 794;
 const A4_HEIGHT = 1123;
-const PAGE_MARGIN = 40;
+const PAGE_MARGIN = 48;
 const CONTENT_WIDTH = A4_WIDTH - (PAGE_MARGIN * 2);
+const COLUMN_GAP = 20;
+const COLUMN_WIDTH = (CONTENT_WIDTH - COLUMN_GAP) / 2;
 
-function createContainer(height?: number): HTMLDivElement {
+// Design tokens
+const COLORS = {
+  primary: "#1e40af",
+  primaryLight: "#3b82f6",
+  success: "#15803d",
+  successBg: "#dcfce7",
+  successBorder: "#bbf7d0",
+  warning: "#a16207",
+  warningBg: "#fef9c3",
+  warningBorder: "#fef08a",
+  muted: "#64748b",
+  mutedBg: "#f1f5f9",
+  mutedBorder: "#e2e8f0",
+  text: "#1e293b",
+  textSecondary: "#475569",
+  border: "#e2e8f0",
+  cardBg: "#ffffff",
+  pageBg: "#ffffff",
+};
+
+const TYPOGRAPHY = {
+  h1: "font-size: 28px; font-weight: 700; letter-spacing: -0.5px;",
+  h2: "font-size: 20px; font-weight: 600;",
+  h3: "font-size: 13px; font-weight: 600; line-height: 1.4;",
+  body: "font-size: 13px; font-weight: 400;",
+  small: "font-size: 11px; font-weight: 400;",
+  tag: "font-size: 9px; font-weight: 500;",
+  meta: "font-size: 10px; font-weight: 400;",
+};
+
+function createContainer(): HTMLDivElement {
   const el = document.createElement("div");
-  el.style.position = "fixed";
-  el.style.left = "-9999px";
-  el.style.top = "0";
-  el.style.width = A4_WIDTH + "px";
-  el.style.height = (height || A4_HEIGHT) + "px";
-  el.style.background = "white";
-  el.style.color = "black";
-  el.style.fontFamily = "'Noto Sans Bengali', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
-  el.style.padding = PAGE_MARGIN + "px";
-  el.style.boxSizing = "border-box";
-  el.style.overflow = "hidden";
-  el.style.lineHeight = "1.5";
+  el.style.cssText = `
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    width: ${A4_WIDTH}px;
+    height: ${A4_HEIGHT}px;
+    background: ${COLORS.pageBg};
+    color: ${COLORS.text};
+    font-family: 'Noto Sans Bengali', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: ${PAGE_MARGIN}px;
+    box-sizing: border-box;
+    overflow: hidden;
+    line-height: 1.5;
+  `;
   document.body.appendChild(el);
   return el;
 }
@@ -63,7 +97,7 @@ async function capturePageToPDF(
   const canvas = await html2canvas(container, {
     scale: 2,
     useCORS: true,
-    backgroundColor: "#ffffff",
+    backgroundColor: COLORS.pageBg,
     height: A4_HEIGHT,
     windowHeight: A4_HEIGHT,
   });
@@ -82,7 +116,7 @@ async function saveSinglePagePDF(container: HTMLDivElement, filename: string): P
   const canvas = await html2canvas(container, {
     scale: 2,
     useCORS: true,
-    backgroundColor: "#ffffff",
+    backgroundColor: COLORS.pageBg,
     height: A4_HEIGHT,
     windowHeight: A4_HEIGHT,
   });
@@ -97,63 +131,70 @@ async function saveSinglePagePDF(container: HTMLDivElement, filename: string): P
   document.body.removeChild(container);
 }
 
-// Styles for consistent design
-const styles = {
-  pageHeader: `
-    border-bottom: 3px solid #1e40af;
-    padding-bottom: 16px;
-    margin-bottom: 28px;
-  `,
-  h1: `
-    font-size: 26px;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0 0 8px 0;
-    letter-spacing: -0.5px;
-  `,
-  h2: `
-    font-size: 18px;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0 0 16px 0;
-  `,
-  h3: `
-    font-size: 14px;
-    font-weight: 600;
-    color: #334155;
-    margin: 0 0 12px 0;
-  `,
-  meta: `
-    font-size: 12px;
-    color: #64748b;
-    margin: 0;
-  `,
-  card: `
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 16px;
-  `,
-  progressBar: `
-    height: 12px;
-    background: #e2e8f0;
-    border-radius: 6px;
-    overflow: hidden;
-  `,
-  footer: `
-    position: absolute;
-    bottom: ${PAGE_MARGIN}px;
-    left: ${PAGE_MARGIN}px;
-    right: ${PAGE_MARGIN}px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    color: #94a3b8;
-    border-top: 1px solid #e2e8f0;
-    padding-top: 12px;
-  `,
-};
+// Shared components
+function renderPageHeader(title: string, subtitle?: string): string {
+  return `
+    <div style="
+      border-bottom: 3px solid ${COLORS.primary};
+      padding-bottom: 16px;
+      margin-bottom: 28px;
+    ">
+      <h1 style="${TYPOGRAPHY.h1} color: ${COLORS.text}; margin: 0 0 6px 0;">${title}</h1>
+      <p style="${TYPOGRAPHY.meta} color: ${COLORS.muted}; margin: 0;">${subtitle || `Generated: ${format(new Date(), "PPpp")}`}</p>
+    </div>
+  `;
+}
+
+function renderPageFooter(pageNum: number, totalPages: number): string {
+  return `
+    <div style="
+      position: absolute;
+      bottom: ${PAGE_MARGIN}px;
+      left: ${PAGE_MARGIN}px;
+      right: ${PAGE_MARGIN}px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: ${COLORS.muted};
+      border-top: 1px solid ${COLORS.border};
+      padding-top: 12px;
+    ">
+      <span>HSC Science Study Tracker</span>
+      <span>Page ${pageNum} of ${totalPages}</span>
+    </div>
+  `;
+}
+
+function renderProgressBar(percent: number, width: string = "100%", height: string = "10px"): string {
+  const barColor = percent >= 75 ? COLORS.success : percent >= 50 ? COLORS.warning : COLORS.primaryLight;
+  return `
+    <div style="
+      width: ${width};
+      height: ${height};
+      background: ${COLORS.mutedBg};
+      border-radius: 6px;
+      overflow: hidden;
+    ">
+      <div style="
+        width: ${percent}%;
+        height: 100%;
+        background: ${barColor};
+        border-radius: 6px;
+        transition: width 0.3s ease;
+      "></div>
+    </div>
+  `;
+}
+
+function getStatusStyles(status: string): { color: string; bg: string; border: string; icon: string } {
+  if (status === "Done") {
+    return { color: COLORS.success, bg: COLORS.successBg, border: COLORS.successBorder, icon: "✓" };
+  } else if (status === "In Progress") {
+    return { color: COLORS.warning, bg: COLORS.warningBg, border: COLORS.warningBorder, icon: "◐" };
+  }
+  return { color: COLORS.muted, bg: COLORS.mutedBg, border: COLORS.mutedBorder, icon: "○" };
+}
 
 // Simple 1-page overall progress PDF
 export async function generateOverallProgressPDF(
@@ -163,64 +204,63 @@ export async function generateOverallProgressPDF(
 ): Promise<void> {
   const container = createContainer();
   
-  const subjectListHTML = subjectProgresses.map(s => `
-    <div style="
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 16px;
-      background: ${s.progress >= 75 ? '#f0fdf4' : s.progress >= 50 ? '#fefce8' : '#fff'};
-      border: 1px solid ${s.progress >= 75 ? '#bbf7d0' : s.progress >= 50 ? '#fef08a' : '#e2e8f0'};
-      border-radius: 8px;
-      margin-bottom: 10px;
-    ">
-      <span style="font-size: 14px; color: #1e293b; font-weight: 500;">${s.fullName}</span>
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 120px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
-          <div style="width: ${s.progress}%; height: 100%; background: ${s.progress >= 75 ? '#22c55e' : s.progress >= 50 ? '#eab308' : '#3b82f6'}; border-radius: 4px;"></div>
+  const subjectListHTML = subjectProgresses.map(s => {
+    const barColor = s.progress >= 75 ? COLORS.success : s.progress >= 50 ? COLORS.warning : COLORS.primaryLight;
+    return `
+      <div style="
+        display: flex;
+        align-items: center;
+        padding: 14px 18px;
+        background: ${COLORS.cardBg};
+        border: 1px solid ${COLORS.border};
+        border-radius: 8px;
+        margin-bottom: 10px;
+      ">
+        <span style="${TYPOGRAPHY.body} color: ${COLORS.text}; font-weight: 500; flex: 1; min-width: 0;">${s.fullName}</span>
+        <div style="display: flex; align-items: center; gap: 14px; flex-shrink: 0;">
+          ${renderProgressBar(s.progress, "100px", "8px")}
+          <span style="${TYPOGRAPHY.body} font-weight: 600; color: ${barColor}; min-width: 42px; text-align: right;">${s.progress}%</span>
         </div>
-        <span style="font-size: 14px; font-weight: 600; color: ${s.progress >= 75 ? '#16a34a' : s.progress >= 50 ? '#ca8a04' : '#2563eb'}; min-width: 45px; text-align: right;">${s.progress}%</span>
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
   
   container.innerHTML = `
     <div style="font-family: 'Noto Sans Bengali', 'Inter', sans-serif; height: 100%; position: relative;">
-      <div style="${styles.pageHeader}">
-        <h1 style="${styles.h1}">HSC Science — Overall Progress Report</h1>
-        <p style="${styles.meta}">Generated: ${format(new Date(), "PPpp")}</p>
-      </div>
+      ${renderPageHeader("HSC Science — Overall Progress Report")}
       
       <div style="margin-bottom: 28px;">
-        <p style="font-size: 14px; color: #475569; margin: 0;">
-          <strong style="color: #1e293b;">Student:</strong> ${email}
+        <p style="${TYPOGRAPHY.body} color: ${COLORS.textSecondary}; margin: 0;">
+          <strong style="color: ${COLORS.text};">Student:</strong> ${email}
         </p>
       </div>
       
-      <div style="${styles.card}; text-align: center; margin-bottom: 32px;">
-        <p style="font-size: 14px; color: #64748b; margin: 0 0 8px 0;">Overall Completion</p>
-        <p style="font-size: 48px; font-weight: 700; color: #1e40af; margin: 0 0 12px 0;">${overallProgress}%</p>
-        <div style="${styles.progressBar}; max-width: 400px; margin: 0 auto;">
-          <div style="height: 100%; width: ${overallProgress}%; background: linear-gradient(90deg, #3b82f6, #1d4ed8); border-radius: 6px;"></div>
-        </div>
+      <div style="
+        background: ${COLORS.mutedBg};
+        border: 1px solid ${COLORS.border};
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        margin-bottom: 32px;
+      ">
+        <p style="${TYPOGRAPHY.small} color: ${COLORS.muted}; margin: 0 0 8px 0;">Overall Completion</p>
+        <p style="font-size: 52px; font-weight: 700; color: ${COLORS.primary}; margin: 0 0 16px 0;">${overallProgress}%</p>
+        ${renderProgressBar(overallProgress, "320px", "14px")}
       </div>
       
       <div style="margin-bottom: 28px;">
-        <h2 style="${styles.h2}">Subject-wise Progress</h2>
+        <h2 style="${TYPOGRAPHY.h2} color: ${COLORS.text}; margin: 0 0 16px 0;">Subject-wise Progress</h2>
         ${subjectListHTML}
       </div>
       
-      <div style="${styles.footer}">
-        <span>HSC Science Study Tracker</span>
-        <span>Page 1 of 1</span>
-      </div>
+      ${renderPageFooter(1, 1)}
     </div>
   `;
 
   await saveSinglePagePDF(container, `hsc-overall-progress-${format(new Date(), "yyyy-MM-dd")}.pdf`);
 }
 
-// Detailed multi-page progress PDF - One subject per page, clean layout
+// Detailed multi-page progress PDF - Strict 2-column grid
 export async function generateDetailedProgressPDF(
   email: string,
   overallProgress: number,
@@ -234,158 +274,169 @@ export async function generateDetailedProgressPDF(
   // Page 1: Overall Summary
   const summaryContainer = createContainer();
   
-  const subjectListHTML = subjectProgresses.map(s => `
-    <div style="
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 14px;
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      margin-bottom: 8px;
-    ">
-      <span style="font-size: 13px; color: #1e293b; font-weight: 500;">${s.fullName}</span>
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="width: 100px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
-          <div style="width: ${s.progress}%; height: 100%; background: ${s.progress >= 75 ? '#22c55e' : s.progress >= 50 ? '#eab308' : '#3b82f6'}; border-radius: 3px;"></div>
+  const subjectListHTML = subjectProgresses.map(s => {
+    const barColor = s.progress >= 75 ? COLORS.success : s.progress >= 50 ? COLORS.warning : COLORS.primaryLight;
+    return `
+      <div style="
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        background: ${COLORS.cardBg};
+        border: 1px solid ${COLORS.border};
+        border-radius: 6px;
+        margin-bottom: 8px;
+      ">
+        <span style="${TYPOGRAPHY.body} color: ${COLORS.text}; font-weight: 500; flex: 1;">${s.fullName}</span>
+        <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+          ${renderProgressBar(s.progress, "80px", "6px")}
+          <span style="${TYPOGRAPHY.small} font-weight: 600; color: ${barColor}; min-width: 36px; text-align: right;">${s.progress}%</span>
         </div>
-        <span style="font-size: 13px; font-weight: 600; color: #334155; min-width: 40px; text-align: right;">${s.progress}%</span>
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
   
   summaryContainer.innerHTML = `
     <div style="font-family: 'Noto Sans Bengali', 'Inter', sans-serif; height: 100%; position: relative;">
-      <div style="${styles.pageHeader}">
-        <h1 style="${styles.h1}">HSC Science — Detailed Progress Report</h1>
-        <p style="${styles.meta}">Generated: ${format(new Date(), "PPpp")}</p>
-      </div>
+      ${renderPageHeader("HSC Science — Detailed Progress Report")}
       
-      <div style="display: flex; gap: 32px; margin-bottom: 24px;">
+      <div style="display: flex; gap: 40px; margin-bottom: 28px;">
         <div>
-          <p style="font-size: 12px; color: #64748b; margin: 0 0 4px 0;">Student</p>
-          <p style="font-size: 14px; color: #1e293b; font-weight: 500; margin: 0;">${email}</p>
+          <p style="${TYPOGRAPHY.meta} color: ${COLORS.muted}; margin: 0 0 4px 0;">Student</p>
+          <p style="${TYPOGRAPHY.body} color: ${COLORS.text}; font-weight: 500; margin: 0;">${email}</p>
         </div>
         <div>
-          <p style="font-size: 12px; color: #64748b; margin: 0 0 4px 0;">Overall Progress</p>
-          <p style="font-size: 24px; color: #1e40af; font-weight: 700; margin: 0;">${overallProgress}%</p>
+          <p style="${TYPOGRAPHY.meta} color: ${COLORS.muted}; margin: 0 0 4px 0;">Overall Progress</p>
+          <p style="font-size: 28px; color: ${COLORS.primary}; font-weight: 700; margin: 0;">${overallProgress}%</p>
         </div>
       </div>
       
-      <div style="margin-bottom: 24px;">
-        <h2 style="${styles.h2}">Subject-wise Summary</h2>
+      <div style="margin-bottom: 28px;">
+        <h2 style="${TYPOGRAPHY.h2} color: ${COLORS.text}; margin: 0 0 14px 0;">Subject-wise Summary</h2>
         ${subjectListHTML}
       </div>
       
-      <div style="${styles.footer}">
-        <span>HSC Science Study Tracker</span>
-        <span>Page 1 of ${totalPages}</span>
-      </div>
+      ${renderPageFooter(1, totalPages)}
     </div>
   `;
 
   await capturePageToPDF(summaryContainer, pdf, true);
   document.body.removeChild(summaryContainer);
 
-  // One page per subject - clean grid layout
+  // Subject pages - Strict 2-column grid
   let pageNumber = 2;
   for (const subject of subjectDetails) {
     const subjectContainer = createContainer();
     const subjectProgress = subjectProgresses.find(s => s.name === subject.id);
+    const progressPercent = subjectProgress?.progress || 0;
     
-    // Build clean chapter cards with proper grid
-    const chaptersHTML = subject.chapters.map(chapter => {
-      const activitiesHTML = chapter.activities
-        .filter(a => a.name !== "Total Lec")
-        .map(activity => {
-          const status = recordMap.get(`${subject.id}-${chapter.name}-${activity.name}`) || "Not Started";
-          let statusColor = "#64748b";
-          let statusBg = "#f1f5f9";
-          let statusBorder = "#e2e8f0";
-          let statusIcon = "○";
-          
-          if (status === "Done") {
-            statusColor = "#15803d";
-            statusBg = "#dcfce7";
-            statusBorder = "#bbf7d0";
-            statusIcon = "✓";
-          } else if (status === "In Progress") {
-            statusColor = "#a16207";
-            statusBg = "#fef9c3";
-            statusBorder = "#fef08a";
-            statusIcon = "◐";
-          }
-          
-          return `
-            <span style="
-              display: inline-flex;
-              align-items: center;
-              gap: 3px;
-              margin: 3px;
-              padding: 4px 8px;
-              background: ${statusBg};
-              border: 1px solid ${statusBorder};
-              color: ${statusColor};
-              font-size: 9px;
-              font-weight: 500;
-              border-radius: 4px;
-              white-space: nowrap;
-            ">${statusIcon} ${activity.name}</span>
-          `;
-        }).join("");
+    // Split chapters into 2 columns
+    const chapters = subject.chapters;
+    const midPoint = Math.ceil(chapters.length / 2);
+    const leftChapters = chapters.slice(0, midPoint);
+    const rightChapters = chapters.slice(midPoint);
+    
+    const renderChapterCard = (chapter: ChapterDetail): string => {
+      const activities = chapter.activities.filter(a => a.name !== "Total Lec");
+      
+      // Limit to max 8 tags (roughly 2 rows)
+      const displayActivities = activities.slice(0, 8);
+      const hasMore = activities.length > 8;
+      
+      const activitiesHTML = displayActivities.map(activity => {
+        const status = recordMap.get(`${subject.id}-${chapter.name}-${activity.name}`) || "Not Started";
+        const styles = getStatusStyles(status);
+        
+        return `
+          <span style="
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            margin: 2px;
+            padding: 3px 6px;
+            background: ${styles.bg};
+            border: 1px solid ${styles.border};
+            color: ${styles.color};
+            ${TYPOGRAPHY.tag}
+            border-radius: 3px;
+            white-space: nowrap;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          ">${styles.icon} ${activity.name}</span>
+        `;
+      }).join("");
 
       return `
         <div style="
-          break-inside: avoid;
-          margin-bottom: 12px;
-          padding: 12px;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          background: #fff;
+          background: ${COLORS.cardBg};
+          border: 1px solid ${COLORS.border};
+          border-radius: 6px;
+          padding: 10px 12px;
+          margin-bottom: 10px;
+          min-height: 70px;
+          box-sizing: border-box;
         ">
           <div style="
-            font-size: 11px;
-            font-weight: 600;
+            ${TYPOGRAPHY.h3}
+            color: ${COLORS.text};
             margin-bottom: 8px;
-            color: #1e293b;
-            line-height: 1.4;
             padding-bottom: 6px;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid ${COLORS.mutedBg};
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
           ">${chapter.name}</div>
-          <div style="display: flex; flex-wrap: wrap; margin: -3px;">${activitiesHTML}</div>
+          <div style="
+            display: flex;
+            flex-wrap: wrap;
+            margin: -2px;
+            max-height: 52px;
+            overflow: hidden;
+          ">
+            ${activitiesHTML}
+            ${hasMore ? `<span style="${TYPOGRAPHY.tag} color: ${COLORS.muted}; padding: 3px 6px;">+${activities.length - 8} more</span>` : ''}
+          </div>
         </div>
       `;
-    }).join("");
+    };
+
+    const leftColumnHTML = leftChapters.map(renderChapterCard).join("");
+    const rightColumnHTML = rightChapters.map(renderChapterCard).join("");
 
     subjectContainer.innerHTML = `
       <div style="font-family: 'Noto Sans Bengali', 'Inter', sans-serif; height: 100%; position: relative;">
         <div style="
           display: flex;
           justify-content: space-between;
-          align-items: center;
-          border-bottom: 3px solid #1e40af;
-          padding-bottom: 12px;
+          align-items: flex-start;
+          border-bottom: 3px solid ${COLORS.primary};
+          padding-bottom: 14px;
           margin-bottom: 20px;
         ">
-          <div>
-            <h2 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 4px 0;">${subject.name}</h2>
-            <p style="font-size: 11px; color: #64748b; margin: 0;">${subject.chapters.length} chapters</p>
+          <div style="flex: 1;">
+            <h2 style="${TYPOGRAPHY.h2} color: ${COLORS.text}; margin: 0 0 4px 0;">${subject.name}</h2>
+            <p style="${TYPOGRAPHY.meta} color: ${COLORS.muted}; margin: 0;">${subject.chapters.length} chapters</p>
           </div>
-          <div style="text-align: right;">
-            <p style="font-size: 24px; font-weight: 700; color: #1e40af; margin: 0;">${subjectProgress?.progress || 0}%</p>
-            <p style="font-size: 10px; color: #64748b; margin: 0;">completed</p>
+          <div style="text-align: right; min-width: 90px;">
+            <p style="font-size: 28px; font-weight: 700; color: ${COLORS.primary}; margin: 0; line-height: 1;">${progressPercent}%</p>
+            <p style="${TYPOGRAPHY.meta} color: ${COLORS.muted}; margin: 4px 0 0 0;">completed</p>
           </div>
         </div>
         
-        <div style="column-count: 2; column-gap: 20px;">
-          ${chaptersHTML}
+        <div style="
+          display: flex;
+          gap: ${COLUMN_GAP}px;
+        ">
+          <div style="width: ${COLUMN_WIDTH}px; flex-shrink: 0;">
+            ${leftColumnHTML}
+          </div>
+          <div style="width: ${COLUMN_WIDTH}px; flex-shrink: 0;">
+            ${rightColumnHTML}
+          </div>
         </div>
         
-        <div style="${styles.footer}">
-          <span>HSC Science Study Tracker</span>
-          <span>Page ${pageNumber} of ${totalPages}</span>
-        </div>
+        ${renderPageFooter(pageNumber, totalPages)}
       </div>
     `;
 
@@ -420,18 +471,18 @@ export async function generateMonthlyProgressPDF(
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 14px;
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      margin-bottom: 8px;
+      padding: 14px 18px;
+      background: ${COLORS.cardBg};
+      border: 1px solid ${COLORS.border};
+      border-radius: 8px;
+      margin-bottom: 10px;
     ">
-      <span style="font-size: 14px; color: #1e293b; font-weight: 500;">${subject}</span>
-      <span style="font-size: 14px; font-weight: 600; color: #1e40af;">${count} chapter${count > 1 ? "s" : ""}</span>
+      <span style="${TYPOGRAPHY.body} color: ${COLORS.text}; font-weight: 500;">${subject}</span>
+      <span style="${TYPOGRAPHY.body} font-weight: 600; color: ${COLORS.primary};">${count} chapter${count > 1 ? "s" : ""}</span>
     </div>
   `).join("");
 
-  const chaptersListHTML = sorted.slice(0, 15).map(c => {
+  const chaptersListHTML = sorted.slice(0, 12).map(c => {
     const dateStr = c.completed_at ? format(new Date(c.completed_at), "MMM d, h:mm a") : "";
     return `
       <div style="
@@ -439,60 +490,61 @@ export async function generateMonthlyProgressPDF(
         justify-content: space-between;
         align-items: flex-start;
         padding: 10px 0;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid ${COLORS.mutedBg};
       ">
-        <div style="flex: 1;">
-          <span style="font-size: 13px; color: #1e293b; font-weight: 500;">${c.chapter}</span>
-          <span style="font-size: 12px; color: #64748b; margin-left: 8px;">(${c.subject})</span>
+        <div style="flex: 1; min-width: 0;">
+          <span style="${TYPOGRAPHY.body} color: ${COLORS.text}; font-weight: 500;">${c.chapter}</span>
+          <span style="${TYPOGRAPHY.small} color: ${COLORS.muted}; margin-left: 8px;">(${c.subject})</span>
         </div>
-        <span style="font-size: 11px; color: #94a3b8; white-space: nowrap; margin-left: 12px;">${dateStr}</span>
+        <span style="${TYPOGRAPHY.meta} color: ${COLORS.muted}; white-space: nowrap; margin-left: 12px; flex-shrink: 0;">${dateStr}</span>
       </div>
     `;
   }).join("");
 
   container.innerHTML = `
     <div style="font-family: 'Noto Sans Bengali', 'Inter', sans-serif; height: 100%; position: relative;">
-      <div style="${styles.pageHeader}">
-        <h1 style="${styles.h1}">HSC Science — Monthly Progress Report</h1>
-        <p style="${styles.meta}">Generated: ${format(new Date(), "PPpp")}</p>
-      </div>
+      ${renderPageHeader("HSC Science — Monthly Progress Report")}
       
-      <div style="display: flex; gap: 32px; margin-bottom: 28px;">
+      <div style="display: flex; gap: 40px; margin-bottom: 28px;">
         <div>
-          <p style="font-size: 12px; color: #64748b; margin: 0 0 4px 0;">Month</p>
-          <p style="font-size: 16px; color: #1e293b; font-weight: 600; margin: 0;">${monthYear}</p>
+          <p style="${TYPOGRAPHY.meta} color: ${COLORS.muted}; margin: 0 0 4px 0;">Month</p>
+          <p style="${TYPOGRAPHY.body} color: ${COLORS.text}; font-weight: 600; font-size: 16px; margin: 0;">${monthYear}</p>
         </div>
         <div>
-          <p style="font-size: 12px; color: #64748b; margin: 0 0 4px 0;">Student</p>
-          <p style="font-size: 14px; color: #1e293b; margin: 0;">${email}</p>
+          <p style="${TYPOGRAPHY.meta} color: ${COLORS.muted}; margin: 0 0 4px 0;">Student</p>
+          <p style="${TYPOGRAPHY.body} color: ${COLORS.text}; margin: 0;">${email}</p>
         </div>
       </div>
       
-      <div style="${styles.card}; text-align: center; margin-bottom: 28px;">
-        <p style="font-size: 14px; color: #64748b; margin: 0 0 6px 0;">Total Chapters Completed</p>
-        <p style="font-size: 42px; font-weight: 700; color: #16a34a; margin: 0;">${completions.length}</p>
+      <div style="
+        background: ${COLORS.mutedBg};
+        border: 1px solid ${COLORS.border};
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        margin-bottom: 28px;
+      ">
+        <p style="${TYPOGRAPHY.small} color: ${COLORS.muted}; margin: 0 0 6px 0;">Total Chapters Completed</p>
+        <p style="font-size: 48px; font-weight: 700; color: ${COLORS.success}; margin: 0;">${completions.length}</p>
       </div>
       
       ${Object.keys(bySubject).length > 0 ? `
         <div style="margin-bottom: 28px;">
-          <h2 style="${styles.h2}">Subject-wise Breakdown</h2>
+          <h2 style="${TYPOGRAPHY.h2} color: ${COLORS.text}; margin: 0 0 14px 0;">Subject-wise Breakdown</h2>
           ${subjectBreakdownHTML}
         </div>
       ` : ""}
       
       ${sorted.length > 0 ? `
         <div style="margin-bottom: 28px;">
-          <h2 style="${styles.h2}">Completed Chapters ${sorted.length > 15 ? `(showing first 15)` : ''}</h2>
-          <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 14px;">
+          <h2 style="${TYPOGRAPHY.h2} color: ${COLORS.text}; margin: 0 0 14px 0;">Completed Chapters ${sorted.length > 12 ? `(showing 12 of ${sorted.length})` : ''}</h2>
+          <div style="background: ${COLORS.cardBg}; border: 1px solid ${COLORS.border}; border-radius: 8px; padding: 6px 16px;">
             ${chaptersListHTML}
           </div>
         </div>
       ` : ""}
       
-      <div style="${styles.footer}">
-        <span>HSC Science Study Tracker</span>
-        <span>Page 1 of 1</span>
-      </div>
+      ${renderPageFooter(1, 1)}
     </div>
   `;
 
