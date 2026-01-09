@@ -275,7 +275,7 @@ export async function generateOverallProgressPDF(
   await saveSinglePagePDF(container, `hsc-overall-progress-${format(new Date(), "yyyy-MM-dd")}.pdf`);
 }
 
-// Detailed multi-page progress PDF - Strict 2-column grid
+// Detailed multi-page progress PDF - Dynamic page flow to show ALL content
 export async function generateDetailedProgressPDF(
   email: string,
   overallProgress: number,
@@ -284,37 +284,56 @@ export async function generateDetailedProgressPDF(
   recordMap: Map<string, string>
 ): Promise<void> {
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const totalPages = subjectDetails.length + 1;
   
-  // Page 1: Overall Summary
+  // Calculate available content height (A4 height minus margins and footer)
+  const CONTENT_HEIGHT = A4_HEIGHT - PAGE_MARGIN - PAGE_MARGIN - 50; // 50px for footer
+  const HEADER_HEIGHT = 80; // Subject header height
+  const CARD_HEIGHT = 85; // Estimated card height
+  const CARD_GAP = 10;
+  
+  // First, calculate total pages needed
+  let estimatedPages = 1; // Summary page
+  subjectDetails.forEach(subject => {
+    const chaptersPerPage = Math.floor((CONTENT_HEIGHT - HEADER_HEIGHT) / (CARD_HEIGHT + CARD_GAP));
+    const pagesForSubject = Math.ceil(subject.chapters.length / (chaptersPerPage * 2)); // 2 columns
+    estimatedPages += Math.max(1, pagesForSubject);
+  });
+  
+  let currentPage = 1;
+  
+  // Page 1: Overall Summary with 2-column subject list
   const summaryContainer = createContainer();
   
-  const subjectListHTML = subjectProgresses.map(s => {
+  const midPoint = Math.ceil(subjectProgresses.length / 2);
+  const leftSubjects = subjectProgresses.slice(0, midPoint);
+  const rightSubjects = subjectProgresses.slice(midPoint);
+  
+  const renderSubjectSummaryItem = (s: SubjectProgress) => {
     const barColor = s.progress >= 75 ? COLORS.success : s.progress >= 50 ? COLORS.warning : COLORS.primaryLight;
     return `
       <div style="
         display: flex;
         align-items: center;
-        padding: 12px 16px;
+        padding: 10px 14px;
         background: ${COLORS.cardBg};
         border: 1px solid ${COLORS.border};
         border-radius: 6px;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
       ">
-        <span style="${TYPOGRAPHY.body} color: ${COLORS.text}; font-weight: 500; flex: 1;">${s.fullName}</span>
-        <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
-          ${renderProgressBar(s.progress, "80px", "6px")}
-          <span style="${TYPOGRAPHY.small} font-weight: 600; color: ${barColor}; min-width: 36px; text-align: right;">${s.progress}%</span>
+        <span style="${TYPOGRAPHY.small} color: ${COLORS.text}; font-weight: 500; flex: 1; min-width: 0;">${s.fullName}</span>
+        <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+          ${renderProgressBar(s.progress, "70px", "5px")}
+          <span style="${TYPOGRAPHY.small} font-weight: 600; color: ${barColor}; min-width: 32px; text-align: right;">${s.progress}%</span>
         </div>
       </div>
     `;
-  }).join("");
+  };
   
   summaryContainer.innerHTML = `
     <div style="font-family: 'Noto Sans Bengali', 'Inter', sans-serif; height: 100%; position: relative;">
       ${renderPageHeader("HSC Science — Detailed Progress Report")}
       
-      <div style="display: flex; gap: 40px; margin-bottom: 28px;">
+      <div style="display: flex; gap: 40px; margin-bottom: 24px;">
         <div>
           <p style="${TYPOGRAPHY.meta} color: ${COLORS.muted}; margin: 0 0 4px 0;">Student</p>
           <p style="${TYPOGRAPHY.body} color: ${COLORS.text}; font-weight: 500; margin: 0;">${email}</p>
@@ -325,139 +344,155 @@ export async function generateDetailedProgressPDF(
         </div>
       </div>
       
-      <div style="margin-bottom: 28px;">
-        <h2 style="${TYPOGRAPHY.h2} color: ${COLORS.text}; margin: 0 0 14px 0;">Subject-wise Summary</h2>
-        ${subjectListHTML}
+      <div style="margin-bottom: 20px;">
+        <h2 style="${TYPOGRAPHY.h2} color: ${COLORS.text}; margin: 0 0 12px 0;">Subject-wise Summary (${subjectProgresses.length} Subjects)</h2>
+        <div style="display: flex; gap: ${COLUMN_GAP}px;">
+          <div style="flex: 1;">
+            ${leftSubjects.map(renderSubjectSummaryItem).join("")}
+          </div>
+          <div style="flex: 1;">
+            ${rightSubjects.map(renderSubjectSummaryItem).join("")}
+          </div>
+        </div>
       </div>
       
-      ${renderPageFooter(1, totalPages)}
+      ${renderPageFooter(1, estimatedPages)}
     </div>
   `;
 
   await capturePageToPDF(summaryContainer, pdf, true);
   document.body.removeChild(summaryContainer);
+  currentPage++;
 
-  // Subject pages - Strict 2-column grid
-  let pageNumber = 2;
+  // Subject pages - Dynamic flow with page breaks
   for (const subject of subjectDetails) {
-    const subjectContainer = createContainer();
-    const subjectProgress = subjectProgresses.find(s => s.name === subject.id);
+    const subjectProgress = subjectProgresses.find(s => s.name === subject.displayName);
     const progressPercent = subjectProgress?.progress || 0;
     
-    // Split chapters into 2 columns
-    const chapters = subject.chapters;
-    const midPoint = Math.ceil(chapters.length / 2);
-    const leftChapters = chapters.slice(0, midPoint);
-    const rightChapters = chapters.slice(midPoint);
+    // Calculate how many chapters fit per page (in 2-column layout)
+    const chaptersPerColumn = 5; // Conservative estimate for chapters per column
+    const chaptersPerPage = chaptersPerColumn * 2;
     
-    const renderChapterCard = (chapter: ChapterDetail): string => {
-      const activities = chapter.activities.filter(a => a.name !== "Total Lec");
+    // Split chapters into pages
+    const totalChapters = subject.chapters;
+    const pageGroups: ChapterDetail[][] = [];
+    
+    for (let i = 0; i < totalChapters.length; i += chaptersPerPage) {
+      pageGroups.push(totalChapters.slice(i, i + chaptersPerPage));
+    }
+    
+    // Render each page for this subject
+    for (let pageIdx = 0; pageIdx < pageGroups.length; pageIdx++) {
+      const chaptersForPage = pageGroups[pageIdx];
+      const isFirstPage = pageIdx === 0;
+      const pageLabel = pageGroups.length > 1 ? ` (Page ${pageIdx + 1}/${pageGroups.length})` : '';
       
-      // Limit to max 8 tags (roughly 2 rows)
-      const displayActivities = activities.slice(0, 8);
-      const hasMore = activities.length > 8;
+      const subjectContainer = createContainer();
       
-      const activitiesHTML = displayActivities.map(activity => {
-        const status = recordMap.get(`${subject.id}-${chapter.name}-${activity.name}`) || "Not Started";
-        const styles = getStatusStyles(status);
+      // Split this page's chapters into 2 columns
+      const midPoint = Math.ceil(chaptersForPage.length / 2);
+      const leftChapters = chaptersForPage.slice(0, midPoint);
+      const rightChapters = chaptersForPage.slice(midPoint);
+      
+      const renderChapterCard = (chapter: ChapterDetail): string => {
+        const activities = chapter.activities.filter(a => a.name !== "Total Lec");
         
-        return `
-          <span style="
-            display: inline-flex;
-            align-items: center;
-            gap: 2px;
-            margin: 2px;
-            padding: 3px 6px;
-            background: ${styles.bg};
-            border: 1px solid ${styles.border};
-            color: ${styles.color};
-            ${TYPOGRAPHY.tag}
-            border-radius: 3px;
-            white-space: nowrap;
-            max-width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          ">${styles.icon} ${activity.name}</span>
-        `;
-      }).join("");
+        // Show ALL activities - no limit
+        const activitiesHTML = activities.map(activity => {
+          const status = recordMap.get(`${subject.id}-${chapter.name}-${activity.name}`) || "Not Started";
+          const styles = getStatusStyles(status);
+          
+          return `
+            <span style="
+              display: inline-flex;
+              align-items: center;
+              gap: 2px;
+              margin: 2px;
+              padding: 3px 6px;
+              background: ${styles.bg};
+              border: 1px solid ${styles.border};
+              color: ${styles.color};
+              ${TYPOGRAPHY.tag}
+              border-radius: 3px;
+              white-space: nowrap;
+            ">${styles.icon} ${activity.name}</span>
+          `;
+        }).join("");
 
-      return `
-        <div style="
-          background: ${COLORS.cardBg};
-          border: 1px solid ${COLORS.border};
-          border-radius: 6px;
-          padding: 10px 12px;
-          margin-bottom: 10px;
-          min-height: 70px;
-          box-sizing: border-box;
-        ">
+        return `
           <div style="
-            ${TYPOGRAPHY.h3}
-            color: ${COLORS.text};
+            background: ${COLORS.cardBg};
+            border: 1px solid ${COLORS.border};
+            border-radius: 6px;
+            padding: 10px 12px;
             margin-bottom: 8px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid ${COLORS.mutedBg};
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-          ">${chapter.name}</div>
+            box-sizing: border-box;
+          ">
+            <div style="
+              ${TYPOGRAPHY.h3}
+              color: ${COLORS.text};
+              margin-bottom: 6px;
+              padding-bottom: 5px;
+              border-bottom: 1px solid ${COLORS.mutedBg};
+            ">${chapter.name}</div>
+            <div style="
+              display: flex;
+              flex-wrap: wrap;
+              margin: -2px;
+            ">
+              ${activitiesHTML}
+            </div>
+          </div>
+        `;
+      };
+
+      const leftColumnHTML = leftChapters.map(renderChapterCard).join("");
+      const rightColumnHTML = rightChapters.map(renderChapterCard).join("");
+
+      subjectContainer.innerHTML = `
+        <div style="font-family: 'Noto Sans Bengali', 'Inter', sans-serif; height: 100%; position: relative;">
           <div style="
             display: flex;
-            flex-wrap: wrap;
-            margin: -2px;
-            max-height: 52px;
-            overflow: hidden;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 3px solid ${COLORS.primary};
+            padding-bottom: 12px;
+            margin-bottom: 16px;
           ">
-            ${activitiesHTML}
-            ${hasMore ? `<span style="${TYPOGRAPHY.tag} color: ${COLORS.muted}; padding: 3px 6px;">+${activities.length - 8} more</span>` : ''}
+            <div style="flex: 1;">
+              <h2 style="${TYPOGRAPHY.h2} color: ${COLORS.text}; margin: 0 0 4px 0;">${subject.name}${pageLabel}</h2>
+              <p style="${TYPOGRAPHY.meta} color: ${COLORS.muted}; margin: 0;">
+                ${isFirstPage ? `${subject.chapters.length} chapters total` : `Chapters ${pageIdx * chaptersPerPage + 1}-${Math.min((pageIdx + 1) * chaptersPerPage, subject.chapters.length)}`}
+              </p>
+            </div>
+            ${isFirstPage ? `
+              <div style="text-align: right; min-width: 80px;">
+                <p style="font-size: 24px; font-weight: 700; color: ${COLORS.primary}; margin: 0; line-height: 1;">${progressPercent}%</p>
+                <p style="${TYPOGRAPHY.meta} color: ${COLORS.muted}; margin: 4px 0 0 0;">completed</p>
+              </div>
+            ` : ''}
           </div>
+          
+          <div style="
+            display: flex;
+            gap: ${COLUMN_GAP}px;
+          ">
+            <div style="width: ${COLUMN_WIDTH}px; flex-shrink: 0;">
+              ${leftColumnHTML}
+            </div>
+            <div style="width: ${COLUMN_WIDTH}px; flex-shrink: 0;">
+              ${rightColumnHTML}
+            </div>
+          </div>
+          
+          ${renderPageFooter(currentPage, estimatedPages)}
         </div>
       `;
-    };
 
-    const leftColumnHTML = leftChapters.map(renderChapterCard).join("");
-    const rightColumnHTML = rightChapters.map(renderChapterCard).join("");
-
-    subjectContainer.innerHTML = `
-      <div style="font-family: 'Noto Sans Bengali', 'Inter', sans-serif; height: 100%; position: relative;">
-        <div style="
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          border-bottom: 3px solid ${COLORS.primary};
-          padding-bottom: 14px;
-          margin-bottom: 20px;
-        ">
-          <div style="flex: 1;">
-            <h2 style="${TYPOGRAPHY.h2} color: ${COLORS.text}; margin: 0 0 4px 0;">${subject.name}</h2>
-            <p style="${TYPOGRAPHY.meta} color: ${COLORS.muted}; margin: 0;">${subject.chapters.length} chapters</p>
-          </div>
-          <div style="text-align: right; min-width: 90px;">
-            <p style="font-size: 28px; font-weight: 700; color: ${COLORS.primary}; margin: 0; line-height: 1;">${progressPercent}%</p>
-            <p style="${TYPOGRAPHY.meta} color: ${COLORS.muted}; margin: 4px 0 0 0;">completed</p>
-          </div>
-        </div>
-        
-        <div style="
-          display: flex;
-          gap: ${COLUMN_GAP}px;
-        ">
-          <div style="width: ${COLUMN_WIDTH}px; flex-shrink: 0;">
-            ${leftColumnHTML}
-          </div>
-          <div style="width: ${COLUMN_WIDTH}px; flex-shrink: 0;">
-            ${rightColumnHTML}
-          </div>
-        </div>
-        
-        ${renderPageFooter(pageNumber, totalPages)}
-      </div>
-    `;
-
-    await capturePageToPDF(subjectContainer, pdf, false);
-    document.body.removeChild(subjectContainer);
-    pageNumber++;
+      await capturePageToPDF(subjectContainer, pdf, false);
+      document.body.removeChild(subjectContainer);
+      currentPage++;
+    }
   }
 
   pdf.save(`hsc-detailed-progress-${format(new Date(), "yyyy-MM-dd")}.pdf`);
