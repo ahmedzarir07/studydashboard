@@ -7,11 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { path: "/", icon: Home, label: "Home" },
-  { path: "/tracker", icon: BookOpen, label: "Study" },
-  { path: "/overview", icon: BarChart3, label: "Stats" },
+  { path: "/tracker", icon: BookOpen, label: "Tracker" },
+  { path: "/overview", icon: BarChart3, label: "Overview" },
   { path: "/ai-analysis", icon: Sparkles, label: "AI" },
   { path: "/community", icon: Users, label: "Community" },
-  { path: "/planning", icon: CalendarDays, label: "Plan" },
+  { path: "/planning", icon: CalendarDays, label: "Planning" },
 ];
 
 const authItem = { path: "/auth", icon: UserCircle, label: "Sign Up" };
