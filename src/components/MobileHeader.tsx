@@ -92,6 +92,16 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
                 <p className="text-sm text-foreground truncate">{user.email}</p>
               </div>
             )}
+            <Link to="/downloads" className="block" onClick={() => setMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start min-h-[44px]">
+                Downloads
+              </Button>
+            </Link>
+            <Link to="/about" className="block" onClick={() => setMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start min-h-[44px]">
+                About
+              </Button>
+            </Link>
             {!loading && (
               user ? (
                 <Button 
@@ -103,7 +113,7 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
                   Sign Out
                 </Button>
               ) : (
-                <Link to="/auth" className="block">
+                <Link to="/auth" className="block" onClick={() => setMenuOpen(false)}>
                   <Button variant="default" className="w-full justify-start min-h-[44px]">
                     <LogIn className="h-4 w-4 mr-2" />
                     Sign In
