@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProgressSnapshot } from "@/hooks/useProgressSnapshot";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Loader2, AlertCircle, Clock } from "lucide-react";
+import { Sparkles, Loader2, AlertCircle, Clock, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { StudyCoach } from "@/components/StudyCoach";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const COOLDOWN_KEY = "ai_analysis_last_used";
 const COOLDOWN_HOURS = 24;
@@ -132,109 +134,128 @@ export default function AIAnalysis() {
       <MobileHeader title="AI বিশ্লেষণ" />
 
       <main className="px-4 py-6 max-w-2xl mx-auto space-y-6">
-        {/* Header Section */}
-        <div className="bg-card/50 rounded-xl p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Sparkles className="h-5 w-5 text-primary" />
-            </div>
-            <h2 className="text-lg font-semibold">AI Progress Analysis</h2>
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            আপনার পড়াশোনার অগ্রগতি বিশ্লেষণ করে AI পরামর্শ পান। প্রতিদিন একবার ব্যবহার করা যাবে।
-          </p>
+        <Tabs defaultValue="coach" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="coach" className="gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Study Coach
+            </TabsTrigger>
+            <TabsTrigger value="analysis" className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              Progress Analysis
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="coach" className="space-y-4">
+            <StudyCoach />
+          </TabsContent>
+          
+          <TabsContent value="analysis" className="space-y-6">
+            {/* Header Section */}
+            <div className="bg-card/50 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </div>
+                <h2 className="text-lg font-semibold">AI Progress Analysis</h2>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                আপনার পড়াশোনার অগ্রগতি বিশ্লেষণ করে AI পরামর্শ পান। প্রতিদিন একবার ব্যবহার করা যাবে।
+              </p>
 
-          <Button
-            onClick={handleAnalyze}
-            disabled={isAnalyzing || progressLoading || !!cooldownRemaining}
-            className="w-full gap-2"
-            size="lg"
-          >
-            {isAnalyzing ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                বিশ্লেষণ চলছে...
-              </>
-            ) : cooldownRemaining ? (
-              <>
-                <Clock className="h-4 w-4" />
-                পরবর্তী বিশ্লেষণ: {cooldownRemaining} পরে
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4" />
-                আমার অগ্রগতি বিশ্লেষণ করুন
-              </>
-            )}
-          </Button>
-        </div>
-
-        {/* Current Progress Summary */}
-        <div className="bg-card/30 rounded-xl p-4">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">বর্তমান অগ্রগতি</h3>
-          <div className="flex items-center gap-4 mb-3">
-            <div className="text-3xl font-bold text-primary">{overallProgress}%</div>
-            <div className="text-sm text-muted-foreground">সার্বিক সম্পন্ন</div>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">ভালো (≥60%):</span>
-              <span className="font-medium text-success">
-                {subjects.filter((s) => s.progress >= 60).length}টি
-              </span>
+              <Button
+                onClick={handleAnalyze}
+                disabled={isAnalyzing || progressLoading || !!cooldownRemaining}
+                className="w-full gap-2"
+                size="lg"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    বিশ্লেষণ চলছে...
+                  </>
+                ) : cooldownRemaining ? (
+                  <>
+                    <Clock className="h-4 w-4" />
+                    পরবর্তী বিশ্লেষণ: {cooldownRemaining} পরে
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    আমার অগ্রগতি বিশ্লেষণ করুন
+                  </>
+                )}
+              </Button>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">দুর্বল (&lt;30%):</span>
-              <span className="font-medium text-destructive">
-                {subjects.filter((s) => s.progress < 30).length}টি
-              </span>
-            </div>
-          </div>
-        </div>
 
-        {/* Error Display */}
-        {error && (
-          <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-destructive">সমস্যা হয়েছে</h4>
-                <p className="text-sm text-destructive/80 mt-1">{error}</p>
+            {/* Current Progress Summary */}
+            <div className="bg-card/30 rounded-xl p-4">
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">বর্তমান অগ্রগতি</h3>
+              <div className="flex items-center gap-4 mb-3">
+                <div className="text-3xl font-bold text-primary">{overallProgress}%</div>
+                <div className="text-sm text-muted-foreground">সার্বিক সম্পন্ন</div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">ভালো (≥60%):</span>
+                  <span className="font-medium text-success">
+                    {subjects.filter((s) => s.progress >= 60).length}টি
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">দুর্বল (&lt;30%):</span>
+                  <span className="font-medium text-destructive">
+                    {subjects.filter((s) => s.progress < 30).length}টি
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Analysis Result */}
-        {analysis && (
-          <div className="space-y-4">
-            <div className="bg-card/50 rounded-xl p-5 space-y-5">
-              {formatAnalysis(analysis).map((section, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="text-sm leading-relaxed whitespace-pre-wrap">{section.trim()}</div>
-                  {index < formatAnalysis(analysis).length - 1 && (
-                    <div className="border-t border-border/50 pt-4" />
-                  )}
+            {/* Error Display */}
+            {error && (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-destructive">সমস্যা হয়েছে</h4>
+                    <p className="text-sm text-destructive/80 mt-1">{error}</p>
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
 
-            {/* Disclaimer */}
-            <p className="text-xs text-muted-foreground text-center px-4">
-              AI পরামর্শ সহায়ক—অনুসরণ করা বাধ্যতামূলক নয়।
-            </p>
-          </div>
-        )}
+            {/* Analysis Result */}
+            {analysis && (
+              <div className="space-y-4">
+                <div className="bg-card/50 rounded-xl p-5 space-y-5">
+                  {formatAnalysis(analysis).map((section, index) => (
+                    <div key={index} className="space-y-2">
+                      <div className="text-sm leading-relaxed whitespace-pre-wrap">{section.trim()}</div>
+                      {index < formatAnalysis(analysis).length - 1 && (
+                        <div className="border-t border-border/50 pt-4" />
+                      )}
+                    </div>
+                  ))}
+                </div>
 
-        {/* Empty State - No analysis yet */}
-        {!analysis && !isAnalyzing && !error && (
-          <div className="text-center py-8 text-muted-foreground">
-            <Sparkles className="h-10 w-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">
-              বিশ্লেষণ বাটনে ক্লিক করে আপনার ব্যক্তিগত পরামর্শ দেখুন
-            </p>
-          </div>
-        )}
+                {/* Disclaimer */}
+                <p className="text-xs text-muted-foreground text-center px-4">
+                  AI পরামর্শ সহায়ক—অনুসরণ করা বাধ্যতামূলক নয়।
+                </p>
+              </div>
+            )}
+
+            {/* Empty State - No analysis yet */}
+            {!analysis && !isAnalyzing && !error && (
+              <div className="text-center py-8 text-muted-foreground">
+                <Sparkles className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">
+                  বিশ্লেষণ বাটনে ক্লিক করে আপনার ব্যক্তিগত পরামর্শ দেখুন
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
 
       <BottomNav />
