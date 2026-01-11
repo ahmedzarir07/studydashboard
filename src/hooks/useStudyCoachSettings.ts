@@ -89,14 +89,13 @@ export function useStudyCoachSettings() {
   });
 
   const updateNotificationSettings = useMutation({
-    mutationFn: async ({ enabled, email }: { enabled: boolean; email?: string }) => {
+    mutationFn: async ({ enabled }: { enabled: boolean }) => {
       if (!user || !settings) throw new Error("Settings not found");
       
       const { data, error } = await supabase
         .from("study_coach_settings")
         .update({
           notifications_enabled: enabled,
-          notification_email: email ?? settings.notification_email,
         })
         .eq("id", settings.id)
         .select()
@@ -108,14 +107,14 @@ export function useStudyCoachSettings() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["study-coach-settings", user?.id] });
       if (data.notifications_enabled) {
-        toast.success("নোটিফিকেশন চালু করা হয়েছে");
+        toast.success("দৈনিক রিমাইন্ডার চালু করা হয়েছে");
       } else {
-        toast.success("নোটিফিকেশন বন্ধ করা হয়েছে");
+        toast.success("দৈনিক রিমাইন্ডার বন্ধ করা হয়েছে");
       }
     },
     onError: (error) => {
       console.error("Failed to update notification settings:", error);
-      toast.error("নোটিফিকেশন সেটিংস আপডেট করতে সমস্যা হয়েছে");
+      toast.error("রিমাইন্ডার সেটিংস আপডেট করতে সমস্যা হয়েছে");
     },
   });
 

@@ -19,8 +19,7 @@ import {
   RefreshCw,
   Lightbulb,
   Flame,
-  Bell,
-  Mail
+  Bell
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -128,8 +127,8 @@ export function StudyCoach() {
   const [completion, setCompletion] = useState<number>(30);
   const [result, setResult] = useState<CoachResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [notificationEmail, setNotificationEmail] = useState<string>("");
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
+  const [lastShownDate, setLastShownDate] = useState<string | null>(null);
 
   // Load saved settings when available
   useEffect(() => {
@@ -138,7 +137,6 @@ export function StudyCoach() {
       setMonthsRemaining(settings.months_remaining);
       setCompletion(settings.completion_percentage);
       setIsNotificationEnabled(settings.notifications_enabled);
-      setNotificationEmail(settings.notification_email || user?.email || "");
       
       // If we have saved settings, show the result
       if (settings.risk_level) {
@@ -210,7 +208,6 @@ export function StudyCoach() {
           months_remaining: monthsRemaining,
           completion_percentage: completion,
           risk_level: riskLevel,
-          notification_email: notificationEmail || user.email || undefined,
           notifications_enabled: isNotificationEnabled,
         });
       }
@@ -225,23 +222,27 @@ export function StudyCoach() {
     if (user && settings) {
       updateNotificationSettings.mutate({
         enabled,
-        email: notificationEmail || user.email || undefined,
       });
+    }
+    // Store in localStorage for in-app reminder check
+    if (enabled) {
+      localStorage.setItem('study-coach-reminder-enabled', 'true');
+    } else {
+      localStorage.removeItem('study-coach-reminder-enabled');
     }
   };
 
-  const handleEmailChange = (email: string) => {
-    setNotificationEmail(email);
-  };
-
-  const saveNotificationEmail = () => {
-    if (user && settings && notificationEmail) {
-      updateNotificationSettings.mutate({
-        enabled: isNotificationEnabled,
-        email: notificationEmail,
-      });
+  // Check if we should show daily reminder notification
+  useEffect(() => {
+    const today = new Date().toDateString();
+    const storedDate = localStorage.getItem('study-coach-last-shown');
+    const reminderEnabled = localStorage.getItem('study-coach-reminder-enabled') === 'true';
+    
+    if (reminderEnabled && storedDate !== today && result) {
+      setLastShownDate(today);
+      localStorage.setItem('study-coach-last-shown', today);
     }
-  };
+  }, [result]);
 
   const resetCoach = () => {
     setStep("batch");
@@ -524,13 +525,13 @@ export function StudyCoach() {
           {/* Notification Settings - Only show for logged in users */}
           {user && (
             <Card className="p-5">
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <Bell className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold">দৈনিক রিমাইন্ডার</h3>
-                  <p className="text-xs text-muted-foreground">প্রতিদিন মোটিভেশন মেসেজ পাও</p>
+                  <p className="text-xs text-muted-foreground">প্রতিদিন নতুন মোটিভেশন মেসেজ দেখাও</p>
                 </div>
                 <Switch
                   checked={isNotificationEnabled}
@@ -539,39 +540,9 @@ export function StudyCoach() {
               </div>
               
               {isNotificationEnabled && (
-                <div className="space-y-3 pt-3 border-t">
-                  <div className="space-y-2">
-                    <Label htmlFor="notification-email" className="text-sm flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      ইমেইল ঠিকানা
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="notification-email"
-                        type="email"
-                        value={notificationEmail}
-                        onChange={(e) => handleEmailChange(e.target.value)}
-                        placeholder="তোমার ইমেইল"
-                        className="flex-1"
-                      />
-                      <Button 
-                        variant="secondary" 
-                        size="sm"
-                        onClick={saveNotificationEmail}
-                        disabled={!notificationEmail || updateNotificationSettings.isPending}
-                      >
-                        {updateNotificationSettings.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          "সংরক্ষণ"
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    প্রতিদিন সকালে তোমার ইমেইলে মোটিভেশন মেসেজ ও স্টাডি টিপস পাঠানো হবে।
-                  </p>
-                </div>
+                <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">
+                  ✓ প্রতিদিন অ্যাপ খুললে নতুন মোটিভেশন মেসেজ ও স্টাডি টিপস দেখতে পাবে।
+                </p>
               )}
             </Card>
           )}
