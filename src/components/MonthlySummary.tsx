@@ -41,7 +41,7 @@ export const MonthlySummary = () => {
 
   return (
     <>
-      <Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
+      <Card className="p-6 bg-card border-2 border-accent/50 hover:border-accent/80 hover:shadow-md transition-all duration-200">
         <div className="space-y-4">
           <div className="flex items-start justify-between">
             <div className="space-y-3">

@@ -15,6 +15,18 @@ interface SubjectProgressBarProps {
   color: string;
 }
 
+// Get border color class based on subject color
+const getBorderColorClass = (color: string) => {
+  if (color.includes('3b82f6') || color.includes('blue')) return 'border-blue-500/40';
+  if (color.includes('22c55e') || color.includes('green')) return 'border-green-500/40';
+  if (color.includes('ec4899') || color.includes('pink')) return 'border-pink-500/40';
+  if (color.includes('a855f7') || color.includes('purple')) return 'border-purple-500/40';
+  if (color.includes('06b6d4') || color.includes('cyan')) return 'border-cyan-500/40';
+  if (color.includes('f59e0b') || color.includes('amber')) return 'border-amber-500/40';
+  if (color.includes('f97316') || color.includes('orange')) return 'border-orange-500/40';
+  return 'border-primary/40';
+};
+
 export const SubjectProgressBar = ({ 
   subjectId, 
   chapters, 
@@ -94,7 +106,7 @@ export const SubjectProgressBar = ({
   }
 
   return (
-    <div className="bg-card/60 rounded-xl p-4 mb-4">
+    <div className={cn("bg-card/60 rounded-xl p-4 mb-4 border-2", getBorderColorClass(color))}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <h2 className="font-semibold text-foreground">{subjectName} Progress</h2>

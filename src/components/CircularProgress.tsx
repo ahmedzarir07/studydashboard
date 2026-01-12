@@ -15,8 +15,13 @@ export function CircularProgress({
 
   return (
     <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      {/* Outer glow ring */}
+      <div 
+        className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 blur-sm"
+        style={{ margin: -4 }}
+      />
       <svg
-        className="transform -rotate-90"
+        className="transform -rotate-90 relative z-10"
         width={size}
         height={size}
       >

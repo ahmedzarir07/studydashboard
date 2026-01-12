@@ -72,7 +72,7 @@ export default function Home() {
 
         {/* Overall Progress - Centered on mobile */}
         <div className="flex flex-col items-center gap-6 mb-8">
-          <div className="bg-card/50 rounded-2xl p-6 md:p-8">
+          <div className="bg-card/50 rounded-2xl p-6 md:p-8 border-2 border-primary/30 shadow-lg shadow-primary/10">
             <CircularProgress percentage={overallProgress} size={140} />
           </div>
         </div>
@@ -84,12 +84,25 @@ export default function Home() {
           </h2>
           <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-touch pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-5 md:overflow-visible">
             <TooltipProvider>
-              {subjects.map((subject, index) => (
+              {subjects.map((subject, index) => {
+                // Get border color class based on subject color
+                const getBorderColor = (color: string) => {
+                  if (color.includes('3b82f6') || color.includes('blue')) return 'border-blue-500/50 hover:border-blue-500/80';
+                  if (color.includes('22c55e') || color.includes('green')) return 'border-green-500/50 hover:border-green-500/80';
+                  if (color.includes('ec4899') || color.includes('pink')) return 'border-pink-500/50 hover:border-pink-500/80';
+                  if (color.includes('a855f7') || color.includes('purple')) return 'border-purple-500/50 hover:border-purple-500/80';
+                  if (color.includes('06b6d4') || color.includes('cyan')) return 'border-cyan-500/50 hover:border-cyan-500/80';
+                  if (color.includes('f59e0b') || color.includes('amber')) return 'border-amber-500/50 hover:border-amber-500/80';
+                  if (color.includes('f97316') || color.includes('orange')) return 'border-orange-500/50 hover:border-orange-500/80';
+                  return 'border-primary/50 hover:border-primary/80';
+                };
+                
+                return (
                 <Tooltip key={subject.name}>
                   <TooltipTrigger asChild>
                     <Link 
                       to={`/tracker?tab=${index}`}
-                      className="flex-shrink-0 w-[100px] md:w-auto bg-card/60 rounded-xl p-4 flex flex-col items-center gap-2 active:scale-[0.97] transition-transform"
+                      className={`flex-shrink-0 w-[100px] md:w-auto bg-card/60 rounded-xl p-4 flex flex-col items-center gap-2 active:scale-[0.97] transition-all duration-200 border-2 ${getBorderColor(subject.color)} hover:shadow-md`}
                     >
                       <div className="relative w-14 h-14 md:w-16 md:h-16">
                         <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
@@ -125,7 +138,8 @@ export default function Home() {
                     <p>{subject.fullName}</p>
                   </TooltipContent>
                 </Tooltip>
-              ))}
+              );
+              })}
             </TooltipProvider>
           </div>
         </div>
@@ -134,7 +148,7 @@ export default function Home() {
         <div className="space-y-3 mb-8">
           <Link 
             to="/tracker" 
-            className="touch-button w-full bg-primary text-primary-foreground"
+            className="touch-button w-full bg-primary text-primary-foreground border-2 border-primary/50 hover:border-primary shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-200"
           >
             Start Studying
           </Link>
