@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LogIn, LogOut, Menu, Users, Settings } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-
+import { NotificationBell } from "@/components/NotificationBell";
 interface MobileHeaderProps {
   title?: string;
 }
@@ -27,6 +27,19 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
         <h1 className="text-lg font-semibold text-foreground truncate">
           {title}
         </h1>
+
+        {/* Notification Bell - Mobile */}
+        <div className="flex items-center gap-1 md:hidden">
+          <NotificationBell />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-10 w-10"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </div>
         
         {/* Desktop navigation */}
         <div className="hidden md:flex gap-2 items-center">
@@ -54,6 +67,7 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
           <Link to="/about">
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">About</Button>
           </Link>
+          <NotificationBell />
           {!loading && (
             user ? (
               <Button variant="outline" size="sm" onClick={handleSignOut}>
@@ -70,16 +84,6 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
             )
           )}
         </div>
-
-        {/* Mobile menu button */}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="md:hidden h-10 w-10"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
       </div>
 
       {/* Mobile dropdown menu */}
