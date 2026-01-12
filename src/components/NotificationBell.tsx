@@ -8,36 +8,63 @@ import {
 } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useProgressSnapshot } from "@/hooks/useProgressSnapshot";
 
-// Daily motivational messages that rotate
-const dailyMessages = [
-  { title: "আজকের অনুপ্রেরণা", message: "আজ ১ ঘণ্টা পড়লে কাল ১ ঘণ্টা এগিয়ে থাকবে।" },
-  { title: "পড়াশোনার সময়", message: "সিলেবাস নিজে নিজে শেষ হবে না—তোমাকেই করতে হবে।" },
-  { title: "ছোট পদক্ষেপ", message: "প্রতিদিন ছোট ছোট পদক্ষেপই বড় ফলাফল আনে।" },
-  { title: "সময়ের মূল্য", message: "বাকি সময় কম—এখনই শুরু করো।" },
-  { title: "শুরু করো", message: "অজুহাত না দিয়ে বই খোলো।" },
-  { title: "তোমার অর্জন", message: "তুমি যতটুকু পেরেছ, সেটাও একটা অর্জন।" },
-  { title: "থামবে না", message: "ধীরে হলেও এগিয়ে যাচ্ছ—থামবে না।" },
-  { title: "লক্ষ্যের দিকে", message: "প্রতিটা পৃষ্ঠা তোমাকে লক্ষ্যের কাছে নিয়ে যাচ্ছে।" },
-  { title: "চালিয়ে যাও", message: "কঠিন লাগলেও চালিয়ে যাও—ফল পাবে।" },
-  { title: "চেষ্টা", message: "তোমার চেষ্টা বৃথা যাবে না।" },
-  { title: "রুটিন", message: "রুটিন মানো—মন না চাইলেও পড়ো।" },
-  { title: "ফোকাস", message: "মোবাইল দূরে রাখো, বই কাছে রাখো।" },
-  { title: "নিয়ম", message: "ইচ্ছার উপর নির্ভর করো না—নিয়মের উপর করো।" },
-  { title: "উন্নতি", message: "গতকালের চেয়ে আজ একটু বেশি পড়ো।" },
-  { title: "ধারাবাহিকতা", message: "প্রতিদিন ১% উন্নতি = মাসে ৩০% উন্নতি।" },
-];
-
-const getTodayMessage = () => {
-  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-  return dailyMessages[dayOfYear % dailyMessages.length];
+// Progress-based motivational messages
+const getProgressMessage = (percentage: number) => {
+  const dayOfWeek = new Date().getDay(); // 0-6, rotates daily
+  
+  // Messages based on completion percentage ranges
+  if (percentage < 20) {
+    // Very low progress - urgent push
+    const messages = [
+      { title: "এখনই শুরু করো", message: "আজ না করলে, কাল আরও কঠিন হবে।" },
+      { title: "সময় কমছে", message: "আজ একটু কষ্ট করো, কাল নিজেকে ধন্যবাদ দেবে।" },
+      { title: "শুরু করো", message: "অজুহাত না দিয়ে বই খোলো।" },
+    ];
+    return messages[dayOfWeek % messages.length];
+  } else if (percentage < 40) {
+    // Low progress - discipline reminder
+    const messages = [
+      { title: "নিয়মিত থাকো", message: "নিয়মিত চেষ্টা প্রতিভার থেকেও শক্তিশালী।" },
+      { title: "রুটিন মানো", message: "ইচ্ছার উপর নির্ভর করো না—নিয়মের উপর করো।" },
+      { title: "ধারাবাহিক হও", message: "প্রতিদিনের ছোট অগ্রগতি একদিন বড় সাফল্য বানায়।" },
+    ];
+    return messages[dayOfWeek % messages.length];
+  } else if (percentage < 60) {
+    // Medium progress - encouragement
+    const messages = [
+      { title: "চালিয়ে যাও", message: "থামো না—তুমি ভাবার চেয়েও কাছাকাছি আছো।" },
+      { title: "ভালো করছ", message: "প্রতিদিনের ছোট অগ্রগতি একদিন বড় সাফল্য বানায়।" },
+      { title: "এগিয়ে যাচ্ছ", message: "তোমার চেষ্টা বৃথা যাবে না।" },
+    ];
+    return messages[dayOfWeek % messages.length];
+  } else if (percentage < 80) {
+    // Good progress - validation
+    const messages = [
+      { title: "দারুণ অগ্রগতি", message: "থামো না—তুমি ভাবার চেয়েও কাছাকাছি আছো।" },
+      { title: "তোমার অর্জন", message: "তুমি যতটুকু পেরেছ, সেটাও একটা অর্জন।" },
+      { title: "সামনে এগিয়ে যাও", message: "নিয়মিত চেষ্টা প্রতিভার থেকেও শক্তিশালী।" },
+    ];
+    return messages[dayOfWeek % messages.length];
+  } else {
+    // High progress - final push
+    const messages = [
+      { title: "প্রায় শেষ!", message: "আজ একটু কষ্ট করো, কাল নিজেকে ধন্যবাদ দেবে।" },
+      { title: "শেষ ধাপে", message: "থামো না—তুমি ভাবার চেয়েও কাছাকাছি আছো।" },
+      { title: "সাফল্যের দোরগোড়ায়", message: "প্রতিদিনের ছোট অগ্রগতি একদিন বড় সাফল্য বানায়।" },
+    ];
+    return messages[dayOfWeek % messages.length];
+  }
 };
 
 export function NotificationBell() {
   const [hasNewNotification, setHasNewNotification] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
-  const todayMessage = getTodayMessage();
+  const { overallProgress } = useProgressSnapshot();
+  
+  const todayMessage = getProgressMessage(overallProgress);
 
   // Check if we should show notification on app open
   useEffect(() => {
@@ -82,7 +109,10 @@ export function NotificationBell() {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-4" align="end">
         <div className="space-y-3">
-          <h4 className="font-semibold text-sm">আজকের অনুপ্রেরণা</h4>
+          <div className="flex items-center justify-between">
+            <h4 className="font-semibold text-sm">আজকের অনুপ্রেরণা</h4>
+            <span className="text-xs text-muted-foreground">{overallProgress}% সম্পন্ন</span>
+          </div>
           <div className={cn(
             "p-3 rounded-lg bg-primary/5 border border-primary/20"
           )}>
