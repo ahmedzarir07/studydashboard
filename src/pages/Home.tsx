@@ -42,7 +42,30 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
+    <div className="min-h-screen bg-background pb-20 md:pb-0 relative overflow-hidden">
+      {/* Animated Glow Orbs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {/* Large primary orb - top right */}
+        <div className="glow-orb w-[300px] h-[300px] md:w-[500px] md:h-[500px] top-[-100px] right-[-100px] md:top-[-150px] md:right-[-150px]" 
+             style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, transparent 70%)' }} />
+        
+        {/* Medium secondary orb - bottom left */}
+        <div className="glow-orb w-[250px] h-[250px] md:w-[400px] md:h-[400px] bottom-[10%] left-[-80px] md:left-[-120px]" 
+             style={{ background: 'radial-gradient(circle, hsl(var(--secondary) / 0.12) 0%, transparent 70%)', animationDelay: '2s' }} />
+        
+        {/* Small accent orb - center right */}
+        <div className="glow-orb w-[150px] h-[150px] md:w-[250px] md:h-[250px] top-[40%] right-[-50px] md:right-[-80px]" 
+             style={{ background: 'radial-gradient(circle, hsl(var(--accent) / 0.1) 0%, transparent 70%)', animationDelay: '4s' }} />
+        
+        {/* Tiny floating orb - mid left */}
+        <div className="glow-orb w-[100px] h-[100px] md:w-[150px] md:h-[150px] top-[25%] left-[5%]" 
+             style={{ background: 'radial-gradient(circle, hsl(var(--neon-purple) / 0.08) 0%, transparent 70%)', animationDelay: '1s' }} />
+        
+        {/* Extra small accent orb - bottom right */}
+        <div className="glow-orb w-[80px] h-[80px] md:w-[120px] md:h-[120px] bottom-[25%] right-[10%]" 
+             style={{ background: 'radial-gradient(circle, hsl(var(--neon-cyan) / 0.1) 0%, transparent 70%)', animationDelay: '3s' }} />
+      </div>
+
       <MobileHeader title="Study Progress" />
 
       <main className="px-4 py-6 max-w-4xl mx-auto">
