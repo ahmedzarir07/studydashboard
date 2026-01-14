@@ -15,6 +15,8 @@ import { english1stData } from "@/data/english1stData";
 import { english2ndData } from "@/data/english2ndData";
 import { bangla1stData } from "@/data/bangla1stData";
 import { bangla2ndData } from "@/data/bangla2ndData";
+import { getSubjectConfig } from "@/config/activityWeights";
+import { normalizeActivity } from "@/config/activityMapping";
 
 export interface SubjectProgress {
   id: string;
@@ -48,43 +50,82 @@ export const ALL_SUBJECTS = [
   { data: bangla2ndData, color: "hsl(35 90% 50%)", displayName: "বাংলা ২য়", id: "bangla2" },
 ];
 
-// Calculate progress from a record map - shared logic
+// Calculate weighted progress from a record map - uses same logic as SubjectProgressBar
 export function calculateProgressFromRecords(
   recordMap: Map<string, string>
 ): { overallProgress: number; subjects: SubjectProgress[] } {
-  let totalCompleted = 0;
-  let totalItems = 0;
+  let totalSubjectProgress = 0;
+  let subjectCount = 0;
   const subjects: SubjectProgress[] = [];
 
   ALL_SUBJECTS.forEach(({ data: subject, color, displayName, id }) => {
-    let subjectCompleted = 0;
-    let subjectTotal = 0;
+    let totalChapterProgress = 0;
+    let chapterCount = 0;
 
     subject.chapters.forEach((chapter) => {
+      // Get the appropriate config for this subject and chapter
+      const config = getSubjectConfig(subject.id, chapter.id);
+      
+      const sectionProgress: Record<string, number> = {
+        core: 0,
+        mcq: 0,
+        cq: 0,
+        final: 0,
+      };
+
       chapter.activities.forEach((activity) => {
-        if (activity.name !== "Total Lec") {
-          totalItems++;
-          subjectTotal++;
-          const status = recordMap.get(`${subject.id}-${chapter.name}-${activity.name}`);
-          if (status === "Done") {
-            totalCompleted++;
-            subjectCompleted++;
+        if (activity.name === "Total Lec") return;
+
+        const status = recordMap.get(`${subject.id}-${chapter.name}-${activity.name}`);
+        const normalizedName = normalizeActivity(activity.name);
+
+        // Find which section this activity belongs to and add its weighted contribution
+        Object.entries(config.sections).forEach(([sectionKey, section]) => {
+          const weight = section.activities[normalizedName];
+          if (weight) {
+            if (status === "Done") {
+              sectionProgress[sectionKey] += weight;
+            } else if (status === "In progress") {
+              sectionProgress[sectionKey] += weight * 0.5;
+            }
           }
+        });
+      });
+
+      // Calculate chapter progress with section caps
+      let chapterProgress = 0;
+      Object.entries(config.sections).forEach(([sectionKey, section]) => {
+        const rawProgress = sectionProgress[sectionKey];
+        const cappedProgress = Math.min(rawProgress, section.internalMax || section.max);
+
+        if (section.internalMax) {
+          // Scale from internal max to actual max
+          chapterProgress += (cappedProgress / section.internalMax) * section.max;
+        } else {
+          chapterProgress += Math.min(cappedProgress, section.max);
         }
       });
+
+      totalChapterProgress += chapterProgress;
+      chapterCount++;
     });
 
+    const subjectProgress = chapterCount > 0 ? Math.round(totalChapterProgress / chapterCount) : 0;
+    
     subjects.push({
       id,
       name: displayName,
       fullName: subject.name,
-      progress: subjectTotal > 0 ? Math.round((subjectCompleted / subjectTotal) * 100) : 0,
+      progress: subjectProgress,
       color,
     });
+
+    totalSubjectProgress += subjectProgress;
+    subjectCount++;
   });
 
   return {
-    overallProgress: totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0,
+    overallProgress: subjectCount > 0 ? Math.round(totalSubjectProgress / subjectCount) : 0,
     subjects,
   };
 }
