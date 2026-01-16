@@ -93,6 +93,8 @@ export const usePublicProgress = () => {
     const recordsByUser = new Map<string, StudyRecord[]>();
     studyRecords.forEach((record) => {
       if (!record.user_id) return;
+      // Only count records with valid status (Done or In progress)
+      if (!record.status || (record.status !== "Done" && record.status !== "In progress")) return;
       
       if (!recordsByUser.has(record.user_id)) {
         recordsByUser.set(record.user_id, []);
@@ -118,13 +120,16 @@ export const usePublicProgress = () => {
         return latest;
       }, null as string | null);
 
-      results.push({
-        profileId: userId,
-        displayName,
-        overallProgress,
-        subjects,
-        lastUpdated,
-      });
+      // Only include users with actual progress
+      if (overallProgress > 0 || Object.values(subjects).some(p => p > 0)) {
+        results.push({
+          profileId: userId,
+          displayName,
+          overallProgress,
+          subjects,
+          lastUpdated,
+        });
+      }
     });
 
     // Sort by overall progress percentage (descending)
