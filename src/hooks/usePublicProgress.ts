@@ -46,8 +46,8 @@ export const usePublicProgress = () => {
 
         setUserProfiles(profilesData || []);
 
-        // Fetch ALL study records (not just first 1000)
-        // Note: PostgREST defaults to 1000 rows, so we page through everything.
+        // Fetch ALL study records with valid status only
+        // Use pagination to get all records (PostgREST defaults to 1000 rows)
         const PAGE_SIZE = 1000;
         const all: StudyRecord[] = [];
         let from = 0;
@@ -57,7 +57,8 @@ export const usePublicProgress = () => {
             .from("study_records")
             .select("user_id, subject, chapter, activity, status, updated_at")
             .eq("type", "status")
-            .order("updated_at", { ascending: true })
+            .in("status", ["Done", "In progress"]) // Only fetch valid statuses
+            .order("updated_at", { ascending: false }) // Most recent first
             .range(from, from + PAGE_SIZE - 1);
 
           if (pageError) throw pageError;
@@ -89,28 +90,39 @@ export const usePublicProgress = () => {
       profileLookup.set(profile.user_id, profile);
     });
 
-    // Group records by user_id (same as Home uses auth.user.id)
-    const recordsByUser = new Map<string, StudyRecord[]>();
+    // Group records by user_id
+    // Use a Map<user_id, Map<key, record>> to ensure only the latest record per activity
+    const recordsByUser = new Map<string, Map<string, StudyRecord>>();
+    
     studyRecords.forEach((record) => {
       if (!record.user_id) return;
-      // Only count records with valid status (Done or In progress)
-      if (!record.status || (record.status !== "Done" && record.status !== "In progress")) return;
       
       if (!recordsByUser.has(record.user_id)) {
-        recordsByUser.set(record.user_id, []);
+        recordsByUser.set(record.user_id, new Map());
       }
-      recordsByUser.get(record.user_id)!.push(record);
+      
+      // Create unique key for this activity
+      const key = `${record.subject}-${record.chapter}-${record.activity}`;
+      const userRecords = recordsByUser.get(record.user_id)!;
+      
+      // Keep the record (since we ordered by updated_at desc, first one is latest)
+      if (!userRecords.has(key)) {
+        userRecords.set(key, record);
+      }
     });
 
     // Calculate progress for each user using the SAME function as Home
     const results: CommunityUserProgress[] = [];
 
-    recordsByUser.forEach((records, userId) => {
+    recordsByUser.forEach((recordsMap, userId) => {
       const profile = profileLookup.get(userId);
 
       const displayName =
         profile?.display_name ||
         `Student • ${userId.slice(0, 4)}`;
+      
+      // Convert Map to array for calculation
+      const records = Array.from(recordsMap.values());
       
       // Use the exact same calculation function as Home page
       const { overallProgress, subjects } = calculateUserProgress(records);
@@ -120,8 +132,8 @@ export const usePublicProgress = () => {
         return latest;
       }, null as string | null);
 
-      // Only include users with actual progress
-      if (overallProgress > 0 || Object.values(subjects).some(p => p > 0)) {
+      // Only include users with actual progress (> 0%)
+      if (overallProgress > 0) {
         results.push({
           profileId: userId,
           displayName,

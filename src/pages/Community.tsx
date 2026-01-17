@@ -76,27 +76,38 @@ export default function Community() {
   const { aggregatedProgress, loading, error } = usePublicProgress();
   const mySnapshot = useProgressSnapshot();
 
-  // Merge lists: for current user, always use Home snapshot so progress matches exactly
+  // Merge lists: for current user, use Home snapshot to ensure real-time accuracy
+  // Other users' data comes directly from aggregatedProgress (database)
   const mergedProgress = useMemo(() => {
+    // If no user logged in, just return aggregated data as-is
     if (!user) return aggregatedProgress;
 
-    // Build subjects record from snapshot
+    // Build subjects record from current user's snapshot
     const mySubjects: Record<string, number> = {};
     mySnapshot.subjects.forEach((s) => {
       mySubjects[s.id] = s.progress;
     });
 
+    // Find existing profile data for display name
+    const existingProfile = aggregatedProgress.find((p) => p.profileId === user.id);
+    
     const myEntry = {
       profileId: user.id,
-      displayName: aggregatedProgress.find((p) => p.profileId === user.id)?.displayName || "You",
+      displayName: existingProfile?.displayName || "You",
       overallProgress: mySnapshot.overallProgress,
       subjects: mySubjects,
       lastUpdated: new Date().toISOString(),
     };
 
-    // Replace or append
+    // Get all other users' progress directly from database (no modifications)
     const others = aggregatedProgress.filter((p) => p.profileId !== user.id);
-    return [myEntry, ...others].sort((a, b) => b.overallProgress - a.overallProgress);
+    
+    // Only include current user if they have progress
+    const result = mySnapshot.overallProgress > 0 
+      ? [myEntry, ...others] 
+      : others;
+    
+    return result.sort((a, b) => b.overallProgress - a.overallProgress);
   }, [aggregatedProgress, user, mySnapshot]);
 
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
