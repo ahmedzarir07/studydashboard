@@ -46,8 +46,8 @@ export const ALL_SUBJECTS = [
   { data: ictData, color: "hsl(199 89% 48%)", displayName: "ICT", id: "ict" },
   { data: english1stData, color: "hsl(340 82% 52%)", displayName: "English 1st", id: "english1" },
   { data: english2ndData, color: "hsl(280 70% 55%)", displayName: "English 2nd", id: "english2" },
-  { data: bangla1stData, color: "hsl(45 93% 47%)", displayName: "বাংলা ১ম", id: "bangla1" },
-  { data: bangla2ndData, color: "hsl(35 90% 50%)", displayName: "বাংলা ২য়", id: "bangla2" },
+  { data: bangla1stData, color: "hsl(45 93% 47%)", displayName: "Bangla 1st", id: "bangla1" },
+  { data: bangla2ndData, color: "hsl(35 90% 50%)", displayName: "Bangla 2nd", id: "bangla2" },
 ];
 
 // Calculate weighted progress from a record map - uses same logic as SubjectProgressBar
