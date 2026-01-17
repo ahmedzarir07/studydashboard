@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 interface CircularProgressProps {
   percentage: number;
   size?: number;
@@ -12,6 +14,17 @@ export function CircularProgress({
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (percentage / 100) * circumference;
+  
+  // Track value changes to trigger animation
+  const [animateKey, setAnimateKey] = useState(0);
+  const [prevPercentage, setPrevPercentage] = useState(percentage);
+  
+  useEffect(() => {
+    if (percentage !== prevPercentage) {
+      setAnimateKey(prev => prev + 1);
+      setPrevPercentage(percentage);
+    }
+  }, [percentage, prevPercentage]);
 
   return (
     <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
@@ -51,7 +64,12 @@ export function CircularProgress({
       </svg>
       {/* Center text */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-2xl font-bold text-foreground">{percentage}%</span>
+        <span 
+          key={animateKey}
+          className="text-2xl font-bold text-foreground animate-scale-in"
+        >
+          {percentage}%
+        </span>
       </div>
     </div>
   );
