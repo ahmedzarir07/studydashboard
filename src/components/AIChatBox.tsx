@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, Bot, User, Sparkles } from "lucide-react";
+import { Send, Loader2, Bot, User, Sparkles, BookOpen, Brain, Target, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 
 type Message = {
@@ -114,6 +114,13 @@ async function streamChat({
   }
 }
 
+const SUGGESTED_PROMPTS = [
+  { icon: BookOpen, text: "How to study Physics effectively?", color: "text-blue-500" },
+  { icon: Brain, text: "Explain organic chemistry basics", color: "text-green-500" },
+  { icon: Target, text: "Tips to improve my exam scores", color: "text-orange-500" },
+  { icon: HelpCircle, text: "What topics should I focus on for HSC?", color: "text-purple-500" },
+];
+
 export function AIChatBox() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -126,6 +133,47 @@ export function AIChatBox() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const handlePromptClick = (prompt: string) => {
+    if (isLoading) return;
+    setInput(prompt);
+    // Auto-send after a brief moment
+    setTimeout(() => {
+      const userMsg: Message = { role: "user", content: prompt };
+      setMessages((prev) => [...prev, userMsg]);
+      setIsLoading(true);
+
+      let assistantContent = "";
+
+      const updateAssistant = (chunk: string) => {
+        assistantContent += chunk;
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last?.role === "assistant") {
+            return prev.map((m, i) =>
+              i === prev.length - 1 ? { ...m, content: assistantContent } : m
+            );
+          }
+          return [...prev, { role: "assistant", content: assistantContent }];
+        });
+      };
+
+      streamChat({
+        messages: [userMsg],
+        onDelta: updateAssistant,
+        onDone: () => {
+          setIsLoading(false);
+          setInput("");
+          inputRef.current?.focus();
+        },
+        onError: (error) => {
+          toast.error(error);
+          setIsLoading(false);
+          setMessages((prev) => prev.slice(0, -1));
+        },
+      });
+    }, 100);
+  };
 
   const sendMessage = async () => {
     const trimmedInput = input.trim();
@@ -190,10 +238,27 @@ export function AIChatBox() {
       {/* Messages */}
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-8">
-            <Sparkles className="h-12 w-12 mb-4 opacity-30" />
-            <p className="text-sm mb-2">Start a conversation!</p>
-            <p className="text-xs">Ask about study tips, subjects, or exam preparation</p>
+          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-4">
+            <Sparkles className="h-10 w-10 mb-3 opacity-30" />
+            <p className="text-sm mb-1">Start a conversation!</p>
+            <p className="text-xs mb-4">Ask about study tips, subjects, or exam preparation</p>
+            
+            {/* Suggested Prompts */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md px-2">
+              {SUGGESTED_PROMPTS.map((prompt, index) => (
+                <button
+                  key={index}
+                  onClick={() => handlePromptClick(prompt.text)}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-muted/50 hover:bg-muted border border-border/50 transition-all duration-200 text-left group disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <prompt.icon className={`h-4 w-4 flex-shrink-0 ${prompt.color}`} />
+                  <span className="text-xs text-foreground/80 group-hover:text-foreground line-clamp-2">
+                    {prompt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
