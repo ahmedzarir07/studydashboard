@@ -16,6 +16,8 @@ import Settings from "./pages/Settings";
 import Community from "./pages/Community";
 import AIAnalysis from "./pages/AIAnalysis";
 import NotFound from "./pages/NotFound";
+import { JoinChannelDialog } from "./components/JoinChannelDialog";
+
 // Initialize React Query client
 const queryClient = new QueryClient();
 
@@ -25,6 +27,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <JoinChannelDialog />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
