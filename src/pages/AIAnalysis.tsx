@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProgressSnapshot } from "@/hooks/useProgressSnapshot";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Loader2, AlertCircle, Clock, GraduationCap } from "lucide-react";
+import { Sparkles, Loader2, AlertCircle, Clock, GraduationCap, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { StudyCoach } from "@/components/StudyCoach";
+import { AIChatBox } from "@/components/AIChatBox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const COOLDOWN_KEY = "ai_analysis_last_used";
@@ -134,17 +135,25 @@ export default function AIAnalysis() {
       <MobileHeader title="AI বিশ্লেষণ" />
 
       <main className="px-4 py-6 max-w-2xl mx-auto space-y-6">
-        <Tabs defaultValue="coach" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+        <Tabs defaultValue="chat" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsTrigger value="chat" className="gap-2">
+              <MessageCircle className="h-4 w-4" />
+              AI Chat
+            </TabsTrigger>
             <TabsTrigger value="coach" className="gap-2">
               <GraduationCap className="h-4 w-4" />
               Study Coach
             </TabsTrigger>
             <TabsTrigger value="analysis" className="gap-2">
               <Sparkles className="h-4 w-4" />
-              Progress Analysis
+              Analysis
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="chat" className="space-y-4">
+            <AIChatBox />
+          </TabsContent>
           
           <TabsContent value="coach" className="space-y-4">
             <StudyCoach />
