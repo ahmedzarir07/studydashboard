@@ -10,28 +10,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 
-const STORAGE_KEY = "join_channel_dismissed";
-
 export const JoinChannelDialog = () => {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const dismissed = localStorage.getItem(STORAGE_KEY);
-    if (!dismissed) {
-      // Small delay for better UX
-      const timer = setTimeout(() => setOpen(true), 500);
-      return () => clearTimeout(timer);
-    }
+    // Show popup on every page load/refresh with a small delay
+    const timer = setTimeout(() => setOpen(true), 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleDismiss = () => {
-    localStorage.setItem(STORAGE_KEY, "true");
     setOpen(false);
   };
 
   const handleJoin = () => {
     window.open("https://t.me/trackingerweb", "_blank");
-    handleDismiss();
+    setOpen(false);
   };
 
   return (
