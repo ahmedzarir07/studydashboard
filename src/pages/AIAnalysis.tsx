@@ -1,128 +1,28 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProgressSnapshot } from "@/hooks/useProgressSnapshot";
-import { useMonthlyPlans } from "@/hooks/useMonthlyPlans";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Loader2, AlertCircle, Clock, GraduationCap, MessageCircle, ClipboardList, Share2 } from "lucide-react";
+import { Sparkles, Loader2, AlertCircle, Clock, GraduationCap, MessageCircle, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { StudyCoach } from "@/components/StudyCoach";
 import { AIChatBox } from "@/components/AIChatBox";
 import { AIStudyAnalyst } from "@/components/AIStudyAnalyst";
-import { SharePlanDialog } from "@/components/SharePlanDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format } from "date-fns";
-import { bn } from "date-fns/locale";
 
 const COOLDOWN_KEY = "ai_analysis_last_used";
 const COOLDOWN_HOURS = 24;
 
 export default function AIAnalysis() {
   const { user } = useAuth();
-  const { overallProgress, subjects, recordMap, loading: progressLoading } = useProgressSnapshot();
-  const { plans, currentMonth } = useMonthlyPlans();
+  const { overallProgress, subjects, loading: progressLoading } = useProgressSnapshot();
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cooldownRemaining, setCooldownRemaining] = useState<string | null>(null);
-  const [shareDialogOpen, setShareDialogOpen] = useState(false);
-
-  // Build completed activities map for SharePlanDialog
-  const completedActivitiesMap = useMemo(() => {
-    const map = new Map<string, string[]>();
-    recordMap.forEach((status, key) => {
-      if (status === "Done") {
-        // Key format is "subject-chapter-activity"
-        const parts = key.split("-");
-        if (parts.length >= 3) {
-          const subject = parts[0];
-          const chapter = parts.slice(1, -1).join("-");
-          const activity = parts[parts.length - 1];
-          const mapKey = `${subject}-${chapter}`;
-          if (!map.has(mapKey)) {
-            map.set(mapKey, []);
-          }
-          map.get(mapKey)!.push(activity);
-        }
-      }
-    });
-    return map;
-  }, [recordMap]);
-
-  // Calculate monthly plan statistics using recordMap from useProgressSnapshot
-  const monthlyPlanData = useMemo(() => {
-    if (!plans || plans.length === 0) return null;
-
-    // Calculate totals
-    let totalPlannedChapters = plans.length;
-    let totalPlannedActivities = 0;
-    let completedPlannedChapters = 0;
-    let completedPlannedActivities = 0;
-
-    // Group by subject
-    const subjectMap = new Map<string, {
-      plannedChapters: number;
-      completedChapters: number;
-      plannedActivities: number;
-      completedActivities: number;
-    }>();
-
-    plans.forEach((plan) => {
-      const plannedActivities = plan.planned_activities || [];
-      totalPlannedActivities += plannedActivities.length;
-
-      // Check completed activities for this chapter using recordMap
-      let chapterCompletedActivities = 0;
-      plannedActivities.forEach((activity) => {
-        const key = `${plan.subject}-${plan.chapter}-${activity}`;
-        const status = recordMap.get(key);
-        if (status === "Done") {
-          chapterCompletedActivities++;
-          completedPlannedActivities++;
-        }
-      });
-
-      // Chapter is considered complete if all planned activities are done
-      const chapterComplete = plannedActivities.length > 0 && 
-        chapterCompletedActivities === plannedActivities.length;
-      if (chapterComplete) {
-        completedPlannedChapters++;
-      }
-
-      // Update subject stats
-      if (!subjectMap.has(plan.subject)) {
-        subjectMap.set(plan.subject, {
-          plannedChapters: 0,
-          completedChapters: 0,
-          plannedActivities: 0,
-          completedActivities: 0,
-        });
-      }
-      const subjectStats = subjectMap.get(plan.subject)!;
-      subjectStats.plannedChapters++;
-      subjectStats.plannedActivities += plannedActivities.length;
-      subjectStats.completedActivities += chapterCompletedActivities;
-      if (chapterComplete) {
-        subjectStats.completedChapters++;
-      }
-    });
-
-    const subjectPlans = Array.from(subjectMap.entries()).map(([subject, stats]) => ({
-      subject,
-      ...stats,
-    }));
-
-    return {
-      totalPlannedChapters,
-      totalPlannedActivities,
-      completedPlannedChapters,
-      completedPlannedActivities,
-      subjectPlans,
-    };
-  }, [plans, recordMap]);
 
   // Check cooldown on mount
   useEffect(() => {
@@ -171,9 +71,6 @@ export default function AIAnalysis() {
     setAnalysis(null);
 
     try {
-      // Format current month for display
-      const formattedMonth = format(new Date(currentMonth + "-01"), "MMMM yyyy", { locale: bn });
-
       const progressData = {
         overallProgress,
         subjects: subjects.map((s) => ({
@@ -181,8 +78,6 @@ export default function AIAnalysis() {
           fullName: s.fullName,
           progress: s.progress,
         })),
-        monthlyPlan: monthlyPlanData,
-        currentMonth: formattedMonth,
       };
 
       const { data, error: fnError } = await supabase.functions.invoke("analyze-progress", {
@@ -241,19 +136,6 @@ export default function AIAnalysis() {
       <MobileHeader title="AI বিশ্লেষণ" />
 
       <main className="px-4 py-6 max-w-2xl mx-auto space-y-6">
-        {/* Share Button */}
-        <div className="flex justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShareDialogOpen(true)}
-            className="gap-2"
-          >
-            <Share2 className="h-4 w-4" />
-            শেয়ার করুন
-          </Button>
-        </div>
-
         <Tabs defaultValue="analyst" className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-4">
             <TabsTrigger value="analyst" className="gap-1 text-xs sm:text-sm px-1 sm:px-3">
@@ -393,16 +275,6 @@ export default function AIAnalysis() {
           </TabsContent>
         </Tabs>
       </main>
-
-      {/* Share Dialog */}
-      <SharePlanDialog
-        open={shareDialogOpen}
-        onOpenChange={setShareDialogOpen}
-        plans={plans}
-        completedActivitiesMap={completedActivitiesMap}
-        currentMonth={new Date(currentMonth + "-01")}
-        userEmail={user?.email}
-      />
 
       <BottomNav />
     </div>
