@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProgressSnapshot } from "@/hooks/useProgressSnapshot";
+import { useMonthlyPlans } from "@/hooks/useMonthlyPlans";
 import { supabase } from "@/integrations/supabase/client";
 import { Sparkles, Loader2, AlertCircle, Clock, GraduationCap, MessageCircle, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
@@ -12,17 +13,92 @@ import { StudyCoach } from "@/components/StudyCoach";
 import { AIChatBox } from "@/components/AIChatBox";
 import { AIStudyAnalyst } from "@/components/AIStudyAnalyst";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format } from "date-fns";
+import { bn } from "date-fns/locale";
 
 const COOLDOWN_KEY = "ai_analysis_last_used";
 const COOLDOWN_HOURS = 24;
 
 export default function AIAnalysis() {
   const { user } = useAuth();
-  const { overallProgress, subjects, loading: progressLoading } = useProgressSnapshot();
+  const { overallProgress, subjects, recordMap, loading: progressLoading } = useProgressSnapshot();
+  const { plans, currentMonth } = useMonthlyPlans();
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cooldownRemaining, setCooldownRemaining] = useState<string | null>(null);
+
+  // Calculate monthly plan statistics using recordMap from useProgressSnapshot
+  const monthlyPlanData = useMemo(() => {
+    if (!plans || plans.length === 0) return null;
+
+    // Calculate totals
+    let totalPlannedChapters = plans.length;
+    let totalPlannedActivities = 0;
+    let completedPlannedChapters = 0;
+    let completedPlannedActivities = 0;
+
+    // Group by subject
+    const subjectMap = new Map<string, {
+      plannedChapters: number;
+      completedChapters: number;
+      plannedActivities: number;
+      completedActivities: number;
+    }>();
+
+    plans.forEach((plan) => {
+      const plannedActivities = plan.planned_activities || [];
+      totalPlannedActivities += plannedActivities.length;
+
+      // Check completed activities for this chapter using recordMap
+      let chapterCompletedActivities = 0;
+      plannedActivities.forEach((activity) => {
+        const key = `${plan.subject}-${plan.chapter}-${activity}`;
+        const status = recordMap.get(key);
+        if (status === "Done") {
+          chapterCompletedActivities++;
+          completedPlannedActivities++;
+        }
+      });
+
+      // Chapter is considered complete if all planned activities are done
+      const chapterComplete = plannedActivities.length > 0 && 
+        chapterCompletedActivities === plannedActivities.length;
+      if (chapterComplete) {
+        completedPlannedChapters++;
+      }
+
+      // Update subject stats
+      if (!subjectMap.has(plan.subject)) {
+        subjectMap.set(plan.subject, {
+          plannedChapters: 0,
+          completedChapters: 0,
+          plannedActivities: 0,
+          completedActivities: 0,
+        });
+      }
+      const subjectStats = subjectMap.get(plan.subject)!;
+      subjectStats.plannedChapters++;
+      subjectStats.plannedActivities += plannedActivities.length;
+      subjectStats.completedActivities += chapterCompletedActivities;
+      if (chapterComplete) {
+        subjectStats.completedChapters++;
+      }
+    });
+
+    const subjectPlans = Array.from(subjectMap.entries()).map(([subject, stats]) => ({
+      subject,
+      ...stats,
+    }));
+
+    return {
+      totalPlannedChapters,
+      totalPlannedActivities,
+      completedPlannedChapters,
+      completedPlannedActivities,
+      subjectPlans,
+    };
+  }, [plans, recordMap]);
 
   // Check cooldown on mount
   useEffect(() => {
@@ -71,6 +147,9 @@ export default function AIAnalysis() {
     setAnalysis(null);
 
     try {
+      // Format current month for display
+      const formattedMonth = format(new Date(currentMonth + "-01"), "MMMM yyyy", { locale: bn });
+
       const progressData = {
         overallProgress,
         subjects: subjects.map((s) => ({
@@ -78,6 +157,8 @@ export default function AIAnalysis() {
           fullName: s.fullName,
           progress: s.progress,
         })),
+        monthlyPlan: monthlyPlanData,
+        currentMonth: formattedMonth,
       };
 
       const { data, error: fnError } = await supabase.functions.invoke("analyze-progress", {

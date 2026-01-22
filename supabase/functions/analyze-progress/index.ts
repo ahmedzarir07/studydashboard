@@ -6,28 +6,40 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const systemPrompt = `You are an AI progress analyst for HSC science students.
+const systemPrompt = `You are an AI Study Analyzer for HSC science students.
 
-Analyze the provided study progress data and return:
-- Clear overall insights
-- Subject-wise strengths and weaknesses
-- Specific problems in consistency or coverage
-- Practical study actions for the next 3–7 days
+You have full access to:
+- Monthly plan data (planned chapters and activities)
+- Subject-wise progress (current completion %)
+- Completed vs planned chapters comparison
+- Study consistency history
 
-Rules:
-- Respond in Bangla ONLY
-- Use short bullet points
-- Follow exactly this structure:
-  1. সার্বিক বিশ্লেষণ (Overall Analysis)
-  2. বিষয়ভিত্তিক পর্যালোচনা (Subject-wise Insights)
-  3. সমস্যা চিহ্নিতকরণ (Problems Detected)
-  4. পরবর্তী ৩-৭ দিনের কর্মপরিকল্পনা (Actionable Suggestions)
-- Do not ask questions
-- Do not give motivational quotes
-- Do not explain theory
-- Do not solve academic questions
-- Be concise and practical
-- Focus on what needs improvement and specific actions`;
+Your rules:
+1. Always prioritize MONTHLY completion status
+2. Analyze which subjects are most behind their plan
+3. Show percentage-based gaps clearly
+4. Warn if monthly pace is insufficient
+5. Highlight risk areas logically
+6. Never give daily tasks or routines
+7. Never tell the user what to study
+8. Do not motivate emotionally
+9. Speak short, clear Bangla ONLY
+10. Your job is to reflect reality, not guide actions
+
+Output format (follow exactly):
+১. মাসিক অবস্থা (Monthly Status)
+   - পরিকল্পিত vs সম্পন্ন অধ্যায়
+   - সম্পন্নতার হার
+
+২. বিষয়ভিত্তিক ঝুঁকি (Subject-wise Risk)
+   - সবচেয়ে পিছিয়ে থাকা বিষয়
+   - গ্যাপ শতাংশ
+
+৩. সতর্কতা (Warning - if needed)
+   - মাসিক গতি অপর্যাপ্ত হলে
+
+৪. বাস্তবতা (Reality Check)
+   - এক লাইনে সংক্ষিপ্ত মূল্যায়ন`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -105,29 +117,86 @@ serve(async (req) => {
   }
 });
 
+interface MonthlyPlanData {
+  totalPlannedChapters: number;
+  totalPlannedActivities: number;
+  completedPlannedChapters: number;
+  completedPlannedActivities: number;
+  subjectPlans: Array<{
+    subject: string;
+    plannedChapters: number;
+    completedChapters: number;
+    plannedActivities: number;
+    completedActivities: number;
+  }>;
+}
+
 function formatProgressForAI(data: {
   overallProgress: number;
   subjects: Array<{ name: string; fullName: string; progress: number }>;
+  monthlyPlan?: MonthlyPlanData;
+  currentMonth?: string;
 }): string {
-  const lines = [
-    `সার্বিক অগ্রগতি: ${data.overallProgress}%`,
-    "",
-    "বিষয়ভিত্তিক অগ্রগতি:",
-  ];
+  const lines: string[] = [];
+  
+  // Monthly Plan Status (Priority)
+  if (data.monthlyPlan && data.currentMonth) {
+    const plan = data.monthlyPlan;
+    const chapterCompletionRate = plan.totalPlannedChapters > 0 
+      ? Math.round((plan.completedPlannedChapters / plan.totalPlannedChapters) * 100) 
+      : 0;
+    const activityCompletionRate = plan.totalPlannedActivities > 0 
+      ? Math.round((plan.completedPlannedActivities / plan.totalPlannedActivities) * 100) 
+      : 0;
+    
+    lines.push(`=== ${data.currentMonth} মাসিক পরিকল্পনা ===`);
+    lines.push(`পরিকল্পিত অধ্যায়: ${plan.totalPlannedChapters}টি`);
+    lines.push(`সম্পন্ন অধ্যায়: ${plan.completedPlannedChapters}টি (${chapterCompletionRate}%)`);
+    lines.push(`পরিকল্পিত কার্যক্রম: ${plan.totalPlannedActivities}টি`);
+    lines.push(`সম্পন্ন কার্যক্রম: ${plan.completedPlannedActivities}টি (${activityCompletionRate}%)`);
+    lines.push("");
+    
+    // Subject-wise monthly plan breakdown
+    if (plan.subjectPlans.length > 0) {
+      lines.push("বিষয়ভিত্তিক মাসিক অবস্থা:");
+      plan.subjectPlans.forEach((sp) => {
+        const chapterRate = sp.plannedChapters > 0 
+          ? Math.round((sp.completedChapters / sp.plannedChapters) * 100) 
+          : 0;
+        const gap = sp.plannedChapters - sp.completedChapters;
+        lines.push(`- ${sp.subject}: ${sp.completedChapters}/${sp.plannedChapters} অধ্যায় (${chapterRate}%) | গ্যাপ: ${gap}টি`);
+      });
+      lines.push("");
+    }
+  } else {
+    lines.push("=== মাসিক পরিকল্পনা নেই ===");
+    lines.push("ব্যবহারকারী এই মাসে কোনো পরিকল্পনা তৈরি করেননি।");
+    lines.push("");
+  }
+  
+  // Overall Progress
+  lines.push(`=== সার্বিক অগ্রগতি: ${data.overallProgress}% ===`);
+  lines.push("");
+  lines.push("বিষয়ভিত্তিক অগ্রগতি:");
 
-  data.subjects.forEach((subject) => {
-    lines.push(`- ${subject.fullName} (${subject.name}): ${subject.progress}%`);
+  // Sort subjects by progress (lowest first for risk identification)
+  const sortedSubjects = [...data.subjects].sort((a, b) => a.progress - b.progress);
+  
+  sortedSubjects.forEach((subject) => {
+    const riskLabel = subject.progress < 20 ? "[উচ্চ ঝুঁকি]" 
+      : subject.progress < 40 ? "[মাঝারি ঝুঁকি]" 
+      : "";
+    lines.push(`- ${subject.fullName}: ${subject.progress}% ${riskLabel}`);
   });
 
-  // Add some context for the AI
-  const lowProgress = data.subjects.filter((s) => s.progress < 30);
-  const mediumProgress = data.subjects.filter((s) => s.progress >= 30 && s.progress < 60);
-  const highProgress = data.subjects.filter((s) => s.progress >= 60);
-
+  // Risk summary
+  const highRisk = data.subjects.filter((s) => s.progress < 20);
+  const mediumRisk = data.subjects.filter((s) => s.progress >= 20 && s.progress < 40);
+  
   lines.push("");
-  lines.push(`দুর্বল বিষয় (<30%): ${lowProgress.length}টি`);
-  lines.push(`মাঝারি বিষয় (30-60%): ${mediumProgress.length}টি`);
-  lines.push(`ভালো বিষয় (>60%): ${highProgress.length}টি`);
+  lines.push("ঝুঁকি সারাংশ:");
+  lines.push(`- উচ্চ ঝুঁকি (<20%): ${highRisk.length}টি বিষয়`);
+  lines.push(`- মাঝারি ঝুঁকি (20-40%): ${mediumRisk.length}টি বিষয়`);
 
   return lines.join("\n");
 }
