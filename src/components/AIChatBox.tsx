@@ -16,12 +16,18 @@ type Message = {
 interface UserContext {
   overallProgress: number;
   subjects: Array<{ name: string; progress: number }>;
-  profile?: { displayName?: string; email?: string };
+  profile?: { displayName?: string; email?: string; lastActive?: string };
   coachSettings?: {
     batch?: string;
     monthsRemaining?: number;
     riskLevel?: string;
   };
+  // Comprehensive data
+  monthlyPlans?: Array<{ subject: string; chapter: string; activities: string[]; goals?: string }>;
+  completedChapters?: Array<{ subject: string; chapter: string; completedAt?: string }>;
+  recentActivities?: Array<{ subject: string; chapter: string; activity: string; status: string; updatedAt?: string }>;
+  totalCompletedChapters?: number;
+  totalPlannedThisMonth?: number;
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
@@ -148,17 +154,21 @@ export function AIChatBox() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Load user context (profile, coach settings) on mount
+  // Load comprehensive user context on mount
   useEffect(() => {
     const loadUserContext = async () => {
       if (!user) return;
 
       try {
-        // Fetch profile and coach settings in parallel
-        const [profileRes, coachRes] = await Promise.all([
+        // Get current month for monthly plans
+        const now = new Date();
+        const currentMonthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+        // Fetch all data in parallel
+        const [profileRes, coachRes, plansRes, completionsRes, activitiesRes] = await Promise.all([
           supabase
             .from("profiles")
-            .select("display_name, email")
+            .select("display_name, email, last_active_at")
             .eq("user_id", user.id)
             .single(),
           supabase
@@ -166,13 +176,61 @@ export function AIChatBox() {
             .select("batch, months_remaining, risk_level")
             .eq("user_id", user.id)
             .single(),
+          supabase
+            .from("monthly_study_plans")
+            .select("subject, chapter, planned_activities, goals")
+            .eq("user_id", user.id)
+            .eq("month_year", currentMonthYear),
+          supabase
+            .from("chapter_completions")
+            .select("subject, chapter, completed_at")
+            .eq("user_id", user.id)
+            .eq("completed", true)
+            .order("completed_at", { ascending: false })
+            .limit(30),
+          supabase
+            .from("study_records")
+            .select("subject, chapter, activity, status, updated_at")
+            .eq("user_id", user.id)
+            .order("updated_at", { ascending: false })
+            .limit(50),
         ]);
+
+        // Transform monthly plans
+        const monthlyPlans = plansRes.data?.map((p) => ({
+          subject: p.subject,
+          chapter: p.chapter,
+          activities: p.planned_activities || [],
+          goals: p.goals ?? undefined,
+        })) || [];
+
+        // Transform completed chapters
+        const completedChapters = completionsRes.data?.map((c) => ({
+          subject: c.subject,
+          chapter: c.chapter,
+          completedAt: c.completed_at ?? undefined,
+        })) || [];
+
+        // Transform recent activities (only those with a status)
+        const recentActivities = activitiesRes.data
+          ?.filter((a) => a.status)
+          .map((a) => ({
+            subject: a.subject,
+            chapter: a.chapter,
+            activity: a.activity,
+            status: a.status!,
+            updatedAt: a.updated_at ?? undefined,
+          })) || [];
 
         setUserContext({
           overallProgress,
           subjects: subjects.map((s) => ({ name: s.name, progress: s.progress })),
           profile: profileRes.data
-            ? { displayName: profileRes.data.display_name ?? undefined, email: profileRes.data.email ?? undefined }
+            ? {
+                displayName: profileRes.data.display_name ?? undefined,
+                email: profileRes.data.email ?? undefined,
+                lastActive: profileRes.data.last_active_at ?? undefined,
+              }
             : undefined,
           coachSettings: coachRes.data
             ? {
@@ -181,6 +239,11 @@ export function AIChatBox() {
                 riskLevel: coachRes.data.risk_level,
               }
             : undefined,
+          monthlyPlans,
+          completedChapters,
+          recentActivities,
+          totalCompletedChapters: completedChapters.length,
+          totalPlannedThisMonth: monthlyPlans.length,
         });
       } catch (error) {
         console.error("Failed to load user context:", error);

@@ -23,26 +23,91 @@ serve(async (req) => {
       throw new Error("AI service is not configured");
     }
 
-    // Build context section based on user data
+    // Build comprehensive context section based on user data
     let userDataContext = "";
     if (userContext) {
+      // Basic profile and settings
+      const profileSection = [
+        userContext.profile?.displayName ? `Name: ${userContext.profile.displayName}` : "",
+        userContext.coachSettings?.batch ? `HSC Batch: ${userContext.coachSettings.batch}` : "",
+        userContext.coachSettings?.monthsRemaining ? `Months until exam: ${userContext.coachSettings.monthsRemaining}` : "",
+        userContext.coachSettings?.riskLevel ? `Risk Level: ${userContext.coachSettings.riskLevel}` : "",
+        userContext.profile?.lastActive ? `Last active: ${new Date(userContext.profile.lastActive).toLocaleDateString()}` : "",
+      ].filter(Boolean).join("\n");
+
+      // Subject progress
+      const subjectProgress = userContext.subjects?.map((s: { name: string; progress: number }) => 
+        `- ${s.name}: ${s.progress}%`
+      ).join("\n") || "No data available";
+
+      // Monthly plans summary
+      let monthlyPlanSection = "";
+      if (userContext.monthlyPlans && userContext.monthlyPlans.length > 0) {
+        const plansBySubject: Record<string, string[]> = {};
+        for (const plan of userContext.monthlyPlans) {
+          if (!plansBySubject[plan.subject]) plansBySubject[plan.subject] = [];
+          plansBySubject[plan.subject].push(`${plan.chapter} (${plan.activities.join(", ")})`);
+        }
+        monthlyPlanSection = Object.entries(plansBySubject)
+          .map(([subject, chapters]) => `${subject}:\n  ${chapters.join("\n  ")}`)
+          .join("\n");
+      }
+
+      // Recently completed chapters
+      let completedSection = "";
+      if (userContext.completedChapters && userContext.completedChapters.length > 0) {
+        const recentCompleted = userContext.completedChapters.slice(0, 10);
+        completedSection = recentCompleted.map((c: { subject: string; chapter: string; completedAt?: string }) => {
+          const date = c.completedAt ? new Date(c.completedAt).toLocaleDateString() : "";
+          return `- ${c.subject}: ${c.chapter}${date ? ` (completed ${date})` : ""}`;
+        }).join("\n");
+      }
+
+      // Recent activity summary (group by chapter)
+      let activitySection = "";
+      if (userContext.recentActivities && userContext.recentActivities.length > 0) {
+        const activityByChapter: Record<string, { done: string[]; inProgress: string[]; notStarted: string[] }> = {};
+        for (const act of userContext.recentActivities.slice(0, 30)) {
+          const key = `${act.subject} - ${act.chapter}`;
+          if (!activityByChapter[key]) activityByChapter[key] = { done: [], inProgress: [], notStarted: [] };
+          if (act.status === "Done") activityByChapter[key].done.push(act.activity);
+          else if (act.status === "In progress") activityByChapter[key].inProgress.push(act.activity);
+          else activityByChapter[key].notStarted.push(act.activity);
+        }
+        
+        const summaries = Object.entries(activityByChapter).slice(0, 8).map(([chapter, activities]) => {
+          const parts = [];
+          if (activities.done.length) parts.push(`Done: ${activities.done.join(", ")}`);
+          if (activities.inProgress.length) parts.push(`In Progress: ${activities.inProgress.join(", ")}`);
+          return `${chapter}: ${parts.join(" | ") || "No activities tracked"}`;
+        });
+        activitySection = summaries.join("\n");
+      }
+
       userDataContext = `
 
-=== STUDENT'S CURRENT DATA ===
-${userContext.profile?.displayName ? `Name: ${userContext.profile.displayName}` : ""}
-${userContext.profile?.email ? `Email: ${userContext.profile.email}` : ""}
-${userContext.coachSettings?.batch ? `HSC Batch: ${userContext.coachSettings.batch}` : ""}
-${userContext.coachSettings?.monthsRemaining ? `Months until exam: ${userContext.coachSettings.monthsRemaining}` : ""}
-${userContext.coachSettings?.riskLevel ? `Risk Level: ${userContext.coachSettings.riskLevel}` : ""}
+=== STUDENT'S COMPLETE DATA ===
+${profileSection}
 
 Overall Progress: ${userContext.overallProgress}%
+Total Chapters Completed: ${userContext.totalCompletedChapters || 0}
+Chapters Planned This Month: ${userContext.totalPlannedThisMonth || 0}
 
-Subject-wise Progress:
-${userContext.subjects?.map((s: { name: string; progress: number }) => `- ${s.name}: ${s.progress}%`).join("\n") || "No data available"}
+--- Subject Progress ---
+${subjectProgress}
+
+${monthlyPlanSection ? `--- This Month's Study Plan ---\n${monthlyPlanSection}\n` : ""}
+${completedSection ? `--- Recently Completed Chapters ---\n${completedSection}\n` : ""}
+${activitySection ? `--- Detailed Activity Status (Recent Chapters) ---\n${activitySection}\n` : ""}
 ===
 
-Use this data to provide personalized advice. Reference their actual progress when giving suggestions.
-If they're behind on certain subjects, prioritize those in your recommendations.
+IMPORTANT INSTRUCTIONS FOR PERSONALIZATION:
+- Reference their SPECIFIC progress data when giving advice
+- If they have chapters planned this month, check if they're on track
+- Notice which activities they've completed vs not started (e.g., "You've done Lecture for Optics but haven't started MCQ practice")
+- Celebrate completed chapters and encourage continuing momentum
+- If they're behind on certain subjects, prioritize those in recommendations
+- Use their HSC batch and months remaining to calibrate urgency
 `;
     }
 
