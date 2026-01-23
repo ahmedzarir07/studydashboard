@@ -6,21 +6,35 @@ import { Send, Loader2, Bot, User, Sparkles, BookOpen, Brain, Target, HelpCircle
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProgressSnapshot } from "@/hooks/useProgressSnapshot";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
 };
 
+interface UserContext {
+  overallProgress: number;
+  subjects: Array<{ name: string; progress: number }>;
+  profile?: { displayName?: string; email?: string };
+  coachSettings?: {
+    batch?: string;
+    monthsRemaining?: number;
+    riskLevel?: string;
+  };
+}
+
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 
 async function streamChat({
   messages,
+  userContext,
   onDelta,
   onDone,
   onError,
 }: {
   messages: Message[];
+  userContext?: UserContext;
   onDelta: (deltaText: string) => void;
   onDone: () => void;
   onError: (error: string) => void;
@@ -32,7 +46,7 @@ async function streamChat({
         "Content-Type": "application/json",
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ messages, userContext }),
     });
 
     if (!resp.ok) {
@@ -125,12 +139,57 @@ const SUGGESTED_PROMPTS = [
 
 export function AIChatBox() {
   const { user } = useAuth();
+  const { overallProgress, subjects } = useProgressSnapshot();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [userContext, setUserContext] = useState<UserContext | undefined>();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Load user context (profile, coach settings) on mount
+  useEffect(() => {
+    const loadUserContext = async () => {
+      if (!user) return;
+
+      try {
+        // Fetch profile and coach settings in parallel
+        const [profileRes, coachRes] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select("display_name, email")
+            .eq("user_id", user.id)
+            .single(),
+          supabase
+            .from("study_coach_settings")
+            .select("batch, months_remaining, risk_level")
+            .eq("user_id", user.id)
+            .single(),
+        ]);
+
+        setUserContext({
+          overallProgress,
+          subjects: subjects.map((s) => ({ name: s.name, progress: s.progress })),
+          profile: profileRes.data
+            ? { displayName: profileRes.data.display_name ?? undefined, email: profileRes.data.email ?? undefined }
+            : undefined,
+          coachSettings: coachRes.data
+            ? {
+                batch: coachRes.data.batch,
+                monthsRemaining: coachRes.data.months_remaining,
+                riskLevel: coachRes.data.risk_level,
+              }
+            : undefined,
+        });
+      } catch (error) {
+        console.error("Failed to load user context:", error);
+      }
+    };
+
+    loadUserContext();
+  }, [user, overallProgress, subjects]);
+
 
   // Load chat history on mount
   useEffect(() => {
@@ -224,6 +283,7 @@ export function AIChatBox() {
 
       streamChat({
         messages: [userMsg],
+        userContext,
         onDelta: updateAssistant,
         onDone: () => {
           setIsLoading(false);
@@ -270,6 +330,7 @@ export function AIChatBox() {
 
     await streamChat({
       messages: [...messages, userMsg],
+      userContext,
       onDelta: updateAssistant,
       onDone: () => {
         setIsLoading(false);

@@ -12,14 +12,38 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, userContext } = await req.json();
     
     console.log("Received chat request with", messages?.length, "messages");
+    console.log("User context:", userContext ? "provided" : "not provided");
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       console.error("LOVABLE_API_KEY is not configured");
       throw new Error("AI service is not configured");
+    }
+
+    // Build context section based on user data
+    let userDataContext = "";
+    if (userContext) {
+      userDataContext = `
+
+=== STUDENT'S CURRENT DATA ===
+${userContext.profile?.displayName ? `Name: ${userContext.profile.displayName}` : ""}
+${userContext.profile?.email ? `Email: ${userContext.profile.email}` : ""}
+${userContext.coachSettings?.batch ? `HSC Batch: ${userContext.coachSettings.batch}` : ""}
+${userContext.coachSettings?.monthsRemaining ? `Months until exam: ${userContext.coachSettings.monthsRemaining}` : ""}
+${userContext.coachSettings?.riskLevel ? `Risk Level: ${userContext.coachSettings.riskLevel}` : ""}
+
+Overall Progress: ${userContext.overallProgress}%
+
+Subject-wise Progress:
+${userContext.subjects?.map((s: { name: string; progress: number }) => `- ${s.name}: ${s.progress}%`).join("\n") || "No data available"}
+===
+
+Use this data to provide personalized advice. Reference their actual progress when giving suggestions.
+If they're behind on certain subjects, prioritize those in your recommendations.
+`;
     }
 
     const systemPrompt = `You are a helpful AI study assistant for HSC (Higher Secondary Certificate) students in Bangladesh. 
@@ -32,7 +56,8 @@ You help students with:
 
 Be friendly, encouraging, and supportive. Keep responses concise but helpful.
 You can respond in both Bengali and English based on the user's language preference.
-Always be positive and motivating to help students succeed in their HSC exams.`;
+Always be positive and motivating to help students succeed in their HSC exams.
+${userDataContext}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
