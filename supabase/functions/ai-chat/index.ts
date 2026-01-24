@@ -118,11 +118,57 @@ You help students with:
 - Motivation and study planning
 - Answering academic questions
 - Exam preparation tips
+- Analyzing images of textbook pages, notes, problems, or diagrams
+- Helping with PDFs or documents shared by students
 
 Be friendly, encouraging, and supportive. Keep responses concise but helpful.
 You can respond in both Bengali and English based on the user's language preference.
 Always be positive and motivating to help students succeed in their HSC exams.
+
+When students share images:
+- Analyze the content carefully (equations, diagrams, handwritten notes, textbook pages)
+- Explain concepts shown in the image
+- Help solve problems if visible
+- Point out any mistakes in their work
+
+When students mention PDFs:
+- Note that you can see the PDF link but cannot directly read PDF contents
+- Suggest they share screenshots of specific pages for better help
 ${userDataContext}`;
+
+    // Transform messages to handle multimodal content (images)
+    const transformedMessages = messages.map((msg: { role: string; content: string; imageUrls?: string[]; documentInfo?: string }) => {
+      // If message has image URLs, format for vision model
+      if (msg.imageUrls && msg.imageUrls.length > 0) {
+        const contentParts: Array<{ type: string; text?: string; image_url?: { url: string } }> = [];
+        
+        // Add text content first
+        let textContent = msg.content || "";
+        if (msg.documentInfo) {
+          textContent += `\n\n${msg.documentInfo}`;
+        }
+        if (textContent) {
+          contentParts.push({ type: "text", text: textContent });
+        }
+        
+        // Add image URLs
+        for (const imageUrl of msg.imageUrls) {
+          contentParts.push({
+            type: "image_url",
+            image_url: { url: imageUrl }
+          });
+        }
+        
+        return { role: msg.role, content: contentParts };
+      }
+      
+      // Text-only message (possibly with document info)
+      let textContent = msg.content || "";
+      if (msg.documentInfo) {
+        textContent += `\n\n${msg.documentInfo}`;
+      }
+      return { role: msg.role, content: textContent };
+    });
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -131,10 +177,10 @@ ${userDataContext}`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...transformedMessages,
         ],
         stream: true,
       }),

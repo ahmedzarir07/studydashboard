@@ -2,15 +2,22 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, Bot, User, Sparkles, BookOpen, Brain, Target, HelpCircle, Trash2 } from "lucide-react";
+import { Send, Loader2, Bot, User, Sparkles, BookOpen, Brain, Target, HelpCircle, Trash2, Paperclip, X, Image, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProgressSnapshot } from "@/hooks/useProgressSnapshot";
 
+type Attachment = {
+  url: string;
+  type: "image" | "document";
+  name: string;
+};
+
 type Message = {
   role: "user" | "assistant";
   content: string;
+  attachments?: Attachment[];
 };
 
 interface UserContext {
@@ -31,6 +38,9 @@ interface UserContext {
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+const ALLOWED_DOC_TYPES = ["application/pdf"];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 async function streamChat({
   messages,
@@ -151,8 +161,11 @@ export function AIChatBox() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [userContext, setUserContext] = useState<UserContext | undefined>();
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load comprehensive user context on mount
   useEffect(() => {
@@ -319,6 +332,66 @@ export function AIChatBox() {
     }
   }, [messages]);
 
+  // Handle file upload
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !user) return;
+
+    setIsUploading(true);
+    const newAttachments: Attachment[] = [];
+
+    for (const file of Array.from(files)) {
+      // Validate file type
+      const isImage = ALLOWED_IMAGE_TYPES.includes(file.type);
+      const isDoc = ALLOWED_DOC_TYPES.includes(file.type);
+      
+      if (!isImage && !isDoc) {
+        toast.error(`${file.name}: Only images (JPG, PNG, GIF, WebP) and PDFs are allowed`);
+        continue;
+      }
+
+      // Validate file size
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`${file.name}: File too large (max 10MB)`);
+        continue;
+      }
+
+      try {
+        const fileName = `${user.id}/${Date.now()}-${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("chat-attachments")
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from("chat-attachments")
+          .getPublicUrl(fileName);
+
+        newAttachments.push({
+          url: urlData.publicUrl,
+          type: isImage ? "image" : "document",
+          name: file.name,
+        });
+      } catch (error) {
+        console.error("Upload error:", error);
+        toast.error(`Failed to upload ${file.name}`);
+      }
+    }
+
+    setAttachments((prev) => [...prev, ...newAttachments]);
+    setIsUploading(false);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handlePromptClick = (prompt: string) => {
     if (isLoading) return;
     setInput(prompt);
@@ -368,12 +441,25 @@ export function AIChatBox() {
 
   const sendMessage = async () => {
     const trimmedInput = input.trim();
-    if (!trimmedInput || isLoading) return;
+    if ((!trimmedInput && attachments.length === 0) || isLoading) return;
 
-    const userMsg: Message = { role: "user", content: trimmedInput };
+    // Build message content with attachments info
+    let messageContent = trimmedInput;
+    if (attachments.length > 0 && !trimmedInput) {
+      messageContent = attachments.map(a => 
+        a.type === "image" ? "[Sent an image]" : `[Sent a file: ${a.name}]`
+      ).join(" ");
+    }
+
+    const userMsg: Message = { 
+      role: "user", 
+      content: messageContent,
+      attachments: attachments.length > 0 ? [...attachments] : undefined 
+    };
     setMessages((prev) => [...prev, userMsg]);
     saveMessage(userMsg);
     setInput("");
+    setAttachments([]);
     setIsLoading(true);
 
     let assistantContent = "";
@@ -391,14 +477,34 @@ export function AIChatBox() {
       });
     };
 
+    // Prepare messages for API - include attachment URLs for vision
+    const apiMessages = [...messages, userMsg].map((m) => {
+      if (m.attachments && m.attachments.length > 0) {
+        // For messages with images, format for vision model
+        const imageUrls = m.attachments
+          .filter((a) => a.type === "image")
+          .map((a) => a.url);
+        const docUrls = m.attachments
+          .filter((a) => a.type === "document")
+          .map((a) => `[PDF attached: ${a.name} - ${a.url}]`);
+        
+        return {
+          role: m.role,
+          content: m.content,
+          imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
+          documentInfo: docUrls.length > 0 ? docUrls.join("\n") : undefined,
+        };
+      }
+      return { role: m.role, content: m.content };
+    });
+
     await streamChat({
-      messages: [...messages, userMsg],
+      messages: apiMessages,
       userContext,
       onDelta: updateAssistant,
       onDone: () => {
         setIsLoading(false);
         inputRef.current?.focus();
-        // Save assistant message after streaming completes
         if (assistantContent) {
           saveMessage({ role: "assistant", content: assistantContent });
         }
@@ -406,7 +512,6 @@ export function AIChatBox() {
       onError: (error) => {
         toast.error(error);
         setIsLoading(false);
-        // Remove the user message if we couldn't get a response
         setMessages((prev) => prev.slice(0, -1));
       },
     });
@@ -499,6 +604,27 @@ export function AIChatBox() {
                       : "bg-muted"
                   }`}
                 >
+                  {/* Show attachments */}
+                  {msg.attachments && msg.attachments.length > 0 && (
+                    <div className="mb-2 space-y-2">
+                      {msg.attachments.map((att, idx) => (
+                        <div key={idx}>
+                          {att.type === "image" ? (
+                            <img 
+                              src={att.url} 
+                              alt={att.name}
+                              className="max-w-full max-h-48 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div className="flex items-center gap-2 bg-background/20 rounded-lg px-3 py-2">
+                              <FileText className="h-4 w-4" />
+                              <span className="text-xs truncate">{att.name}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                 </div>
                 {msg.role === "user" && (
@@ -523,20 +649,78 @@ export function AIChatBox() {
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-4 border-t border-border/50 bg-card/80">
+      <div className="p-4 border-t border-border/50 bg-card/80 space-y-2">
+        {/* Attachment preview */}
+        {attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {attachments.map((att, idx) => (
+              <div 
+                key={idx} 
+                className="relative group bg-muted rounded-lg overflow-hidden"
+              >
+                {att.type === "image" ? (
+                  <img 
+                    src={att.url} 
+                    alt={att.name}
+                    className="h-16 w-16 object-cover"
+                  />
+                ) : (
+                  <div className="h-16 w-16 flex flex-col items-center justify-center p-2">
+                    <FileText className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground truncate w-full text-center">
+                      {att.name.slice(0, 10)}...
+                    </span>
+                  </div>
+                )}
+                <button
+                  onClick={() => removeAttachment(idx)}
+                  className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        
         <div className="flex gap-2">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+            multiple
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          
+          {/* Attach button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isLoading || isUploading || !user}
+            title="Attach image or PDF"
+          >
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Paperclip className="h-4 w-4" />
+            )}
+          </Button>
+          
           <Input
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
+            placeholder={attachments.length > 0 ? "Add a message..." : "Type your message..."}
             disabled={isLoading}
             className="flex-1"
           />
           <Button
             onClick={sendMessage}
-            disabled={!input.trim() || isLoading}
+            disabled={(!input.trim() && attachments.length === 0) || isLoading}
             size="icon"
           >
             {isLoading ? (
