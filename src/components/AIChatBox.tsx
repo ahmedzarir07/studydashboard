@@ -40,7 +40,7 @@ interface UserContext {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 const ALLOWED_DOC_TYPES = ["application/pdf"];
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+// No file size limit
 
 async function streamChat({
   messages,
@@ -350,11 +350,7 @@ export function AIChatBox() {
         continue;
       }
 
-      // Validate file size
-      if (file.size > MAX_FILE_SIZE) {
-        toast.error(`${file.name}: File too large (max 10MB)`);
-        continue;
-      }
+      // No file size limit - allow any size
 
       try {
         const fileName = `${user.id}/${Date.now()}-${file.name}`;
