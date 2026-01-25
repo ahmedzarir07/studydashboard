@@ -1,27 +1,33 @@
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserSettings } from "@/hooks/useUserSettings";
+import { useProfileSettings, ProfileData } from "@/hooks/useProfileSettings";
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
-import { Card } from "@/components/ui/card";
+import { ProfileCard } from "@/components/settings/ProfileCard";
+import { PersonalInfoSection } from "@/components/settings/PersonalInfoSection";
+import { AcademicInfoSection } from "@/components/settings/AcademicInfoSection";
+import { ContactInfoSection } from "@/components/settings/ContactInfoSection";
+import { SecuritySection } from "@/components/settings/SecuritySection";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
-import { Loader2, Settings as SettingsIcon, Globe, User, LogOut } from "lucide-react";
+import { Loader2, Settings as SettingsIcon, Save, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Settings() {
   const { user, signOut, loading: authLoading } = useAuth();
-  const { settings, loading, saving, updateDisplayName, togglePublicProgress } = useUserSettings();
-  const [displayNameInput, setDisplayNameInput] = useState("");
-  const [hasEditedName, setHasEditedName] = useState(false);
+  const {
+    profile,
+    setProfile,
+    loading,
+    saving,
+    avatarUploading,
+    isGoogleUser,
+    updateProfile,
+    uploadAvatar,
+    updatePassword,
+  } = useProfileSettings();
 
-  // Initialize input when settings load
-  if (!hasEditedName && settings.displayName !== null && displayNameInput === "") {
-    setDisplayNameInput(settings.displayName || "");
-  }
+  const [hasChanges, setHasChanges] = useState(false);
 
   if (authLoading || loading) {
     return (
@@ -35,107 +41,103 @@ export default function Settings() {
     return <Navigate to="/auth" replace />;
   }
 
-  const handleSaveDisplayName = () => {
-    updateDisplayName(displayNameInput.trim());
-    setHasEditedName(false);
+  const handleProfileChange = (updates: Partial<ProfileData>) => {
+    setProfile((prev) => ({ ...prev, ...updates }));
+    setHasChanges(true);
+  };
+
+  const handleSave = async () => {
+    const success = await updateProfile(profile);
+    if (success) {
+      setHasChanges(false);
+    }
   };
 
   const handleSignOut = async () => {
     try {
       await signOut();
       toast.success("Signed out successfully");
-    } catch (err) {
+    } catch {
       toast.error("Failed to sign out");
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-20 md:pb-0">
+    <div className="min-h-screen bg-background flex flex-col pb-24 md:pb-6">
       <MobileHeader title="Settings" />
 
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-6">
+      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-6">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-xl bg-primary/10">
-            <SettingsIcon className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-            <p className="text-sm text-muted-foreground">Manage your profile and privacy</p>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-primary/10">
+              <SettingsIcon className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Profile Settings</h1>
+              <p className="text-sm text-muted-foreground">Manage your profile and preferences</p>
+            </div>
           </div>
         </div>
 
         <div className="space-y-6">
-          {/* Profile Section */}
-          <Card className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <User className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold text-foreground">Profile</h2>
-            </div>
+          {/* Profile Card */}
+          <ProfileCard
+            profile={profile}
+            avatarUploading={avatarUploading}
+            onAvatarUpload={uploadAvatar}
+          />
 
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="email" className="text-muted-foreground">Email</Label>
-                <Input
-                  id="email"
-                  value={user.email || ""}
-                  disabled
-                  className="mt-1.5 bg-muted"
-                />
-              </div>
+          {/* Personal Information */}
+          <PersonalInfoSection profile={profile} onChange={handleProfileChange} />
 
-              <div>
-                <Label htmlFor="displayName">Display Name</Label>
-                <p className="text-xs text-muted-foreground mb-1.5">
-                  This name will be shown in the community progress page
-                </p>
-                <div className="flex gap-2">
-                  <Input
-                    id="displayName"
-                    value={displayNameInput}
-                    onChange={(e) => {
-                      setDisplayNameInput(e.target.value);
-                      setHasEditedName(true);
-                    }}
-                    placeholder="Enter your display name"
-                    className="flex-1"
-                  />
-                  <Button
-                    onClick={handleSaveDisplayName}
-                    disabled={saving || !hasEditedName}
-                    size="sm"
-                  >
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Card>
+          {/* Academic Information */}
+          <AcademicInfoSection profile={profile} onChange={handleProfileChange} />
 
-          {/* Privacy Info */}
-          <Card className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Globe className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold text-foreground">Community</h2>
-            </div>
+          {/* Contact Information */}
+          <ContactInfoSection
+            profile={profile}
+            onChange={handleProfileChange}
+            isGoogleUser={isGoogleUser}
+          />
 
-            <p className="text-sm text-muted-foreground">
-              Your study progress is shared on the Community page so you can see how you compare with other students.
-              Your email is never shared — only your display name appears publicly.
-            </p>
-          </Card>
+          {/* Security */}
+          <SecuritySection
+            onPasswordUpdate={updatePassword}
+            isGoogleUser={isGoogleUser}
+          />
 
-          {/* Sign Out */}
-          <Card className="p-6">
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <Button
+              onClick={handleSave}
+              disabled={saving || !hasChanges}
+              className="flex-1 sm:flex-none"
+              size="lg"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+
             <Button
               variant="destructive"
               onClick={handleSignOut}
-              className="w-full"
+              className="flex-1 sm:flex-none"
+              size="lg"
             >
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
-          </Card>
+          </div>
         </div>
       </main>
 
