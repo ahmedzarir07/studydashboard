@@ -148,30 +148,75 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           avatar_url: string | null
+          batch: string | null
+          board_name: string | null
+          board_roll: string | null
           created_at: string
+          date_of_birth: string | null
           display_name: string | null
           email: string | null
+          full_name: string | null
+          gender: string | null
+          google_linked: boolean | null
+          group_name: string | null
           id: string
           last_active_at: string | null
+          optional_subjects: string[] | null
+          passing_year: number | null
+          phone_number: string | null
+          phone_verified: boolean | null
+          registration_number: string | null
+          study_type: string | null
           user_id: string
         }
         Insert: {
+          address?: string | null
           avatar_url?: string | null
+          batch?: string | null
+          board_name?: string | null
+          board_roll?: string | null
           created_at?: string
+          date_of_birth?: string | null
           display_name?: string | null
           email?: string | null
+          full_name?: string | null
+          gender?: string | null
+          google_linked?: boolean | null
+          group_name?: string | null
           id?: string
           last_active_at?: string | null
+          optional_subjects?: string[] | null
+          passing_year?: number | null
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          registration_number?: string | null
+          study_type?: string | null
           user_id: string
         }
         Update: {
+          address?: string | null
           avatar_url?: string | null
+          batch?: string | null
+          board_name?: string | null
+          board_roll?: string | null
           created_at?: string
+          date_of_birth?: string | null
           display_name?: string | null
           email?: string | null
+          full_name?: string | null
+          gender?: string | null
+          google_linked?: boolean | null
+          group_name?: string | null
           id?: string
           last_active_at?: string | null
+          optional_subjects?: string[] | null
+          passing_year?: number | null
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          registration_number?: string | null
+          study_type?: string | null
           user_id?: string
         }
         Relationships: []
