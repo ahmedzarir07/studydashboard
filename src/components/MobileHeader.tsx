@@ -86,7 +86,7 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
               size="sm" 
               className="text-muted-foreground hover:text-primary hover:bg-primary/10 hover:shadow-glow-sm transition-all duration-300"
             >
-              Community
+              Leaderboard
             </Button>
           </Link>
           <Link to="/planning">
@@ -163,7 +163,7 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
                 className="w-full justify-start min-h-[44px] hover:bg-primary/10 hover:text-primary transition-all duration-300"
               >
                 <Users className="h-4 w-4 mr-2" />
-                Community
+                Leaderboard
               </Button>
             </Link>
             {!loading && (
