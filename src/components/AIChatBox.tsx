@@ -147,10 +147,10 @@ async function streamChat({
 }
 
 const SUGGESTED_PROMPTS = [
-  { icon: BookOpen, text: "How to study Physics effectively?", color: "text-blue-500" },
-  { icon: Brain, text: "Explain organic chemistry basics", color: "text-green-500" },
-  { icon: Target, text: "Tips to improve my exam scores", color: "text-orange-500" },
-  { icon: HelpCircle, text: "What topics should I focus on for HSC?", color: "text-purple-500" },
+  { icon: BookOpen, text: "বর্তমানে কোন ক্লাসে পড়ছো?", color: "text-blue-500" },
+  { icon: Brain, text: "কোন সাবজেক্ট সবচেয়ে দুর্বল মনে হয়?", color: "text-green-500" },
+  { icon: Target, text: "প্রতিদিন গড়ে কত ঘণ্টা পড়ো?", color: "text-orange-500" },
+  { icon: HelpCircle, text: "তোমার প্রধান লক্ষ্য কী? (GPA-5, Engineering, Medical, University, Study Abroad)", color: "text-purple-500" },
 ];
 
 export function AIChatBox() {
