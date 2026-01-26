@@ -129,7 +129,9 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
                     <Settings className="h-4 w-4" />
                   </Button>
                 </Link>
-                <UserProfileDisplay size="sm" showName={false} />
+                <Link to="/settings" className="cursor-pointer hover:opacity-80 transition-opacity">
+                  <UserProfileDisplay size="sm" showName={false} />
+                </Link>
                 <Button 
                   variant="outline" 
                   size="sm" 
