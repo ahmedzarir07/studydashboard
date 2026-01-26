@@ -153,9 +153,9 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
         <div className="md:hidden absolute top-14 left-0 right-0 bg-card/95 backdrop-blur-xl border-b border-primary/10 shadow-lg shadow-primary/10">
           <div className="px-4 py-3 space-y-2">
             {!loading && user && (
-              <div className="pb-3 mb-2 border-b border-primary/10">
+              <Link to="/settings" className="block pb-3 mb-2 border-b border-primary/10 hover:opacity-80 transition-opacity" onClick={() => setMenuOpen(false)}>
                 <UserProfileDisplay size="md" showName={true} showEmail={true} />
-              </div>
+              </Link>
             )}
             <Link to="/community" className="block" onClick={() => setMenuOpen(false)}>
               <Button 
@@ -166,17 +166,6 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
                 Community
               </Button>
             </Link>
-            {user && (
-              <Link to="/settings" className="block" onClick={() => setMenuOpen(false)}>
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start min-h-[44px] hover:bg-primary/10 hover:text-primary transition-all duration-300"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </Button>
-              </Link>
-            )}
             {!loading && (
               user ? (
                 <Button 
