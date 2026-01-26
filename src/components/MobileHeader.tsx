@@ -120,20 +120,11 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
           {!loading && (
             user ? (
               <div className="flex items-center gap-2">
-                <Link to="/settings">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 hover:shadow-glow-sm transition-all duration-300"
-                  >
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link to="/settings" className="cursor-pointer hover:opacity-80 transition-opacity">
+                <Link to="/settings" className="cursor-pointer hover:opacity-80 transition-opacity" title="Settings">
                   <UserProfileDisplay size="sm" showName={false} />
                 </Link>
                 <Button 
-                  variant="outline" 
+                  variant="outline"
                   size="sm" 
                   onClick={handleSignOut}
                   className="border-primary/30 hover:border-primary hover:bg-primary/10 hover:text-primary hover:shadow-glow-sm transition-all duration-300"
