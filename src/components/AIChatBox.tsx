@@ -150,7 +150,14 @@ const SUGGESTED_PROMPTS = [
   { icon: BookOpen, text: "বর্তমানে কোন ক্লাসে পড়ছো?", color: "text-blue-500" },
   { icon: Brain, text: "কোন সাবজেক্ট সবচেয়ে দুর্বল মনে হয়?", color: "text-green-500" },
   { icon: Target, text: "প্রতিদিন গড়ে কত ঘণ্টা পড়ো?", color: "text-orange-500" },
-  { icon: HelpCircle, text: "তোমার প্রধান লক্ষ্য কী? (GPA-5, Engineering, Medical, University, Study Abroad)", color: "text-purple-500" },
+];
+
+const GOAL_OPTIONS = [
+  { label: "GPA-5", emoji: "🎯", description: "শুধু ভালো রেজাল্ট" },
+  { label: "Engineering", emoji: "⚙️", description: "ইঞ্জিনিয়ারিং" },
+  { label: "Medical", emoji: "🩺", description: "মেডিকেল" },
+  { label: "University", emoji: "🎓", description: "বিশ্ববিদ্যালয়" },
+  { label: "Study Abroad", emoji: "🌍", description: "বিদেশে পড়াশোনা" },
 ];
 
 export function AIChatBox() {
@@ -565,7 +572,7 @@ export function AIChatBox() {
             <p className="text-xs mb-4">Ask about study tips, subjects, or exam preparation</p>
             
             {/* Suggested Prompts */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md px-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md px-2 mb-4">
               {SUGGESTED_PROMPTS.map((prompt, index) => (
                 <button
                   key={index}
@@ -579,6 +586,29 @@ export function AIChatBox() {
                   </span>
                 </button>
               ))}
+            </div>
+
+            {/* Goal Selection Section */}
+            <div className="w-full max-w-md px-2">
+              <div className="flex items-center gap-2 mb-3">
+                <HelpCircle className="h-4 w-4 text-purple-500" />
+                <span className="text-xs font-medium text-foreground">তোমার প্রধান লক্ষ্য কী?</span>
+              </div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {GOAL_OPTIONS.map((goal, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handlePromptClick(`আমার প্রধান লক্ষ্য হলো ${goal.label} (${goal.description})`)}
+                    disabled={isLoading}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
+                  >
+                    <span className="text-base">{goal.emoji}</span>
+                    <span className="text-xs font-medium text-foreground/80 group-hover:text-foreground">
+                      {goal.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ) : (
