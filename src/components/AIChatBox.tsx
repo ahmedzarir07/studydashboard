@@ -2,7 +2,10 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, Bot, User, Sparkles, BookOpen, Brain, Target, HelpCircle, Trash2, Paperclip, X, Image, FileText } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Send, Loader2, Bot, User, Sparkles, BookOpen, Brain, Target, HelpCircle, Trash2, Paperclip, X, FileText, MoreVertical, Settings2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,6 +38,13 @@ interface UserContext {
   recentActivities?: Array<{ subject: string; chapter: string; activity: string; status: string; updatedAt?: string }>;
   totalCompletedChapters?: number;
   totalPlannedThisMonth?: number;
+  // User preferences from questionnaire
+  userPreferences?: {
+    currentClass?: string;
+    weakSubjects?: string[];
+    studyHours?: string;
+    mainGoal?: string;
+  };
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
@@ -160,6 +170,27 @@ const GOAL_OPTIONS = [
   { label: "Study Abroad", emoji: "🌍", description: "বিদেশে পড়াশোনা" },
 ];
 
+const CLASS_OPTIONS = ["HSC 1st Year", "HSC 2nd Year"];
+
+const SUBJECT_OPTIONS = [
+  { id: "physics", label: "পদার্থবিজ্ঞান", labelEn: "Physics" },
+  { id: "chemistry", label: "রসায়ন", labelEn: "Chemistry" },
+  { id: "biology", label: "জীববিজ্ঞান", labelEn: "Biology" },
+  { id: "math", label: "উচ্চতর গণিত", labelEn: "Higher Math" },
+  { id: "ict", label: "আইসিটি", labelEn: "ICT" },
+  { id: "english", label: "ইংরেজি", labelEn: "English" },
+  { id: "bangla", label: "বাংলা", labelEn: "Bangla" },
+];
+
+const STUDY_HOURS_OPTIONS = ["৩-৪ ঘণ্টা", "৫-৬ ঘণ্টা", "৭-৮ ঘণ্টা", "৯-১০ ঘণ্টা", "১০+ ঘণ্টা"];
+
+interface UserPreferences {
+  currentClass: string;
+  weakSubjects: string[];
+  studyHours: string;
+  mainGoal: string;
+}
+
 export function AIChatBox() {
   const { user } = useAuth();
   const { overallProgress, subjects } = useProgressSnapshot();
@@ -170,9 +201,48 @@ export function AIChatBox() {
   const [userContext, setUserContext] = useState<UserContext | undefined>();
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [preferences, setPreferences] = useState<UserPreferences>({
+    currentClass: "",
+    weakSubjects: [],
+    studyHours: "",
+    mainGoal: "",
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load preferences from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("ai-chat-preferences");
+    if (saved) {
+      try {
+        setPreferences(JSON.parse(saved));
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
+
+  // Save preferences handler
+  const handleSavePreferences = () => {
+    localStorage.setItem("ai-chat-preferences", JSON.stringify(preferences));
+    // Update user context with preferences
+    setUserContext((prev) => prev ? { ...prev, userPreferences: preferences } : prev);
+    setPreferencesOpen(false);
+    toast.success("পছন্দসমূহ সংরক্ষিত হয়েছে!");
+  };
+
+  const toggleWeakSubject = (subjectId: string) => {
+    setPreferences((prev) => ({
+      ...prev,
+      weakSubjects: prev.weakSubjects.includes(subjectId)
+        ? prev.weakSubjects.filter((s) => s !== subjectId)
+        : [...prev.weakSubjects, subjectId],
+    }));
+  };
+
+  const hasPreferences = preferences.currentClass || preferences.weakSubjects.length > 0 || preferences.studyHours || preferences.mainGoal;
 
   // Load comprehensive user context on mount
   useEffect(() => {
@@ -242,6 +312,17 @@ export function AIChatBox() {
             updatedAt: a.updated_at ?? undefined,
           })) || [];
 
+        // Load saved preferences
+        const savedPrefs = localStorage.getItem("ai-chat-preferences");
+        let userPreferences: UserPreferences | undefined;
+        if (savedPrefs) {
+          try {
+            userPreferences = JSON.parse(savedPrefs);
+          } catch {
+            // ignore
+          }
+        }
+
         setUserContext({
           overallProgress,
           subjects: subjects.map((s) => ({ name: s.name, progress: s.progress })),
@@ -264,6 +345,7 @@ export function AIChatBox() {
           recentActivities,
           totalCompletedChapters: completedChapters.length,
           totalPlannedThisMonth: monthlyPlans.length,
+          userPreferences,
         });
       } catch (error) {
         console.error("Failed to load user context:", error);
@@ -550,17 +632,157 @@ export function AIChatBox() {
             <p className="text-xs text-muted-foreground">Ask anything about your studies</p>
           </div>
         </div>
-        {messages.length > 0 && user && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={clearHistory}
-            className="text-muted-foreground hover:text-destructive"
-            title="Clear chat history"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        )}
+        <div className="flex items-center gap-1">
+          {/* Preferences Menu */}
+          <Popover open={preferencesOpen} onOpenChange={setPreferencesOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`text-muted-foreground hover:text-foreground relative ${hasPreferences ? 'text-primary' : ''}`}
+                title="তোমার তথ্য দাও"
+              >
+                <MoreVertical className="h-4 w-4" />
+                {hasPreferences && (
+                  <span className="absolute top-1 right-1 h-2 w-2 bg-green-500 rounded-full" />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0" align="end">
+              <div className="p-4 border-b border-border/50 bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <Settings2 className="h-4 w-4 text-primary" />
+                  <h4 className="font-semibold text-sm">তোমার তথ্য দাও</h4>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">ভালো সাজেশনের জন্য এই প্রশ্নগুলোর উত্তর দাও</p>
+              </div>
+              
+              <ScrollArea className="max-h-[350px]">
+                <div className="p-4 space-y-4">
+                  {/* Current Class */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium flex items-center gap-2">
+                      <BookOpen className="h-3.5 w-3.5 text-blue-500" />
+                      বর্তমানে কোন ক্লাসে পড়ছো?
+                    </Label>
+                    <div className="flex gap-2">
+                      {CLASS_OPTIONS.map((cls) => (
+                        <button
+                          key={cls}
+                          onClick={() => setPreferences((p) => ({ ...p, currentClass: cls }))}
+                          className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                            preferences.currentClass === cls
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted hover:bg-muted/80 border border-border/50"
+                          }`}
+                        >
+                          {cls}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Weak Subjects */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium flex items-center gap-2">
+                      <Brain className="h-3.5 w-3.5 text-green-500" />
+                      কোন সাবজেক্ট দুর্বল? (এক বা একাধিক)
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {SUBJECT_OPTIONS.map((subject) => (
+                        <button
+                          key={subject.id}
+                          onClick={() => toggleWeakSubject(subject.id)}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all ${
+                            preferences.weakSubjects.includes(subject.id)
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted hover:bg-muted/80 border border-border/50"
+                          }`}
+                        >
+                          <Checkbox
+                            checked={preferences.weakSubjects.includes(subject.id)}
+                            className="h-3 w-3 pointer-events-none"
+                          />
+                          <span>{subject.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Study Hours */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium flex items-center gap-2">
+                      <Clock className="h-3.5 w-3.5 text-orange-500" />
+                      প্রতিদিন গড়ে কত ঘণ্টা পড়ো?
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {STUDY_HOURS_OPTIONS.map((hours) => (
+                        <button
+                          key={hours}
+                          onClick={() => setPreferences((p) => ({ ...p, studyHours: hours }))}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                            preferences.studyHours === hours
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted hover:bg-muted/80 border border-border/50"
+                          }`}
+                        >
+                          {hours}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Main Goal */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium flex items-center gap-2">
+                      <Target className="h-3.5 w-3.5 text-purple-500" />
+                      তোমার প্রধান লক্ষ্য কী?
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {GOAL_OPTIONS.map((goal) => (
+                        <button
+                          key={goal.label}
+                          onClick={() => setPreferences((p) => ({ ...p, mainGoal: goal.label }))}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                            preferences.mainGoal === goal.label
+                              ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                              : "bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 border border-purple-500/20"
+                          }`}
+                        >
+                          <span>{goal.emoji}</span>
+                          <span>{goal.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </ScrollArea>
+
+              <div className="p-4 border-t border-border/50 bg-muted/30">
+                <Button
+                  onClick={handleSavePreferences}
+                  className="w-full"
+                  size="sm"
+                >
+                  সংরক্ষণ করো
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Clear History Button */}
+          {messages.length > 0 && user && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={clearHistory}
+              className="text-muted-foreground hover:text-destructive"
+              title="Clear chat history"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
