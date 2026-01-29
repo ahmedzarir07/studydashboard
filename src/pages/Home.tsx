@@ -104,8 +104,8 @@ export default function Home() {
           )}
 
           {/* Overall Progress - Centered on mobile */}
-          <div className="flex flex-col items-center gap-6 mb-8">
-            <div className="bg-card/50 rounded-2xl p-6 md:p-8 border-2 border-primary/30 shadow-lg shadow-primary/10">
+          <div className="relative z-10 flex flex-col items-center gap-6 mb-8">
+            <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 border-2 border-primary/30 shadow-lg shadow-primary/10">
               <CircularProgress percentage={overallProgress} size={140} />
             </div>
           </div>
