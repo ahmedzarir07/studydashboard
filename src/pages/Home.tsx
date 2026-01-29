@@ -115,7 +115,7 @@ export default function Home() {
             <h2 className="text-base font-semibold text-foreground mb-4 px-1">
               Subject Progress
             </h2>
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-touch pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-5 md:overflow-visible">
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-touch snap-x snap-mandatory touch-pan-x overscroll-x-contain pb-2 -mx-4 px-4 pr-8 md:pr-0 md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-5 md:overflow-visible">
               <TooltipProvider>
                 {subjects.map((subject, index) => {
                   // Get border color class based on subject color
@@ -135,7 +135,7 @@ export default function Home() {
                     <TooltipTrigger asChild>
                       <Link 
                         to={`/tracker?tab=${index}`}
-                        className={`flex-shrink-0 w-[100px] md:w-auto bg-card/60 rounded-xl p-4 flex flex-col items-center gap-2 active:scale-[0.97] transition-all duration-200 border-2 ${getBorderColor(subject.color)} hover:shadow-md`}
+                         className={`flex-shrink-0 snap-start w-[112px] md:w-auto bg-card/60 rounded-xl p-4 flex flex-col items-center gap-2 active:scale-[0.97] transition-all duration-200 border-2 ${getBorderColor(subject.color)} hover:shadow-md`}
                       >
                         <div className="relative w-14 h-14 md:w-16 md:h-16">
                           <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
