@@ -41,26 +41,26 @@ export const MonthlySummary = () => {
 
   return (
     <>
-      <Card className="p-6 bg-card border-2 border-accent/50 hover:border-accent/80 hover:shadow-md transition-all duration-200">
-        <div className="space-y-4">
-          <div className="flex items-start justify-between">
-            <div className="space-y-3">
+      <Card className="p-4 md:p-6 bg-card/80 backdrop-blur-sm border border-accent/40 hover:border-accent/60 hover:shadow-md transition-all duration-200">
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-2 flex-1 min-w-0">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                <span className="text-sm font-medium">{currentMonth}</span>
+                <Calendar className="h-4 w-4 flex-shrink-0" />
+                <span className="text-xs font-medium truncate">{currentMonth}</span>
               </div>
               <div>
-                <div className="text-3xl font-bold text-foreground">
+                <div className="text-2xl md:text-3xl font-bold text-foreground">
                   {monthlyCompletions.length}
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Chapters Completed
                 </p>
               </div>
               {Object.keys(bySubject).length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {Object.entries(bySubject).map(([subject, count]) => (
-                    <Badge key={subject} variant="secondary" className="text-xs">
+                    <Badge key={subject} variant="secondary" className="text-[10px] px-1.5 py-0.5">
                       {subject}: {count}
                     </Badge>
                   ))}
@@ -72,10 +72,10 @@ export const MonthlySummary = () => {
               size="sm"
               onClick={() => setShowDetails(true)}
               disabled={monthlyCompletions.length === 0}
-              className="text-primary hover:text-primary/80"
+              className="text-primary hover:text-primary/80 px-2 flex-shrink-0"
             >
-              View Details
-              <ChevronRight className="h-4 w-4 ml-1" />
+              <span className="hidden sm:inline">View Details</span>
+              <ChevronRight className="h-4 w-4 sm:ml-1" />
             </Button>
           </div>
           
@@ -85,10 +85,10 @@ export const MonthlySummary = () => {
             size="sm"
             onClick={handleDownloadMonthlyPDF}
             disabled={monthlyCompletions.length === 0}
-            className="w-full gap-2 h-10"
+            className="w-full gap-2 h-9 text-xs"
           >
-            <Download className="h-4 w-4" />
-            Download Monthly Progress (PDF)
+            <Download className="h-3.5 w-3.5" />
+            <span className="truncate">Download Monthly Progress (PDF)</span>
           </Button>
         </div>
       </Card>

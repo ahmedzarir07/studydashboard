@@ -11,12 +11,12 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, title = "Study Progress", showMobileHeader = true }: AppLayoutProps) {
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex overflow-x-hidden">
       {/* Desktop Sidebar */}
       <DesktopSidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-screen pb-20 md:pb-0">
+      <div className="flex-1 flex flex-col min-h-screen pb-[60px] md:pb-0 w-full max-w-full overflow-x-hidden">
         {/* Mobile Header - Only visible on mobile */}
         {showMobileHeader && (
           <div className="md:hidden">
@@ -25,7 +25,7 @@ export function AppLayout({ children, title = "Study Progress", showMobileHeader
         )}
 
         {/* Page Content */}
-        <div className="flex-1">
+        <div className="flex-1 w-full max-w-full">
           {children}
         </div>
 

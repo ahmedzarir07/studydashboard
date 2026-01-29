@@ -50,7 +50,7 @@ export function BottomNav() {
 
   return (
     <nav className="bottom-nav md:hidden">
-      <div className="flex items-stretch">
+      <div className="flex items-stretch justify-evenly">
         {allNavItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -58,12 +58,14 @@ export function BottomNav() {
               key={item.path}
               to={item.path}
               className={cn(
-                "bottom-nav-item",
-                isActive && "active"
+                "flex flex-col items-center justify-center gap-0.5 py-2 px-1 min-h-[52px] min-w-[44px] transition-all",
+                isActive 
+                  ? "text-primary" 
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <item.icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <item.icon className={cn("h-5 w-5", isActive && "drop-shadow-[0_0_6px_hsl(var(--primary))]")} />
+              <span className={cn("text-[9px] font-medium leading-tight", isActive && "text-primary")}>{item.label}</span>
             </Link>
           );
         })}
