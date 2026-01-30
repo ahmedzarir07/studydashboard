@@ -93,12 +93,7 @@ export default function Admin() {
   const highPerformers = usersProgress.filter((u) => getOverallProgress(u.subjects) >= 60).length;
   const usersWithActivity = usersProgress.filter((u) => Object.keys(u.subjects).length > 0).length;
 
-  const handleViewUser = (userId: string) => {
-    const user = usersProgress.find((u) => u.userId === userId);
-    if (user) {
-      toast.info(`Viewing user: ${user.email}`);
-    }
-  };
+  // Note: View user is handled internally by UserTable with UserDetailModal
 
   const handleResetProgress = (userId: string) => {
     toast.info("Reset progress feature coming soon!");
@@ -226,7 +221,6 @@ export default function Admin() {
 
             <UserTable
               users={usersProgress}
-              onViewUser={handleViewUser}
               onResetProgress={handleResetProgress}
             />
           </div>

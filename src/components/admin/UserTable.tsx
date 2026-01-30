@@ -42,8 +42,11 @@ import {
   CalendarDays,
   MessageSquare,
   CheckCircle,
+  Mail,
+  Phone,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import { UserDetailModal } from "./UserDetailModal";
 
 interface UserProgress {
   userId: string;
@@ -92,13 +95,15 @@ type ProgressFilter = "all" | "low" | "medium" | "high";
 
 const ITEMS_PER_PAGE = 10;
 
-export function UserTable({ users, onViewUser, onResetProgress }: UserTableProps) {
+export function UserTable({ users, onResetProgress }: UserTableProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [progressFilter, setProgressFilter] = useState<ProgressFilter>("all");
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedUser, setSelectedUser] = useState<UserProgress | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const getOverallProgress = (subjects: UserProgress["subjects"]) => {
     let total = 0;
@@ -440,7 +445,10 @@ export function UserTable({ users, onViewUser, onResetProgress }: UserTableProps
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => onViewUser?.(user.userId)}>
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedUser(user);
+                            setModalOpen(true);
+                          }}>
                             <Eye className="h-4 w-4 mr-2" />
                             View Profile
                           </DropdownMenuItem>
@@ -508,7 +516,10 @@ export function UserTable({ users, onViewUser, onResetProgress }: UserTableProps
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onViewUser?.(user.userId)}>
+                      <DropdownMenuItem onClick={() => {
+                        setSelectedUser(user);
+                        setModalOpen(true);
+                      }}>
                         <Eye className="h-4 w-4 mr-2" />
                         View Profile
                       </DropdownMenuItem>
@@ -627,6 +638,13 @@ export function UserTable({ users, onViewUser, onResetProgress }: UserTableProps
           </div>
         </div>
       )}
+
+      {/* User Detail Modal */}
+      <UserDetailModal
+        user={selectedUser}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
     </div>
   );
 }
