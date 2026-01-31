@@ -17,9 +17,9 @@ serve(async (req) => {
     
     console.log("Received chat request with", messages?.length, "messages");
     
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY is not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY is not configured");
       throw new Error("AI service is not configured");
     }
 
@@ -132,16 +132,16 @@ ${userDataContext}`;
       ? transformedMessages.slice(-MAX_MESSAGES)
       : transformedMessages;
     
-    console.log("Sending", truncatedMessages.length, "messages to Lovable AI");
+    console.log("Sending", truncatedMessages.length, "messages to OpenAI");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           ...truncatedMessages,
@@ -151,31 +151,31 @@ ${userDataContext}`;
     });
 
     if (!response.ok) {
-      console.error("AI gateway error:", response.status);
+      console.error("OpenAI API error:", response.status);
       
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Too many requests. Please wait a moment and try again." }),
+          JSON.stringify({ error: "Rate limit exceeded. Please wait a moment and try again." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI quota exceeded. Please try again later." }),
+          JSON.stringify({ error: "OpenAI quota exceeded. Please check your billing." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
       const errorText = await response.text();
-      console.error("AI gateway error response:", errorText);
+      console.error("OpenAI API error response:", errorText);
       return new Response(
         JSON.stringify({ error: "AI service error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Streaming response from Lovable AI");
+    console.log("Streaming response from OpenAI");
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
