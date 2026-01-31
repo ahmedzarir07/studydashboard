@@ -1,64 +1,122 @@
 
-# Fix Subject Progress Cards - Exact Match to Reference
+# Fix Community Page to Show Email Addresses
 
 ## Problem Identified
-The current card width (`w-[112px]`) and container padding may not produce the exact layout shown in your reference image where:
-- Exactly 3 cards are fully visible
-- The 4th card is partially visible (peeking) on the right
+The Community/Leaderboard page currently displays user display names or anonymized identifiers (e.g., "Student • ab12"). The user wants email addresses to be visible to everyone on this page.
 
-## Root Cause Analysis
-Looking at the reference image:
-- Screen appears to be approximately 375-390px wide
-- 3 cards + gaps + container padding must fit precisely
-- Current setup: `w-[112px]` cards with `gap-3` (12px) and `px-4` (16px) padding
+## Current Behavior
+- `usePublicProgress.ts` hook fetches email from profiles table but doesn't expose it
+- Community page displays `displayName` which falls back to "Student • {user_id_prefix}" 
+- The RLS policy on `profiles` table already allows public SELECT (`Anyone can view profiles for public progress`)
 
-**Calculation:**
-- Available width: ~390px viewport - 32px padding (16px each side) = 358px
-- 3 cards at 112px = 336px
-- 2 gaps at 12px = 24px
-- Total needed: 360px (slightly larger than available)
+## Solution Overview
 
-This means cards might be too wide, causing improper fitting.
+### 1. Update the `usePublicProgress` Hook
+**File: `src/hooks/usePublicProgress.ts`**
 
-## Solution
+Add `email` field to the `CommunityUserProgress` interface and include it in the aggregated data:
 
-### 1. Adjust Card Width to Match Reference Exactly
-Change card width from `w-[112px]` to a calculated width that ensures exactly 3 cards fit with proper peeking:
-- New width: `w-[calc((100vw-32px-24px)/3)]` on mobile OR fixed `w-[100px]`
-- This ensures 3 cards + 2 gaps fit perfectly, with the 4th card naturally peeking
+| Change | Description |
+|--------|-------------|
+| Add `email` to interface | `email?: string \| null` field in `CommunityUserProgress` |
+| Include email in results | Pass email from profile lookup to result objects |
 
-### 2. Technical Changes
+### 2. Update the Community Page UI  
+**File: `src/pages/Community.tsx`**
 
-**File: `src/pages/Home.tsx`**
+Display email address alongside or below the display name in:
+- Top 3 students section
+- All students list
+- Expanded user details
 
-Update the Subject Progress container and card classes:
+| Section | Change |
+|---------|--------|
+| Top 3 Cards | Show email below name in muted text |
+| All Students List | Show email as secondary text line |
+| Merged Progress | Include email from usePublicProgress |
 
-```tsx
-// Container - remove snap classes that may interfere, ensure proper mobile behavior
-<div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-touch pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-5 md:overflow-visible">
+## Technical Implementation
 
-// Each card - use calculated width for mobile
-<Link 
-  className="flex-shrink-0 w-[100px] md:w-auto bg-card/60 rounded-xl p-3 flex flex-col items-center gap-2 active:scale-[0.97] transition-all duration-200 border-2 ..."
->
+### usePublicProgress.ts Changes
+
+```typescript
+// Update interface
+export interface CommunityUserProgress {
+  profileId: string;
+  displayName: string;
+  email: string | null;  // ADD THIS
+  overallProgress: number;
+  subjects: Record<string, number>;
+  lastUpdated: string | null;
+}
+
+// In aggregatedProgress calculation
+results.push({
+  profileId: userId,
+  displayName,
+  email: profile?.email || null,  // ADD THIS
+  overallProgress,
+  subjects,
+  lastUpdated,
+});
 ```
 
-### 3. Specific Code Changes
+### Community.tsx UI Changes
 
-1. **Change card width**: `w-[112px]` to `w-[100px]` for tighter fit
-2. **Adjust padding**: `p-4` to `p-3` inside cards for compactness
-3. **Remove snap classes**: The `snap-x snap-mandatory snap-start` may be causing jumpy behavior - remove them for natural scroll
-4. **Keep scrollbar hidden**: Maintain `scrollbar-hide` class
+```tsx
+// In Top 3 section
+<div className="flex-1 min-w-0">
+  <p className="font-medium truncate">
+    {isMe ? `${entry.displayName} (You)` : entry.displayName}
+  </p>
+  {entry.email && (
+    <p className="text-xs text-muted-foreground truncate">
+      {entry.email}
+    </p>
+  )}
+</div>
 
-### 4. Files to Modify
+// In All Students list
+<div className="flex-1 min-w-0 text-left">
+  <p className="font-medium truncate">
+    {isMe ? `${u.displayName} (You)` : u.displayName}
+  </p>
+  {u.email && (
+    <p className="text-xs text-muted-foreground truncate">
+      {u.email}
+    </p>
+  )}
+</div>
+```
 
-| File | Change |
-|------|--------|
-| `src/pages/Home.tsx` | Update container classes and card width/padding |
+### 3. Update Merged Progress Logic
+**File: `src/pages/Community.tsx`**
+
+The `mergedProgress` useMemo needs to include email for the current user:
+
+```typescript
+const myEntry = {
+  profileId: user.id,
+  displayName: existingProfile?.displayName || "You",
+  email: user.email || null,  // ADD THIS
+  overallProgress: mySnapshot.overallProgress,
+  subjects: mySubjects,
+  lastUpdated: new Date().toISOString(),
+};
+```
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/hooks/usePublicProgress.ts` | Add email to interface and include in results |
+| `src/pages/Community.tsx` | Display email in UI, update mergedProgress |
+
+## Privacy Consideration
+**Note**: Showing email addresses publicly may raise privacy concerns. The user has confirmed they want emails visible to everyone. If privacy becomes a concern later, this can be changed to admin-only visibility.
 
 ## Expected Result
-- Exactly 3 Subject Progress cards visible on mobile
-- 4th card partially visible (peeking) on the right edge
-- Smooth horizontal scrolling without snap behavior
-- Matches your reference image exactly
-
+- All users on the Community/Leaderboard page will show their email address
+- Email appears as secondary text below the display name
+- Emails are truncated if too long to prevent layout issues
+- Current user's email is included when they appear on the leaderboard
