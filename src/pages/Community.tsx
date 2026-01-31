@@ -93,6 +93,7 @@ export default function Community() {
     const myEntry = {
       profileId: user.id,
       displayName: existingProfile?.displayName || "You",
+      email: user.email || null,
       overallProgress: mySnapshot.overallProgress,
       subjects: mySubjects,
       lastUpdated: new Date().toISOString(),
@@ -260,9 +261,11 @@ export default function Community() {
                         )}>
                           {isMe ? `${entry.displayName} (You)` : entry.displayName}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          Rank #{rank}
-                        </p>
+                        {entry.email && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {entry.email}
+                          </p>
+                        )}
                       </div>
                       <CircularProgress percentage={entry.overallProgress} size={48} />
                     </div>
@@ -313,7 +316,7 @@ export default function Community() {
                           <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         )}
                         
-                        {/* Name */}
+                        {/* Name & Email */}
                         <div className="flex-1 min-w-0 text-left">
                           <p className={cn(
                             "font-medium truncate",
@@ -321,6 +324,11 @@ export default function Community() {
                           )}>
                             {isMe ? `${u.displayName} (You)` : u.displayName}
                           </p>
+                          {u.email && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {u.email}
+                            </p>
+                          )}
                         </div>
                         
                         {/* Progress */}

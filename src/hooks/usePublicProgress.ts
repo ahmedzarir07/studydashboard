@@ -23,6 +23,7 @@ interface UserProfile {
 export interface CommunityUserProgress {
   profileId: string;
   displayName: string;
+  email: string | null;
   overallProgress: number;
   subjects: Record<string, number>; // subjectId -> percentage
   lastUpdated: string | null;
@@ -137,6 +138,7 @@ export const usePublicProgress = () => {
         results.push({
           profileId: userId,
           displayName,
+          email: profile?.email || null,
           overallProgress,
           subjects,
           lastUpdated,
