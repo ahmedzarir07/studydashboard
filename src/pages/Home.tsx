@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { MonthlySummary } from "@/components/MonthlySummary";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, RefreshCw } from "lucide-react";
 import { generateOverallProgressPDF, generateDetailedProgressPDF } from "@/lib/pdfGenerator";
 import { useProgressSnapshot, ALL_SUBJECTS } from "@/hooks/useProgressSnapshot";
 import { useProgressCelebration } from "@/hooks/useProgressCelebration";
@@ -13,7 +13,7 @@ import { ProgressCelebration } from "@/components/ProgressCelebration";
 
 export default function Home() {
   const { user } = useAuth();
-  const { overallProgress, subjects, recordMap, loading } = useProgressSnapshot();
+  const { overallProgress, subjects, recordMap, loading, refetch } = useProgressSnapshot();
   const { celebration, dismissCelebration } = useProgressCelebration(overallProgress, loading);
 
   const handleDownloadOverallPDF = async () => {
@@ -97,8 +97,19 @@ export default function Home() {
 
           {/* Overall Progress - Centered with proper mobile spacing */}
           <div className="relative z-10 flex flex-col items-center gap-4 mb-6">
-            <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-5 md:p-8 border-2 border-primary/30 shadow-lg shadow-primary/10 w-fit">
+            <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-5 md:p-8 border-2 border-primary/30 shadow-lg shadow-primary/10 w-fit relative">
               <CircularProgress percentage={overallProgress} size={120} />
+              {/* Refresh Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={refetch}
+                disabled={loading}
+                className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-card border border-border shadow-sm hover:bg-accent"
+                title="Refresh progress"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
             </div>
           </div>
 
