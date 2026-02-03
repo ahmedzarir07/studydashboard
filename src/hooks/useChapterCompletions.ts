@@ -109,11 +109,14 @@ export const useChapterCompletions = () => {
   };
 
   // Check if all chapters in a subject are completed
-  const areAllChaptersCompleted = (subject: string, chapters: string[]) => {
-    return chapters.every(chapter => 
-      completions.some(c => c.subject === subject && c.chapter === chapter && c.completed)
-    );
-  };
+  const areAllChaptersCompleted = useCallback(
+    (subject: string, chapters: string[]) => {
+      return chapters.every(chapter => 
+        completions.some(c => c.subject === subject && c.chapter === chapter && c.completed)
+      );
+    },
+    [completions]
+  );
 
   const getMonthlyCompletions = useCallback(() => {
     const now = new Date();
