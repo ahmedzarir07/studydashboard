@@ -160,5 +160,5 @@ export const usePublicProgress = () => {
 // Subject labels for display
 export const SUBJECT_LABELS: Record<string, string> = {};
 ALL_SUBJECTS.forEach((s) => {
-  SUBJECT_LABELS[s.id] = s.displayName;
+  SUBJECT_LABELS[s.data.id] = s.displayName;
 });

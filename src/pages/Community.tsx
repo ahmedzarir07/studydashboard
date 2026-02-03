@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 
 // Build subject metadata lookup
 const SUBJECT_META = ALL_SUBJECTS.reduce((acc, s) => {
-  acc[s.id] = { displayName: s.displayName, color: s.color, fullName: s.data.name };
+  acc[s.data.id] = { displayName: s.displayName, color: s.color, fullName: s.data.name };
   return acc;
 }, {} as Record<string, { displayName: string; color: string; fullName: string }>);
 
@@ -356,7 +356,8 @@ export default function Community() {
                             </h4>
                             <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-touch pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-5 md:overflow-visible">
                               <TooltipProvider>
-                                {ALL_SUBJECTS.map(({ id, displayName, data, color }) => {
+                                {ALL_SUBJECTS.map(({ displayName, data, color }) => {
+                                  const id = data.id;
                                   const progress = u.subjects[id] ?? 0;
                                   return (
                                     <Tooltip key={id}>

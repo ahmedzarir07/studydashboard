@@ -34,20 +34,21 @@ export interface ProgressSnapshot {
 }
 
 // All subjects configuration - single source of truth
+// IMPORTANT: IDs must match the data file IDs (e.g., physicsData.id)
 export const ALL_SUBJECTS = [
-  { data: physicsData, color: "hsl(var(--primary))", displayName: "Physics 1st", id: "physics1" },
-  { data: physics2ndData, color: "hsl(217 91% 60%)", displayName: "Physics 2nd", id: "physics2" },
-  { data: chemistryData, color: "hsl(142 76% 36%)", displayName: "Chemistry 1st", id: "chemistry1" },
-  { data: chemistry2ndData, color: "hsl(142 71% 45%)", displayName: "Chemistry 2nd", id: "chemistry2" },
-  { data: higherMathData, color: "hsl(262 83% 58%)", displayName: "HM 1st", id: "higherMath1" },
-  { data: higherMath2ndData, color: "hsl(262 78% 68%)", displayName: "HM 2nd", id: "higherMath2" },
-  { data: biologyData, color: "hsl(25 95% 53%)", displayName: "Biology 1st", id: "biology1" },
-  { data: biology2ndData, color: "hsl(25 90% 63%)", displayName: "Biology 2nd", id: "biology2" },
-  { data: ictData, color: "hsl(199 89% 48%)", displayName: "ICT", id: "ict" },
-  { data: english1stData, color: "hsl(340 82% 52%)", displayName: "English 1st", id: "english1" },
-  { data: english2ndData, color: "hsl(280 70% 55%)", displayName: "English 2nd", id: "english2" },
-  { data: bangla1stData, color: "hsl(45 93% 47%)", displayName: "Bangla 1st", id: "bangla1" },
-  { data: bangla2ndData, color: "hsl(35 90% 50%)", displayName: "Bangla 2nd", id: "bangla2" },
+  { data: physicsData, color: "hsl(var(--primary))", displayName: "Physics 1st" },
+  { data: physics2ndData, color: "hsl(217 91% 60%)", displayName: "Physics 2nd" },
+  { data: chemistryData, color: "hsl(142 76% 36%)", displayName: "Chemistry 1st" },
+  { data: chemistry2ndData, color: "hsl(142 71% 45%)", displayName: "Chemistry 2nd" },
+  { data: higherMathData, color: "hsl(262 83% 58%)", displayName: "HM 1st" },
+  { data: higherMath2ndData, color: "hsl(262 78% 68%)", displayName: "HM 2nd" },
+  { data: biologyData, color: "hsl(25 95% 53%)", displayName: "Biology 1st" },
+  { data: biology2ndData, color: "hsl(25 90% 63%)", displayName: "Biology 2nd" },
+  { data: ictData, color: "hsl(199 89% 48%)", displayName: "ICT" },
+  { data: english1stData, color: "hsl(340 82% 52%)", displayName: "English 1st" },
+  { data: english2ndData, color: "hsl(280 70% 55%)", displayName: "English 2nd" },
+  { data: bangla1stData, color: "hsl(45 93% 47%)", displayName: "Bangla 1st" },
+  { data: bangla2ndData, color: "hsl(35 90% 50%)", displayName: "Bangla 2nd" },
 ];
 
 // Calculate weighted progress from a record map - uses same logic as SubjectProgressBar
@@ -58,7 +59,8 @@ export function calculateProgressFromRecords(
   let subjectCount = 0;
   const subjects: SubjectProgress[] = [];
 
-  ALL_SUBJECTS.forEach(({ data: subject, color, displayName, id }) => {
+  ALL_SUBJECTS.forEach(({ data: subject, color, displayName }) => {
+    const id = subject.id;
     let totalChapterProgress = 0;
     let chapterCount = 0;
 
@@ -190,8 +192,8 @@ export const useProgressSnapshot = (): ProgressSnapshot => {
   if (!user) {
     return {
       overallProgress: 0,
-      subjects: ALL_SUBJECTS.map(({ displayName, data, color, id }) => ({
-        id,
+      subjects: ALL_SUBJECTS.map(({ displayName, data, color }) => ({
+        id: data.id,
         name: displayName,
         fullName: data.name,
         progress: 0,
