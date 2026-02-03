@@ -6,6 +6,86 @@ const corsHeaders = {
 };
 
 const MAX_MESSAGES = 20;
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY_MS = 200;
+
+// Helper to detect if 429 is actually a billing/quota issue vs rate limit
+function isBillingOrQuotaError(errorBody: string): boolean {
+  const lower = errorBody.toLowerCase();
+  return (
+    lower.includes("insufficient_quota") ||
+    lower.includes("billing") ||
+    lower.includes("exceeded your current quota") ||
+    lower.includes("you exceeded") ||
+    lower.includes("account") ||
+    lower.includes("plan") ||
+    lower.includes("upgrade")
+  );
+}
+
+// Helper to sleep for exponential backoff
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Make request with exponential backoff for true rate limits
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  retries = MAX_RETRIES
+): Promise<Response> {
+  let lastResponse: Response | null = null;
+  let delay = INITIAL_RETRY_DELAY_MS;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const response = await fetch(url, options);
+    
+    if (response.ok) {
+      return response;
+    }
+
+    // For 429, check if it's billing or rate limit
+    if (response.status === 429) {
+      const errorText = await response.text();
+      console.log(`OpenAI 429 response (attempt ${attempt + 1}):`, errorText);
+
+      // If it's a billing/quota issue, don't retry - return immediately
+      if (isBillingOrQuotaError(errorText)) {
+        console.error("Billing/quota issue detected, not retrying");
+        // Create a new response with the error text since we consumed it
+        return new Response(errorText, {
+          status: 429,
+          statusText: "Too Many Requests",
+          headers: response.headers,
+        });
+      }
+
+      // True rate limit - retry with backoff
+      if (attempt < retries) {
+        // Check for Retry-After header
+        const retryAfter = response.headers.get("Retry-After");
+        const waitTime = retryAfter ? parseInt(retryAfter, 10) * 1000 : delay;
+        console.log(`Rate limited, retrying in ${waitTime}ms...`);
+        await sleep(waitTime);
+        delay *= 2; // Exponential backoff
+        continue;
+      }
+
+      // Max retries reached
+      return new Response(errorText, {
+        status: 429,
+        statusText: "Too Many Requests",
+        headers: response.headers,
+      });
+    }
+
+    // For other errors, don't retry
+    lastResponse = response;
+    break;
+  }
+
+  return lastResponse!;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -134,7 +214,7 @@ ${userDataContext}`;
     
     console.log("Sending", truncatedMessages.length, "messages to OpenAI");
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetchWithRetry("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${OPENAI_API_KEY}`,
@@ -154,15 +234,37 @@ ${userDataContext}`;
       console.error("OpenAI API error:", response.status);
       
       if (response.status === 429) {
+        // Read error body to determine if it's billing or rate limit
+        const errorText = await response.text();
+        console.error("OpenAI 429 error body:", errorText);
+        
+        if (isBillingOrQuotaError(errorText)) {
+          // Billing/quota issue - return 402
+          return new Response(
+            JSON.stringify({ 
+              error: "OpenAI billing/credits not enabled. Please add credits to your OpenAI account.",
+              type: "billing"
+            }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
+        // True rate limit
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please wait a moment and try again." }),
+          JSON.stringify({ 
+            error: "Too many requests. Please wait 30-60 seconds and try again.",
+            type: "rate_limit"
+          }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "OpenAI quota exceeded. Please check your billing." }),
+          JSON.stringify({ 
+            error: "OpenAI billing/credits not enabled. Please add credits to your OpenAI account.",
+            type: "billing"
+          }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }

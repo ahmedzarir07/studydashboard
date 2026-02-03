@@ -77,15 +77,15 @@ async function streamChat({
 
     if (!resp.ok) {
       const errorData = await resp.json().catch(() => ({}));
-      if (resp.status === 429) {
-        onError("Rate limit exceeded. Please wait a moment.");
-        return;
-      }
       if (resp.status === 402) {
-        onError("AI quota exceeded. Please try again later.");
+        onError("OpenAI বিলিং/ক্রেডিট সক্রিয় নেই। অনুগ্রহ করে আপনার OpenAI অ্যাকাউন্টে ক্রেডিট যোগ করুন।");
         return;
       }
-      onError(errorData.error || "Failed to connect to AI");
+      if (resp.status === 429) {
+        onError("অনেক বেশি রিকোয়েস্ট। অনুগ্রহ করে ৩০-৬০ সেকেন্ড অপেক্ষা করুন এবং আবার চেষ্টা করুন।");
+        return;
+      }
+      onError(errorData.error || "AI এর সাথে সংযোগ করতে ব্যর্থ");
       return;
     }
 
