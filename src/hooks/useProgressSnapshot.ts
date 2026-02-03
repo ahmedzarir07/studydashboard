@@ -32,6 +32,7 @@ export interface ProgressSnapshot {
   subjects: SubjectProgress[];
   recordMap: Map<string, string>;
   loading: boolean;
+  refetch: () => void;
 }
 
 // All subjects configuration - single source of truth
@@ -140,7 +141,7 @@ export const useProgressSnapshot = (): ProgressSnapshot => {
 
   const queryKey = useMemo(() => ["progress_snapshot", user?.id ?? null] as const, [user?.id]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey,
     enabled: !!user,
     queryFn: async () => {
@@ -198,6 +199,10 @@ export const useProgressSnapshot = (): ProgressSnapshot => {
   const recordMap = data ?? new Map<string, string>();
   const calculated = useMemo(() => calculateProgressFromRecords(recordMap), [recordMap]);
 
+  const handleRefetch = () => {
+    refetch();
+  };
+
   if (!user) {
     return {
       overallProgress: 0,
@@ -210,6 +215,7 @@ export const useProgressSnapshot = (): ProgressSnapshot => {
       })),
       recordMap: new Map(),
       loading: false,
+      refetch: () => {},
     };
   }
 
@@ -218,6 +224,7 @@ export const useProgressSnapshot = (): ProgressSnapshot => {
     subjects: calculated.subjects,
     recordMap,
     loading: isLoading,
+    refetch: handleRefetch,
   };
 };
 
