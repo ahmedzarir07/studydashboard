@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +17,7 @@ import { bangla1stData } from "@/data/bangla1stData";
 import { bangla2ndData } from "@/data/bangla2ndData";
 import { getSubjectConfig } from "@/config/activityWeights";
 import { normalizeActivity } from "@/config/activityMapping";
+import { fetchAllStudyStatusRecordsForUser } from "@/lib/fetchAllStudyStatusRecords";
 
 export interface SubjectProgress {
   id: string;
@@ -137,39 +138,32 @@ export const useProgressSnapshot = (): ProgressSnapshot => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const queryKey = ["progress_snapshot", user?.id ?? null];
+  const queryKey = useMemo(() => ["progress_snapshot", user?.id ?? null] as const, [user?.id]);
 
   const { data, isLoading } = useQuery({
     queryKey,
     enabled: !!user,
     queryFn: async () => {
-      // Fetch all records without limit (Supabase default limit is 1000)
-      // Users with many records need all data for accurate progress calculation
-      const { data: records, error } = await supabase
-        .from("study_records")
-        .select("subject, chapter, activity, status, updated_at")
-        .eq("user_id", user!.id)
-        .eq("type", "status")
-        .order("updated_at", { ascending: false })
-        .limit(5000); // Increase limit to handle users with many records
+      try {
+        // IMPORTANT: We paginate to avoid missing older subjects (e.g., Physics) when a user has
+        // thousands of historical/duplicated rows.
+        const records = await fetchAllStudyStatusRecordsForUser(user!.id);
 
-      if (error) {
+        const recordMap = new Map<string, string>();
+        // Deduplicate by keeping the latest record for each key.
+        // (records are ordered by updated_at DESC)
+        records.forEach((r) => {
+          const key = `${r.subject}-${r.chapter}-${r.activity}`;
+          if (!recordMap.has(key)) {
+            recordMap.set(key, r.status || "");
+          }
+        });
+
+        return recordMap;
+      } catch (error) {
         console.error("Error fetching study records:", error);
         return new Map<string, string>();
       }
-
-      const recordMap = new Map<string, string>();
-      // IMPORTANT: Deduplicate by keeping the latest record for each key.
-      // Even though we now upsert with a unique constraint, older data may still contain duplicates.
-      // We order by updated_at DESC and only set the first time we see a key.
-      records?.forEach((r) => {
-        const key = `${r.subject}-${r.chapter}-${r.activity}`;
-        if (!recordMap.has(key)) {
-          recordMap.set(key, r.status || "");
-        }
-      });
-
-      return recordMap;
     },
     staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: true,
@@ -180,7 +174,7 @@ export const useProgressSnapshot = (): ProgressSnapshot => {
     if (!user) return;
 
     const channel = supabase
-      .channel("progress_snapshot_realtime")
+      .channel(`progress_snapshot_${user.id}`)
       .on(
         "postgres_changes",
         {
