@@ -54,7 +54,8 @@ export const useStudyRecords = (subjectId: string) => {
         .from("study_records")
         .select("*")
         .eq("user_id", user!.id)
-        .eq("subject", subjectId);
+        .eq("subject", subjectId)
+        .order("updated_at", { ascending: false });
 
       if (error) throw error;
       return (data as StudyRecord[]) ?? [];

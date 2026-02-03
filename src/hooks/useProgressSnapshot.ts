@@ -147,9 +147,10 @@ export const useProgressSnapshot = (): ProgressSnapshot => {
       // Users with many records need all data for accurate progress calculation
       const { data: records, error } = await supabase
         .from("study_records")
-        .select("subject, chapter, activity, status")
+        .select("subject, chapter, activity, status, updated_at")
         .eq("user_id", user!.id)
         .eq("type", "status")
+        .order("updated_at", { ascending: false })
         .limit(5000); // Increase limit to handle users with many records
 
       if (error) {
@@ -158,8 +159,14 @@ export const useProgressSnapshot = (): ProgressSnapshot => {
       }
 
       const recordMap = new Map<string, string>();
+      // IMPORTANT: Deduplicate by keeping the latest record for each key.
+      // Even though we now upsert with a unique constraint, older data may still contain duplicates.
+      // We order by updated_at DESC and only set the first time we see a key.
       records?.forEach((r) => {
-        recordMap.set(`${r.subject}-${r.chapter}-${r.activity}`, r.status || "");
+        const key = `${r.subject}-${r.chapter}-${r.activity}`;
+        if (!recordMap.has(key)) {
+          recordMap.set(key, r.status || "");
+        }
       });
 
       return recordMap;
