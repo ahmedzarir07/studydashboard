@@ -1,6 +1,6 @@
 import { useSubjectAnalytics } from "@/hooks/useSubjectAnalytics";
 import { SubjectBreakdownChart } from "./SubjectBreakdownChart";
-import { StrengthWeaknessCard } from "./StrengthWeaknessCard";
+import { PerformanceStatsRow } from "./PerformanceStatsRow";
 import { Loader2, BarChart3 } from "lucide-react";
 
 // Map subject IDs to tracker tab indices
@@ -21,7 +21,7 @@ const subjectTabIndex: Record<string, number> = {
 };
 
 export const SubjectAnalyticsSection = () => {
-  const { subjectBreakdowns, strongestAreas, weakestAreas, loading } = useSubjectAnalytics();
+  const { subjectBreakdowns, loading } = useSubjectAnalytics();
 
   if (loading) {
     return (
@@ -33,23 +33,12 @@ export const SubjectAnalyticsSection = () => {
 
   return (
     <div className="space-y-6">
-      {/* Strength & Weakness Section */}
+      {/* Performance Stats Row */}
       <div>
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           Performance Analysis
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <StrengthWeaknessCard 
-            title="Strongest Areas" 
-            items={strongestAreas} 
-            type="strength" 
-          />
-          <StrengthWeaknessCard 
-            title="Weakest Areas" 
-            items={weakestAreas} 
-            type="weakness" 
-          />
-        </div>
+        <PerformanceStatsRow />
       </div>
 
       {/* Subject-wise Charts Section */}
