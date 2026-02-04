@@ -59,8 +59,13 @@ export const SubjectBreakdownChart = ({ breakdown }: SubjectBreakdownChartProps)
   }));
 
   return (
-    <div className="bg-card/60 rounded-xl p-4 border border-border/50 backdrop-blur-sm">
-      <h4 className="font-medium text-foreground text-sm mb-3 truncate">
+    <div 
+      className="bg-card/60 rounded-xl p-4 border border-border/50 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 cursor-pointer group"
+      style={{ 
+        "--subject-color": breakdown.subjectColor 
+      } as React.CSSProperties}
+    >
+      <h4 className="font-medium text-foreground text-sm mb-3 truncate group-hover:text-primary transition-colors">
         {breakdown.subjectName}
       </h4>
       
