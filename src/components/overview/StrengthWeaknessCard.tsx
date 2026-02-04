@@ -33,7 +33,7 @@ export const StrengthWeaknessCard = ({ title, items, type }: StrengthWeaknessCar
         ) : (
           items.map((item, index) => (
             <div 
-              key={`${item.subject}-${item.type}`}
+              key={`${item.subject}-${item.activity}`}
               className="flex items-center justify-between gap-2"
             >
               <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -49,7 +49,7 @@ export const StrengthWeaknessCard = ({ title, items, type }: StrengthWeaknessCar
                     {item.subject}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {item.type}
+                    {item.activity}
                   </p>
                 </div>
               </div>

@@ -1,35 +1,34 @@
 import { useMemo } from "react";
 import { useProgressSnapshot, ALL_SUBJECTS } from "./useProgressSnapshot";
-import { normalizeActivity } from "@/config/activityMapping";
 
-export interface TypeProgress {
+export interface ActivityProgress {
   subject: string;
   subjectId: string;
   subjectColor: string;
-  type: string;
+  activity: string;
   completedCount: number;
   totalCount: number;
   percentage: number;
 }
 
-export interface SubjectTypeBreakdown {
+export interface SubjectActivityBreakdown {
   subjectId: string;
   subjectName: string;
   subjectColor: string;
-  theory: number;
-  mcq: number;
-  cq: number;
-  revision: number;
+  activities: Array<{
+    name: string;
+    percentage: number;
+  }>;
 }
 
 export interface StrengthWeaknessItem {
   subject: string;
-  type: string;
+  activity: string;
   percentage: number;
   color: string;
 }
 
-// Only science subjects for the breakdown charts (9 subjects)
+// Only science subjects (9 subjects)
 const SCIENCE_SUBJECT_IDS = [
   "physics", "physics2nd",
   "chemistry", "chemistry2nd", 
@@ -38,78 +37,67 @@ const SCIENCE_SUBJECT_IDS = [
   "ict"
 ];
 
-// Map activities to their type categories
-const getActivityType = (activity: string): string | null => {
-  const normalizedName = normalizeActivity(activity);
-  
-  // Theory/Core activities
-  if (["Lecture", "Notes", "Text Reading", "Poem Reading", "Chapter Reading", "Book Reading", "Rule Notes", "Outline", "Format Templates", "Highlight Book"].includes(normalizedName)) {
-    return "theory";
-  }
-  
-  // MCQ activities
-  if (["MCQ Practice", "MCQ Summary", "SQ", "Info Transfer", "Practice", "Practice Sets", "Error Log", "Error Analysis", "MCQ"].includes(normalizedName)) {
-    return "mcq";
-  }
-  
-  // CQ activities
-  if (["ক", "খ", "CQ Summary", "Written CQ", "CQ Practice", "Book Problems", "Practice Drafts", "Final Draft", "Model Answers", "Model Review", "Model Samples", "Model Reading", "Model Essays", "Idea Planning", "Practice Writing", "Theme", "CQ Types", "Figure Notes", "Typewise CQ"].includes(normalizedName)) {
-    return "cq";
-  }
-  
-  // Revision activities
-  if (["Revision", "Exam", "Mock Practice", "Final Practice", "Vocabulary", "Expressions", "ALL Revision"].includes(normalizedName)) {
-    return "revision";
-  }
-  
-  return null;
-};
+// Activities to track (excluding Total Lec which is numeric input)
+const TRACKED_ACTIVITIES = [
+  "Lecture",
+  "ক",
+  "খ",
+  "Notes",
+  "MCQ Practice",
+  "MCQ Summary",
+  "CQ Summary",
+  "Written CQ",
+  "Revision",
+  "Exam"
+];
 
 export const useSubjectAnalytics = () => {
-  const { recordMap, loading, subjects } = useProgressSnapshot();
+  const { recordMap, loading } = useProgressSnapshot();
 
-  const typeProgressList = useMemo<TypeProgress[]>(() => {
-    const result: TypeProgress[] = [];
+  const activityProgressList = useMemo<ActivityProgress[]>(() => {
+    const result: ActivityProgress[] = [];
 
     // Filter to only science subjects
     const scienceSubjects = ALL_SUBJECTS.filter(s => SCIENCE_SUBJECT_IDS.includes(s.data.id));
 
     scienceSubjects.forEach(({ data: subject, color, displayName }) => {
-      const typeCounts: Record<string, { done: number; total: number }> = {
-        theory: { done: 0, total: 0 },
-        mcq: { done: 0, total: 0 },
-        cq: { done: 0, total: 0 },
-        revision: { done: 0, total: 0 },
-      };
-
-      subject.chapters.forEach((chapter) => {
-        chapter.activities.forEach((activity) => {
-          if (activity.name === "Total Lec") return;
-          
-          const type = getActivityType(activity.name);
-          if (!type) return;
-          
-          typeCounts[type].total++;
-          
-          const status = recordMap.get(`${subject.id}-${chapter.name}-${activity.name}`);
-          if (status === "Done") {
-            typeCounts[type].done++;
-          } else if (status === "In progress") {
-            typeCounts[type].done += 0.5;
+      // Get unique activities from the subject's chapters
+      const subjectActivities = new Set<string>();
+      subject.chapters.forEach(chapter => {
+        chapter.activities.forEach(activity => {
+          if (activity.name !== "Total Lec" && TRACKED_ACTIVITIES.includes(activity.name)) {
+            subjectActivities.add(activity.name);
           }
         });
       });
 
-      Object.entries(typeCounts).forEach(([type, counts]) => {
-        if (counts.total > 0) {
+      // Calculate progress for each activity
+      subjectActivities.forEach(activityName => {
+        let doneCount = 0;
+        let totalCount = 0;
+
+        subject.chapters.forEach(chapter => {
+          const hasActivity = chapter.activities.some(a => a.name === activityName);
+          if (hasActivity) {
+            totalCount++;
+            const status = recordMap.get(`${subject.id}-${chapter.name}-${activityName}`);
+            if (status === "Done") {
+              doneCount++;
+            } else if (status === "In progress") {
+              doneCount += 0.5;
+            }
+          }
+        });
+
+        if (totalCount > 0) {
           result.push({
             subject: displayName,
             subjectId: subject.id,
             subjectColor: color,
-            type,
-            completedCount: Math.round(counts.done),
-            totalCount: counts.total,
-            percentage: Math.round((counts.done / counts.total) * 100),
+            activity: activityName,
+            completedCount: Math.round(doneCount),
+            totalCount,
+            percentage: Math.round((doneCount / totalCount) * 100),
           });
         }
       });
@@ -118,64 +106,74 @@ export const useSubjectAnalytics = () => {
     return result;
   }, [recordMap]);
 
-  const subjectBreakdowns = useMemo<SubjectTypeBreakdown[]>(() => {
-    const breakdownMap = new Map<string, SubjectTypeBreakdown>();
+  const subjectBreakdowns = useMemo<SubjectActivityBreakdown[]>(() => {
+    const breakdownMap = new Map<string, SubjectActivityBreakdown>();
 
-    typeProgressList.forEach((item) => {
-      if (!breakdownMap.has(item.subjectId)) {
-        breakdownMap.set(item.subjectId, {
-          subjectId: item.subjectId,
-          subjectName: item.subject,
-          subjectColor: item.subjectColor,
-          theory: 0,
-          mcq: 0,
-          cq: 0,
-          revision: 0,
+    // Filter to only science subjects
+    const scienceSubjects = ALL_SUBJECTS.filter(s => SCIENCE_SUBJECT_IDS.includes(s.data.id));
+
+    scienceSubjects.forEach(({ data: subject, color, displayName }) => {
+      breakdownMap.set(subject.id, {
+        subjectId: subject.id,
+        subjectName: displayName,
+        subjectColor: color,
+        activities: [],
+      });
+    });
+
+    activityProgressList.forEach((item) => {
+      const breakdown = breakdownMap.get(item.subjectId);
+      if (breakdown) {
+        breakdown.activities.push({
+          name: item.activity,
+          percentage: item.percentage,
         });
       }
-      
-      const breakdown = breakdownMap.get(item.subjectId)!;
-      if (item.type === "theory") breakdown.theory = item.percentage;
-      if (item.type === "mcq") breakdown.mcq = item.percentage;
-      if (item.type === "cq") breakdown.cq = item.percentage;
-      if (item.type === "revision") breakdown.revision = item.percentage;
+    });
+
+    // Sort activities in consistent order
+    breakdownMap.forEach((breakdown) => {
+      breakdown.activities.sort((a, b) => {
+        const orderA = TRACKED_ACTIVITIES.indexOf(a.name);
+        const orderB = TRACKED_ACTIVITIES.indexOf(b.name);
+        return orderA - orderB;
+      });
     });
 
     return Array.from(breakdownMap.values());
-  }, [typeProgressList]);
+  }, [activityProgressList]);
 
   const strongestAreas = useMemo<StrengthWeaknessItem[]>(() => {
-    return [...typeProgressList]
+    return [...activityProgressList]
       .filter((item) => item.totalCount > 0)
       .sort((a, b) => b.percentage - a.percentage)
       .slice(0, 3)
       .map((item) => ({
         subject: item.subject,
-        type: item.type.charAt(0).toUpperCase() + item.type.slice(1),
+        activity: item.activity,
         percentage: item.percentage,
         color: item.subjectColor,
       }));
-  }, [typeProgressList]);
+  }, [activityProgressList]);
 
   const weakestAreas = useMemo<StrengthWeaknessItem[]>(() => {
-    return [...typeProgressList]
+    return [...activityProgressList]
       .filter((item) => item.totalCount > 0)
       .sort((a, b) => a.percentage - b.percentage)
       .slice(0, 3)
       .map((item) => ({
         subject: item.subject,
-        type: item.type.charAt(0).toUpperCase() + item.type.slice(1),
+        activity: item.activity,
         percentage: item.percentage,
         color: item.subjectColor,
       }));
-  }, [typeProgressList]);
+  }, [activityProgressList]);
 
   return {
-    typeProgressList,
+    activityProgressList,
     subjectBreakdowns,
     strongestAreas,
     weakestAreas,
     loading,
-    subjects,
   };
 };
