@@ -8,6 +8,7 @@ import { PersonalInfoSection } from "@/components/settings/PersonalInfoSection";
 import { AcademicInfoSection } from "@/components/settings/AcademicInfoSection";
 import { ContactInfoSection } from "@/components/settings/ContactInfoSection";
 import { SecuritySection } from "@/components/settings/SecuritySection";
+import { IntegrationsSection } from "@/components/settings/IntegrationsSection";
 import { Button } from "@/components/ui/button";
 import { Loader2, Settings as SettingsIcon, Save, LogOut } from "lucide-react";
 import { toast } from "sonner";
@@ -103,6 +104,9 @@ export default function Settings() {
             onPasswordUpdate={updatePassword}
             isGoogleUser={isGoogleUser}
           />
+
+          {/* Integrations */}
+          <IntegrationsSection />
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
