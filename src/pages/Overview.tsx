@@ -189,6 +189,11 @@ export default function Overview() {
               <PerformanceStatsRow />
             </div>
 
+            {/* Subject-wise Breakdown Charts - 2nd from Top */}
+            <div className="mb-6">
+              <SubjectAnalyticsSection />
+            </div>
+
             {/* Overall Progress Card */}
             <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-background rounded-2xl p-6 mb-6 border border-primary/20">
               <div className="flex items-center gap-3 mb-4">
@@ -239,7 +244,7 @@ export default function Overview() {
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               Subject Breakdown
             </h3>
-            <div className="space-y-3 mb-8">
+            <div className="space-y-3">
               {subjectProgress.map((subject, index) => (
                 <button
                   key={subject.id}
@@ -278,9 +283,6 @@ export default function Overview() {
                 </button>
               ))}
             </div>
-
-            {/* Subject-wise Breakdown Charts - At Bottom */}
-            <SubjectAnalyticsSection />
           </>
         )}
       </main>
