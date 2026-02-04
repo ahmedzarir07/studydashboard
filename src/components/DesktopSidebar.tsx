@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
   HelpCircle,
+  HardDrive,
 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -39,6 +40,7 @@ const mainNavItems: NavItem[] = [
   { path: "/ai-analysis", icon: Sparkles, label: "AI", section: "Main" },
   { path: "/community", icon: Users, label: "Leaderboard", section: "Main" },
   { path: "/planning", icon: CalendarDays, label: "Planning", section: "Main" },
+  { path: "/drive", icon: HardDrive, label: "Drive", section: "Main" },
   { path: "/downloads", icon: Download, label: "Downloads", section: "Main" },
   { path: "/about", icon: Info, label: "About", section: "Main" },
 ];
