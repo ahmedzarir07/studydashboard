@@ -29,27 +29,36 @@ export interface StrengthWeaknessItem {
   color: string;
 }
 
+// Only science subjects for the breakdown charts (9 subjects)
+const SCIENCE_SUBJECT_IDS = [
+  "physics", "physics2nd",
+  "chemistry", "chemistry2nd", 
+  "highermath", "highermath2nd",
+  "biology", "biology2nd",
+  "ict"
+];
+
 // Map activities to their type categories
 const getActivityType = (activity: string): string | null => {
   const normalizedName = normalizeActivity(activity);
   
   // Theory/Core activities
-  if (["Lecture", "Notes", "Text Reading", "Poem Reading", "Chapter Reading", "Book Reading", "Rule Notes", "Outline", "Format Templates"].includes(normalizedName)) {
+  if (["Lecture", "Notes", "Text Reading", "Poem Reading", "Chapter Reading", "Book Reading", "Rule Notes", "Outline", "Format Templates", "Highlight Book"].includes(normalizedName)) {
     return "theory";
   }
   
   // MCQ activities
-  if (["MCQ Practice", "MCQ Summary", "SQ", "Info Transfer", "Practice", "Practice Sets", "Error Log", "Error Analysis"].includes(normalizedName)) {
+  if (["MCQ Practice", "MCQ Summary", "SQ", "Info Transfer", "Practice", "Practice Sets", "Error Log", "Error Analysis", "MCQ"].includes(normalizedName)) {
     return "mcq";
   }
   
   // CQ activities
-  if (["ক", "খ", "CQ Summary", "Written CQ", "CQ Practice", "Book Problems", "Practice Drafts", "Final Draft", "Model Answers", "Model Review", "Model Samples", "Model Reading", "Model Essays", "Idea Planning", "Practice Writing", "Theme"].includes(normalizedName)) {
+  if (["ক", "খ", "CQ Summary", "Written CQ", "CQ Practice", "Book Problems", "Practice Drafts", "Final Draft", "Model Answers", "Model Review", "Model Samples", "Model Reading", "Model Essays", "Idea Planning", "Practice Writing", "Theme", "CQ Types", "Figure Notes", "Typewise CQ"].includes(normalizedName)) {
     return "cq";
   }
   
   // Revision activities
-  if (["Revision", "Exam", "Mock Practice", "Final Practice", "Vocabulary", "Expressions"].includes(normalizedName)) {
+  if (["Revision", "Exam", "Mock Practice", "Final Practice", "Vocabulary", "Expressions", "ALL Revision"].includes(normalizedName)) {
     return "revision";
   }
   
@@ -62,7 +71,10 @@ export const useSubjectAnalytics = () => {
   const typeProgressList = useMemo<TypeProgress[]>(() => {
     const result: TypeProgress[] = [];
 
-    ALL_SUBJECTS.forEach(({ data: subject, color, displayName }) => {
+    // Filter to only science subjects
+    const scienceSubjects = ALL_SUBJECTS.filter(s => SCIENCE_SUBJECT_IDS.includes(s.data.id));
+
+    scienceSubjects.forEach(({ data: subject, color, displayName }) => {
       const typeCounts: Record<string, { done: number; total: number }> = {
         theory: { done: 0, total: 0 },
         mcq: { done: 0, total: 0 },

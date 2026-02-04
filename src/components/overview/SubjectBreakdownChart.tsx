@@ -1,28 +1,28 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { SubjectTypeBreakdown } from "@/hooks/useSubjectAnalytics";
 
 interface SubjectBreakdownChartProps {
   breakdown: SubjectTypeBreakdown;
 }
 
-const typeColors = {
-  Theory: "hsl(var(--primary))",
-  MCQ: "hsl(142 76% 45%)",
-  CQ: "hsl(262 83% 58%)",
-  Revision: "hsl(25 95% 53%)",
+// Colors matching the reference design
+const typeConfig = {
+  Theory: { color: "hsl(217 91% 60%)", bgColor: "hsl(217 91% 60% / 0.2)" },    // Blue
+  MCQ: { color: "hsl(142 76% 45%)", bgColor: "hsl(142 76% 45% / 0.2)" },       // Green  
+  CQ: { color: "hsl(25 95% 53%)", bgColor: "hsl(25 95% 53% / 0.2)" },          // Orange
+  Revision: { color: "hsl(262 83% 58%)", bgColor: "hsl(262 83% 58% / 0.2)" },  // Purple
 };
 
 export const SubjectBreakdownChart = ({ breakdown }: SubjectBreakdownChartProps) => {
   const data = [
-    { name: "Theory", value: breakdown.theory, fill: typeColors.Theory },
-    { name: "MCQ", value: breakdown.mcq, fill: typeColors.MCQ },
-    { name: "CQ", value: breakdown.cq, fill: typeColors.CQ },
-    { name: "Revision", value: breakdown.revision, fill: typeColors.Revision },
+    { name: "Theory", value: breakdown.theory, ...typeConfig.Theory },
+    { name: "MCQ", value: breakdown.mcq, ...typeConfig.MCQ },
+    { name: "CQ", value: breakdown.cq, ...typeConfig.CQ },
+    { name: "Revision", value: breakdown.revision, ...typeConfig.Revision },
   ];
 
   return (
     <div className="bg-card/60 rounded-xl p-4 border border-border/50 backdrop-blur-sm">
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-4">
         <div 
           className="w-3 h-3 rounded-full shrink-0"
           style={{ backgroundColor: breakdown.subjectColor }}
@@ -32,48 +32,27 @@ export const SubjectBreakdownChart = ({ breakdown }: SubjectBreakdownChartProps)
         </h4>
       </div>
       
-      <div className="h-32">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical" margin={{ left: 0, right: 10, top: 0, bottom: 0 }}>
-            <XAxis 
-              type="number" 
-              domain={[0, 100]} 
-              hide 
-            />
-            <YAxis 
-              type="category" 
-              dataKey="name" 
-              width={55}
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <Tooltip
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  const data = payload[0].payload;
-                  return (
-                    <div className="bg-popover border border-border rounded-lg px-3 py-2 shadow-xl">
-                      <p className="text-sm font-medium text-foreground">{data.name}</p>
-                      <p className="text-xs text-muted-foreground">{data.value}% complete</p>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
-            <Bar 
-              dataKey="value" 
-              radius={[0, 4, 4, 0]}
-              barSize={14}
-              animationDuration={800}
+      <div className="space-y-3">
+        {data.map((item) => (
+          <div key={item.name} className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">{item.name}</span>
+              <span className="text-xs font-medium text-muted-foreground">{item.value}%</span>
+            </div>
+            <div 
+              className="h-2.5 rounded-full overflow-hidden"
+              style={{ backgroundColor: item.bgColor }}
             >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.fill} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+              <div
+                className="h-full rounded-full transition-all duration-700 ease-out"
+                style={{ 
+                  width: `${item.value}%`,
+                  backgroundColor: item.color,
+                }}
+              />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
