@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { Progress } from "@/components/ui/progress";
+import { SubjectAnalyticsSection } from "@/components/overview/SubjectAnalyticsSection";
 import { cn } from "@/lib/utils";
 
 import { physicsData } from "@/data/physicsData";
@@ -265,6 +266,11 @@ export default function Overview() {
                   </div>
                 </button>
               ))}
+            </div>
+
+            {/* Subject Analytics Section */}
+            <div className="mt-8">
+              <SubjectAnalyticsSection />
             </div>
           </>
         )}
