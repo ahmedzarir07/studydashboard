@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowRight, ArrowDown } from "lucide-react";
 import { useSubjectAnalytics } from "@/hooks/useSubjectAnalytics";
 import { useProgressSnapshot } from "@/hooks/useProgressSnapshot";
 
@@ -26,9 +27,10 @@ interface StatCardProps {
   percentage: string;
   variant?: "default" | "success" | "warning" | "danger";
   onClick?: () => void;
+  icon?: "navigate" | "scroll";
 }
 
-const StatCard = ({ label, value, percentage, variant = "default", onClick }: StatCardProps) => {
+const StatCard = ({ label, value, percentage, variant = "default", onClick, icon }: StatCardProps) => {
   const variantStyles = {
     default: "border-border/50",
     success: "border-emerald-500/30",
@@ -43,11 +45,27 @@ const StatCard = ({ label, value, percentage, variant = "default", onClick }: St
     danger: "text-destructive",
   };
 
+  const iconColors = {
+    default: "text-muted-foreground",
+    success: "text-emerald-500",
+    warning: "text-amber-500",
+    danger: "text-destructive",
+  };
+
   return (
     <div 
       onClick={onClick}
-      className={`bg-card/60 rounded-xl p-4 border ${variantStyles[variant]} backdrop-blur-sm text-center transition-all ${onClick ? "cursor-pointer hover:bg-card/80 hover:scale-[1.02] active:scale-[0.98]" : ""}`}
+      className={`bg-card/60 rounded-xl p-4 border ${variantStyles[variant]} backdrop-blur-sm text-center transition-all relative group ${onClick ? "cursor-pointer hover:bg-card/80 hover:scale-[1.02] active:scale-[0.98]" : ""}`}
     >
+      {onClick && icon && (
+        <div className={`absolute top-2 right-2 ${iconColors[variant]} opacity-50 group-hover:opacity-100 transition-opacity`}>
+          {icon === "navigate" ? (
+            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+          ) : (
+            <ArrowDown className="h-3.5 w-3.5 group-hover:translate-y-0.5 transition-transform" />
+          )}
+        </div>
+      )}
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className="font-semibold text-foreground text-sm mb-1 line-clamp-2">{value}</p>
       <p className={`text-sm font-bold ${percentageColors[variant]}`}>{percentage}</p>
@@ -127,6 +145,7 @@ export const PerformanceStatsRow = () => {
         percentage={`${stats.topSubject.percentage.toFixed(1)}%`}
         variant="success"
         onClick={() => handleSubjectClick(stats.topSubject.id)}
+        icon="navigate"
       />
       <StatCard
         label="Least Covered"
@@ -134,6 +153,7 @@ export const PerformanceStatsRow = () => {
         percentage={`${stats.leastSubject.percentage.toFixed(1)}%`}
         variant="danger"
         onClick={() => handleSubjectClick(stats.leastSubject.id)}
+        icon="navigate"
       />
       <StatCard
         label="Strongest Study Type"
@@ -141,6 +161,7 @@ export const PerformanceStatsRow = () => {
         percentage={`${stats.strongestType.percentage.toFixed(1)}%`}
         variant="success"
         onClick={scrollToBreakdown}
+        icon="scroll"
       />
       <StatCard
         label="Needs Focus In"
@@ -148,6 +169,7 @@ export const PerformanceStatsRow = () => {
         percentage={`${stats.weakestType.percentage.toFixed(1)}%`}
         variant="warning"
         onClick={scrollToBreakdown}
+        icon="scroll"
       />
     </div>
   );
