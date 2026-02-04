@@ -1,25 +1,26 @@
-import { SubjectTypeBreakdown } from "@/hooks/useSubjectAnalytics";
+import { SubjectActivityBreakdown } from "@/hooks/useSubjectAnalytics";
 
 interface SubjectBreakdownChartProps {
-  breakdown: SubjectTypeBreakdown;
+  breakdown: SubjectActivityBreakdown;
 }
 
-// Colors matching the reference design
-const typeConfig = {
-  Theory: { color: "hsl(217 91% 60%)", bgColor: "hsl(217 91% 60% / 0.2)" },    // Blue
-  MCQ: { color: "hsl(142 76% 45%)", bgColor: "hsl(142 76% 45% / 0.2)" },       // Green  
-  CQ: { color: "hsl(25 95% 53%)", bgColor: "hsl(25 95% 53% / 0.2)" },          // Orange
-  Revision: { color: "hsl(262 83% 58%)", bgColor: "hsl(262 83% 58% / 0.2)" },  // Purple
+// Activity colors - matching the tracker feel
+const activityColors: Record<string, string> = {
+  "Lecture": "hsl(217 91% 60%)",       // Blue
+  "ক": "hsl(142 76% 45%)",             // Green
+  "খ": "hsl(142 71% 55%)",             // Light Green
+  "Notes": "hsl(199 89% 48%)",         // Cyan
+  "MCQ Practice": "hsl(45 93% 47%)",   // Yellow
+  "MCQ Summary": "hsl(35 90% 50%)",    // Orange-Yellow
+  "CQ Summary": "hsl(25 95% 53%)",     // Orange
+  "Written CQ": "hsl(340 82% 52%)",    // Pink
+  "Revision": "hsl(262 83% 58%)",      // Purple
+  "Exam": "hsl(280 70% 55%)",          // Violet
 };
 
-export const SubjectBreakdownChart = ({ breakdown }: SubjectBreakdownChartProps) => {
-  const data = [
-    { name: "Theory", value: breakdown.theory, ...typeConfig.Theory },
-    { name: "MCQ", value: breakdown.mcq, ...typeConfig.MCQ },
-    { name: "CQ", value: breakdown.cq, ...typeConfig.CQ },
-    { name: "Revision", value: breakdown.revision, ...typeConfig.Revision },
-  ];
+const getActivityColor = (name: string) => activityColors[name] || "hsl(var(--primary))";
 
+export const SubjectBreakdownChart = ({ breakdown }: SubjectBreakdownChartProps) => {
   return (
     <div className="bg-card/60 rounded-xl p-4 border border-border/50 backdrop-blur-sm">
       <div className="flex items-center gap-2 mb-4">
@@ -32,27 +33,30 @@ export const SubjectBreakdownChart = ({ breakdown }: SubjectBreakdownChartProps)
         </h4>
       </div>
       
-      <div className="space-y-3">
-        {data.map((item) => (
-          <div key={item.name} className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">{item.name}</span>
-              <span className="text-xs font-medium text-muted-foreground">{item.value}%</span>
+      <div className="space-y-2.5">
+        {breakdown.activities.map((item) => {
+          const color = getActivityColor(item.name);
+          return (
+            <div key={item.name} className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground truncate max-w-[60%]">{item.name}</span>
+                <span className="text-xs font-medium text-muted-foreground">{item.percentage}%</span>
+              </div>
+              <div 
+                className="h-2 rounded-full overflow-hidden"
+                style={{ backgroundColor: `${color}20` }}
+              >
+                <div
+                  className="h-full rounded-full transition-all duration-700 ease-out"
+                  style={{ 
+                    width: `${item.percentage}%`,
+                    backgroundColor: color,
+                  }}
+                />
+              </div>
             </div>
-            <div 
-              className="h-2.5 rounded-full overflow-hidden"
-              style={{ backgroundColor: item.bgColor }}
-            >
-              <div
-                className="h-full rounded-full transition-all duration-700 ease-out"
-                style={{ 
-                  width: `${item.value}%`,
-                  backgroundColor: item.color,
-                }}
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
