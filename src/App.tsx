@@ -9,6 +9,9 @@ import Tracker from "./pages/Tracker";
 import Overview from "./pages/Overview";
 import Downloads from "./pages/Downloads";
 import About from "./pages/About";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Contact from "./pages/Contact";
+import HowToUse from "./pages/HowToUse";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import MonthlyPlanning from "./pages/MonthlyPlanning";
@@ -39,6 +42,9 @@ const App = () => (
             <Route path="/planning" element={<MonthlyPlanning />} />
             <Route path="/downloads" element={<Downloads />} />
             <Route path="/about" element={<About />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/how-to-use" element={<HowToUse />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/settings" element={<Settings />} />
