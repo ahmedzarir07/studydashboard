@@ -99,7 +99,7 @@ export default function Home() {
             <h2 className="font-semibold text-foreground mb-3 text-lg font-serif text-left">
               Subject Progress
             </h2>
-            <div className="flex overflow-x-auto scrollbar-hide scroll-smooth-touch touch-pan-x overscroll-x-contain pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-5 md:gap-3 md:overflow-visible gap-[10px] border-8 border-dotted rounded-md shadow-glow opacity-100">
+            <div className="flex overflow-x-auto scrollbar-hide scroll-smooth-touch touch-pan-x overscroll-x-contain pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-5 md:gap-3 md:overflow-visible gap-[10px] rounded-md shadow-glow opacity-100 border-4 border-none">
               <TooltipProvider>
                 {subjects.map((subject, index) => {
                 // Get border color class based on subject color
