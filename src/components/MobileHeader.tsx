@@ -45,7 +45,7 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
 
       {/* Mobile dropdown menu */}
       {menuOpen && (
-        <div className="md:hidden absolute top-14 left-0 right-0 bg-card/95 backdrop-blur-xl border-b border-primary/10 shadow-lg shadow-primary/10">
+        <div className="md:hidden absolute top-14 left-0 right-0 bg-card/95 backdrop-blur-xl border-b border-primary/10 shadow-lg shadow-primary/10 animate-in slide-in-from-top-2 fade-in duration-200">
           <div className="px-4 py-3 space-y-2">
             {!loading && user && (
               <Link to="/settings" className="block pb-3 mb-2 border-b border-primary/10 hover:opacity-80 transition-opacity" onClick={() => setMenuOpen(false)}>
