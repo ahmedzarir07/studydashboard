@@ -11,7 +11,7 @@ const socialLinks = [
   { name: "Telegram", icon: Send, url: "https://t.me/md_monir01" },
   { name: "GitHub", icon: Github, url: "https://github.com/mdmonirhossen6" },
   { name: "YouTube", icon: Youtube, url: "https://www.youtube.com/@MonirHossen-i6j" },
-  { name: "Email", icon: Mail, url: "mailto:md01610988605@gmail.com" },
+  { name: "Email", icon: Mail, url: "mailto:hscstudypdf@gmail.com" },
 ];
 
 const features = [

@@ -42,7 +42,7 @@ const sections = [
   {
     title: "Contact Us",
     content:
-      "If you have any questions about this Privacy Policy, please contact us at md01610988605@gmail.com.",
+      "If you have any questions about this Privacy Policy, please contact us at hscstudypdf@gmail.com.",
   },
 ];
 
