@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { LogIn, LogOut, Menu, Users, Settings } from "lucide-react";
+import { LogIn, LogOut, Menu, Users, Settings, Info, HelpCircle, ShieldCheck, Mail } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -53,14 +53,37 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
               </Link>
             )}
             <Link to="/community" className="block" onClick={() => setMenuOpen(false)}>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start min-h-[44px] hover:bg-primary/10 hover:text-primary transition-all duration-300"
-              >
+              <Button variant="ghost" className="w-full justify-start min-h-[44px] hover:bg-primary/10 hover:text-primary transition-all duration-300">
                 <Users className="h-4 w-4 mr-2" />
                 Leaderboard
               </Button>
             </Link>
+            <div className="border-t border-primary/10 pt-2 mt-1">
+              <Link to="/about" className="block" onClick={() => setMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start min-h-[44px] hover:bg-primary/10 hover:text-primary transition-all duration-300">
+                  <Info className="h-4 w-4 mr-2" />
+                  About
+                </Button>
+              </Link>
+              <Link to="/how-to-use" className="block" onClick={() => setMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start min-h-[44px] hover:bg-primary/10 hover:text-primary transition-all duration-300">
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  How to Use
+                </Button>
+              </Link>
+              <Link to="/privacy-policy" className="block" onClick={() => setMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start min-h-[44px] hover:bg-primary/10 hover:text-primary transition-all duration-300">
+                  <ShieldCheck className="h-4 w-4 mr-2" />
+                  Privacy Policy
+                </Button>
+              </Link>
+              <Link to="/contact" className="block" onClick={() => setMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start min-h-[44px] hover:bg-primary/10 hover:text-primary transition-all duration-300">
+                  <Mail className="h-4 w-4 mr-2" />
+                  Contact
+                </Button>
+              </Link>
+            </div>
             {!loading && (
               user ? (
                 <Button 
