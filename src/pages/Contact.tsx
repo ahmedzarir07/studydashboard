@@ -8,8 +8,8 @@ const contactMethods = [
   {
     icon: Mail,
     label: "Email",
-    value: "md01610988605@gmail.com",
-    url: "mailto:md01610988605@gmail.com",
+    value: "hscstudypdf@gmail.com",
+    url: "mailto:hscstudypdf@gmail.com",
     note: "Best for detailed inquiries",
   },
   {
