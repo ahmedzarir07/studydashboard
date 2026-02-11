@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const SUBJECT_OPTIONS = ALL_SUBJECTS.map(s => ({ id: s.data.id, name: s.displayName, chapters: s.data.chapters.map(c => c.name) }));
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+// No file size limit
 
 interface AskDoubtInputProps {
   onPost: (subject: string, question: string, chapter?: string, imageUrl?: string) => Promise<void>;
@@ -53,10 +53,6 @@ export function AskDoubtInput({ onPost }: AskDoubtInputProps) {
 
     if (!file.type.startsWith("image/")) {
       toast({ title: "Only images allowed", variant: "destructive" });
-      return;
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      toast({ title: "Image must be under 5MB", variant: "destructive" });
       return;
     }
 
