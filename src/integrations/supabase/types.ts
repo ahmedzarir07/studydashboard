@@ -107,6 +107,148 @@ export type Database = {
         }
         Relationships: []
       }
+      doubt_answers: {
+        Row: {
+          answer_text: string
+          created_at: string
+          doubt_id: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer_text: string
+          created_at?: string
+          doubt_id: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer_text?: string
+          created_at?: string
+          doubt_id?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doubt_answers_doubt_id_fkey"
+            columns: ["doubt_id"]
+            isOneToOne: false
+            referencedRelation: "doubts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doubt_reports: {
+        Row: {
+          answer_id: string | null
+          created_at: string
+          doubt_id: string | null
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          answer_id?: string | null
+          created_at?: string
+          doubt_id?: string | null
+          id?: string
+          reason?: string
+          user_id: string
+        }
+        Update: {
+          answer_id?: string | null
+          created_at?: string
+          doubt_id?: string | null
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doubt_reports_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "doubt_answers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doubt_reports_doubt_id_fkey"
+            columns: ["doubt_id"]
+            isOneToOne: false
+            referencedRelation: "doubts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doubt_votes: {
+        Row: {
+          answer_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          answer_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          answer_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doubt_votes_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "doubt_answers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doubts: {
+        Row: {
+          chapter: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_resolved: boolean
+          question: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chapter?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_resolved?: boolean
+          question: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chapter?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_resolved?: boolean
+          question?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       drive_connections: {
         Row: {
           access_token: string
