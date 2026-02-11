@@ -21,6 +21,7 @@ import AIAnalysis from "./pages/AIAnalysis";
 import ResetPassword from "./pages/ResetPassword";
 import Drive from "./pages/Drive";
 import DriveCallback from "./pages/DriveCallback";
+import Doubts from "./pages/Doubts";
 import NotFound from "./pages/NotFound";
 import { JoinChannelDialog } from "./components/JoinChannelDialog";
 
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/drive" element={<Drive />} />
             <Route path="/drive/callback" element={<DriveCallback />} />
+            <Route path="/doubts" element={<Doubts />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
