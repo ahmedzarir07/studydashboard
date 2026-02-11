@@ -8,7 +8,8 @@ export function Footer() {
         <nav className="flex items-center gap-6">
           <Link to="/about" className="hover:text-foreground transition-colors underline">About</Link>
           <Link to="/how-to-use" className="hover:text-foreground transition-colors underline">How to Use</Link>
-          <Link to="/privacy-policy" className="hover:text-foreground transition-colors underline">Privacy Policy</Link>
+          <Link to="/privacy" className="hover:text-foreground transition-colors underline">Privacy Policy</Link>
+          <Link to="/terms" className="hover:text-foreground transition-colors underline">Terms of Service</Link>
           <Link to="/contact" className="hover:text-foreground transition-colors underline">Contact</Link>
         </nav>
       </div>

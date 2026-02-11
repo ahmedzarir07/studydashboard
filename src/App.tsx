@@ -10,6 +10,7 @@ import Overview from "./pages/Overview";
 import Downloads from "./pages/Downloads";
 import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import Contact from "./pages/Contact";
 import HowToUse from "./pages/HowToUse";
 import Auth from "./pages/Auth";
@@ -43,7 +44,8 @@ const App = () => (
             <Route path="/planning" element={<MonthlyPlanning />} />
             <Route path="/downloads" element={<Downloads />} />
             <Route path="/about" element={<About />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/how-to-use" element={<HowToUse />} />
             <Route path="/auth" element={<Auth />} />

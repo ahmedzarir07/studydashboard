@@ -70,7 +70,8 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
                 {[
                   { to: "/about", icon: Info, label: "About", color: "text-blue-400" },
                   { to: "/how-to-use", icon: HelpCircle, label: "How to Use", color: "text-emerald-400" },
-                  { to: "/privacy-policy", icon: ShieldCheck, label: "Privacy", color: "text-amber-400" },
+                  { to: "/privacy", icon: ShieldCheck, label: "Privacy", color: "text-amber-400" },
+                  { to: "/terms", icon: ShieldCheck, label: "Terms", color: "text-violet-400" },
                   { to: "/contact", icon: Mail, label: "Contact", color: "text-pink-400" },
                 ].map((item) => (
                   <Link key={item.to} to={item.to} className="block" onClick={() => setMenuOpen(false)}>
