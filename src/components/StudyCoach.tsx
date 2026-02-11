@@ -196,19 +196,32 @@ export function StudyCoach() {
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
   const [lastShownDate, setLastShownDate] = useState<string | null>(null);
 
+  // Auto-set completion from overall progress
+  useEffect(() => {
+    if (!progressSnapshot.loading && progressSnapshot.overallProgress > 0 && !settings) {
+      setCompletion(progressSnapshot.overallProgress);
+    }
+  }, [progressSnapshot.loading, progressSnapshot.overallProgress, settings]);
+
   // Load saved settings when available
   useEffect(() => {
     if (settings) {
       setBatch(settings.batch as "2026" | "2027");
       setMonthsRemaining(settings.months_remaining);
-      setCompletion(settings.completion_percentage);
+      // Always use live overall progress instead of saved static value
+      if (!progressSnapshot.loading) {
+        setCompletion(progressSnapshot.overallProgress);
+      } else {
+        setCompletion(settings.completion_percentage);
+      }
       setIsNotificationEnabled(settings.notifications_enabled);
       
       // If we have saved settings, show the result
       if (settings.risk_level) {
+        const currentCompletion = !progressSnapshot.loading ? progressSnapshot.overallProgress : settings.completion_percentage;
         const tone = getTodayTone();
         const motivationalMessages = getMotivationalMessages(settings.months_remaining, settings.risk_level as RiskLevel, tone);
-        const todayActions = getTodayActions(settings.completion_percentage, settings.months_remaining, settings.batch);
+        const todayActions = getTodayActions(currentCompletion, settings.months_remaining, settings.batch);
         
         let safePercentage: number;
         if (settings.batch === "2027") {
@@ -217,20 +230,29 @@ export function StudyCoach() {
           safePercentage = Math.min(90, Math.round((12 - settings.months_remaining) * 7));
         }
         safePercentage = Math.max(0, safePercentage);
+
+        // Recalculate risk level based on live progress
+        let riskLevel: RiskLevel;
+        if (currentCompletion >= safePercentage) {
+          riskLevel = "safe";
+        } else if (currentCompletion >= safePercentage - 10) {
+          riskLevel = "slightly_behind";
+        } else {
+          riskLevel = "high_risk";
+        }
         
         setResult({
           safePercentage,
-          riskLevel: settings.risk_level as RiskLevel,
-          motivationalMessages,
-          todayActions
+          riskLevel,
+          motivationalMessages: getMotivationalMessages(settings.months_remaining, riskLevel, tone),
+          todayActions: getTodayActions(currentCompletion, settings.months_remaining, settings.batch),
         });
         setStep("result");
         
-        // Try to fetch AI content
-        fetchAIContent(settings.completion_percentage, settings.months_remaining, settings.batch, settings.risk_level as RiskLevel);
+        fetchAIContent(currentCompletion, settings.months_remaining, settings.batch, riskLevel);
       }
     }
-  }, [settings, user?.email]);
+  }, [settings, user?.email, progressSnapshot.loading, progressSnapshot.overallProgress]);
 
   const fetchAIContent = async (comp: number, months: number, userBatch: string, risk: RiskLevel) => {
     if (!user) return; // Only fetch AI for logged-in users
@@ -515,9 +537,19 @@ export function StudyCoach() {
             </div>
             <div>
               <h3 className="font-semibold gradient-text">সিলেবাস কতটুকু শেষ?</h3>
-              <p className="text-sm text-muted-foreground">আনুমানিক শতাংশ দাও</p>
+              <p className="text-sm text-muted-foreground">তোমার ট্র্যাকার থেকে স্বয়ংক্রিয়ভাবে নেওয়া হয়েছে</p>
             </div>
           </div>
+
+          {/* Auto-populated notice */}
+          {!progressSnapshot.loading && progressSnapshot.overallProgress > 0 && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20">
+              <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
+              <p className="text-xs text-primary">
+                তোমার ট্র্যাকার অনুযায়ী Overall Progress: <span className="font-bold">{progressSnapshot.overallProgress}%</span>
+              </p>
+            </div>
+          )}
           
           <div className="space-y-4 py-4">
             <div className="text-center">
@@ -530,7 +562,7 @@ export function StudyCoach() {
               onValueChange={([v]) => setCompletion(v)}
               min={0}
               max={100}
-              step={5}
+              step={1}
               className="w-full"
             />
             
