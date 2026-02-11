@@ -51,12 +51,43 @@ interface SubjectProgress {
   progressPercent: number;
 }
 
+export interface DbStats {
+  totalCompletedChapters: number;
+  totalStudyRecords: number;
+  doneRecords: number;
+  inProgressRecords: number;
+  totalMonthlyPlans: number;
+  currentMonthPlans: number;
+  totalResources: number;
+  coachRiskLevel: string | null;
+  coachMonthsRemaining: number | null;
+  coachCompletionPercent: number | null;
+  recentActivityDays: number;
+  mostActiveSubject: string | null;
+  mostActiveSubjectCount: number;
+}
+
 export default function Overview() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [studyRecords, setStudyRecords] = useState<Map<string, Set<string>>>(new Map());
   const [chapterCompletions, setChapterCompletions] = useState<Set<string>>(new Set());
+  const [dbStats, setDbStats] = useState<DbStats>({
+    totalCompletedChapters: 0,
+    totalStudyRecords: 0,
+    doneRecords: 0,
+    inProgressRecords: 0,
+    totalMonthlyPlans: 0,
+    currentMonthPlans: 0,
+    totalResources: 0,
+    coachRiskLevel: null,
+    coachMonthsRemaining: null,
+    coachCompletionPercent: null,
+    recentActivityDays: 0,
+    mostActiveSubject: null,
+    mostActiveSubjectCount: 0,
+  });
 
   useEffect(() => {
     if (!user) {
@@ -67,36 +98,71 @@ export default function Overview() {
     const fetchData = async () => {
       setLoading(true);
 
-      // Fetch completed activities
-      const { data: records } = await supabase
-        .from("study_records")
-        .select("subject, chapter, activity, status")
-        .eq("user_id", user.id)
-        .eq("type", "status")
-        .eq("status", "Done");
+      const now = new Date();
+      const currentMonthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const [recordsRes, completionsRes, allPlansRes, currentPlansRes, resourcesRes, coachRes, recentRes] = await Promise.all([
+        supabase.from("study_records").select("subject, chapter, activity, status").eq("user_id", user.id).eq("type", "status"),
+        supabase.from("chapter_completions").select("subject, chapter, completed").eq("user_id", user.id).eq("completed", true),
+        supabase.from("monthly_study_plans").select("id").eq("user_id", user.id),
+        supabase.from("monthly_study_plans").select("id").eq("user_id", user.id).eq("month_year", currentMonthYear),
+        supabase.from("chapter_resources").select("id").eq("user_id", user.id),
+        supabase.from("study_coach_settings").select("risk_level, months_remaining, completion_percentage").eq("user_id", user.id).single(),
+        supabase.from("study_records").select("subject, updated_at").eq("user_id", user.id).gte("updated_at", sevenDaysAgo),
+      ]);
+
+      const records = recordsRes.data || [];
+      const completions = completionsRes.data || [];
 
       const recordMap = new Map<string, Set<string>>();
-      records?.forEach((r) => {
-        const key = `${r.subject}-${r.chapter}`;
-        if (!recordMap.has(key)) {
-          recordMap.set(key, new Set());
+      let doneCount = 0;
+      let inProgressCount = 0;
+      const subjectActivityCounts = new Map<string, number>();
+
+      records.forEach((r) => {
+        if (r.status === "Done") {
+          doneCount++;
+          const key = `${r.subject}-${r.chapter}`;
+          if (!recordMap.has(key)) recordMap.set(key, new Set());
+          recordMap.get(key)!.add(r.activity);
+        } else if (r.status === "In progress") {
+          inProgressCount++;
         }
-        recordMap.get(key)!.add(r.activity);
+        subjectActivityCounts.set(r.subject, (subjectActivityCounts.get(r.subject) || 0) + 1);
       });
       setStudyRecords(recordMap);
 
-      // Fetch chapter completions
-      const { data: completions } = await supabase
-        .from("chapter_completions")
-        .select("subject, chapter, completed")
-        .eq("user_id", user.id)
-        .eq("completed", true);
-
       const completionSet = new Set<string>();
-      completions?.forEach((c) => {
-        completionSet.add(`${c.subject}-${c.chapter}`);
-      });
+      completions.forEach((c) => completionSet.add(`${c.subject}-${c.chapter}`));
       setChapterCompletions(completionSet);
+
+      let mostActiveSub: string | null = null;
+      let mostActiveCount = 0;
+      subjectActivityCounts.forEach((count, subject) => {
+        if (count > mostActiveCount) { mostActiveCount = count; mostActiveSub = subject; }
+      });
+
+      const activeDays = new Set<string>();
+      (recentRes.data || []).forEach((r) => {
+        if (r.updated_at) activeDays.add(r.updated_at.slice(0, 10));
+      });
+
+      setDbStats({
+        totalCompletedChapters: completions.length,
+        totalStudyRecords: records.length,
+        doneRecords: doneCount,
+        inProgressRecords: inProgressCount,
+        totalMonthlyPlans: allPlansRes.data?.length || 0,
+        currentMonthPlans: currentPlansRes.data?.length || 0,
+        totalResources: resourcesRes.data?.length || 0,
+        coachRiskLevel: coachRes.data?.risk_level || null,
+        coachMonthsRemaining: coachRes.data?.months_remaining ?? null,
+        coachCompletionPercent: coachRes.data?.completion_percentage ?? null,
+        recentActivityDays: activeDays.size,
+        mostActiveSubject: mostActiveSub,
+        mostActiveSubjectCount: mostActiveCount,
+      });
 
       setLoading(false);
     };
@@ -187,7 +253,7 @@ export default function Overview() {
                   Performance Analysis
                 </h3>
               </div>
-              <PerformanceStatsRow />
+              <PerformanceStatsRow dbStats={dbStats} />
             </div>
 
             {/* Subject-wise Breakdown Charts - 2nd from Top */}
