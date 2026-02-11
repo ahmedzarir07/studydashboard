@@ -9,26 +9,10 @@ const MAX_MESSAGES = 20;
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY_MS = 200;
 
-// Helper to detect if 429 is actually a billing/quota issue vs rate limit
-function isBillingOrQuotaError(errorBody: string): boolean {
-  const lower = errorBody.toLowerCase();
-  return (
-    lower.includes("insufficient_quota") ||
-    lower.includes("billing") ||
-    lower.includes("exceeded your current quota") ||
-    lower.includes("you exceeded") ||
-    lower.includes("account") ||
-    lower.includes("plan") ||
-    lower.includes("upgrade")
-  );
-}
-
-// Helper to sleep for exponential backoff
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Make request with exponential backoff for true rate limits
 async function fetchWithRetry(
   url: string,
   options: RequestInit,
@@ -40,38 +24,21 @@ async function fetchWithRetry(
   for (let attempt = 0; attempt <= retries; attempt++) {
     const response = await fetch(url, options);
     
-    if (response.ok) {
-      return response;
-    }
+    if (response.ok) return response;
 
-    // For 429, check if it's billing or rate limit
     if (response.status === 429) {
       const errorText = await response.text();
-      console.log(`OpenAI 429 response (attempt ${attempt + 1}):`, errorText);
+      console.log(`Groq 429 response (attempt ${attempt + 1}):`, errorText);
 
-      // If it's a billing/quota issue, don't retry - return immediately
-      if (isBillingOrQuotaError(errorText)) {
-        console.error("Billing/quota issue detected, not retrying");
-        // Create a new response with the error text since we consumed it
-        return new Response(errorText, {
-          status: 429,
-          statusText: "Too Many Requests",
-          headers: response.headers,
-        });
-      }
-
-      // True rate limit - retry with backoff
       if (attempt < retries) {
-        // Check for Retry-After header
         const retryAfter = response.headers.get("Retry-After");
         const waitTime = retryAfter ? parseInt(retryAfter, 10) * 1000 : delay;
         console.log(`Rate limited, retrying in ${waitTime}ms...`);
         await sleep(waitTime);
-        delay *= 2; // Exponential backoff
+        delay *= 2;
         continue;
       }
 
-      // Max retries reached
       return new Response(errorText, {
         status: 429,
         statusText: "Too Many Requests",
@@ -79,7 +46,6 @@ async function fetchWithRetry(
       });
     }
 
-    // For other errors, don't retry
     lastResponse = response;
     break;
   }
@@ -97,20 +63,34 @@ serve(async (req) => {
     
     console.log("Received chat request with", messages?.length, "messages");
     
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) {
-      console.error("OPENAI_API_KEY is not configured");
+    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
+    if (!GROQ_API_KEY) {
+      console.error("GROQ_API_KEY is not configured");
       throw new Error("AI service is not configured");
     }
 
-    // Build user context section
+    // Build comprehensive user context
     let userDataContext = "";
     if (userContext) {
       const profileSection = [
         userContext.profile?.displayName ? `Name: ${userContext.profile.displayName}` : "",
+        userContext.profile?.email ? `Email: ${userContext.profile.email}` : "",
+        userContext.profile?.batch ? `Batch: ${userContext.profile.batch}` : "",
+        userContext.profile?.groupName ? `Group: ${userContext.profile.groupName}` : "",
+        userContext.profile?.boardName ? `Board: ${userContext.profile.boardName}` : "",
+        userContext.profile?.studyType ? `Study Type: ${userContext.profile.studyType}` : "",
+        userContext.profile?.phone ? `Phone: ${userContext.profile.phone}` : "",
+        userContext.profile?.gender ? `Gender: ${userContext.profile.gender}` : "",
+        userContext.profile?.address ? `Address: ${userContext.profile.address}` : "",
+        userContext.profile?.passingYear ? `Passing Year: ${userContext.profile.passingYear}` : "",
+        userContext.profile?.dateOfBirth ? `Date of Birth: ${userContext.profile.dateOfBirth}` : "",
+        userContext.profile?.boardRoll ? `Board Roll: ${userContext.profile.boardRoll}` : "",
+        userContext.profile?.registrationNumber ? `Registration: ${userContext.profile.registrationNumber}` : "",
+        userContext.profile?.optionalSubjects?.length ? `Optional Subjects: ${userContext.profile.optionalSubjects.join(", ")}` : "",
         userContext.coachSettings?.batch ? `HSC Batch: ${userContext.coachSettings.batch}` : "",
         userContext.coachSettings?.monthsRemaining ? `Months until exam: ${userContext.coachSettings.monthsRemaining}` : "",
         userContext.coachSettings?.riskLevel ? `Risk Level: ${userContext.coachSettings.riskLevel}` : "",
+        userContext.coachSettings?.completionPercentage !== undefined ? `Coach Completion: ${userContext.coachSettings.completionPercentage}%` : "",
       ].filter(Boolean).join("\n");
 
       const subjectProgress = userContext.subjects?.map((s: { name: string; progress: number }) => 
@@ -122,7 +102,7 @@ serve(async (req) => {
         const plansBySubject: Record<string, string[]> = {};
         for (const plan of userContext.monthlyPlans) {
           if (!plansBySubject[plan.subject]) plansBySubject[plan.subject] = [];
-          plansBySubject[plan.subject].push(`${plan.chapter} (${plan.activities.join(", ")})`);
+          plansBySubject[plan.subject].push(`${plan.chapter} (${plan.activities.join(", ")})${plan.goals ? ` [Goal: ${plan.goals}]` : ""}`);
         }
         monthlyPlanSection = Object.entries(plansBySubject)
           .map(([subject, chapters]) => `${subject}:\n  ${chapters.join("\n  ")}`)
@@ -131,38 +111,62 @@ serve(async (req) => {
 
       let completedSection = "";
       if (userContext.completedChapters && userContext.completedChapters.length > 0) {
-        const recentCompleted = userContext.completedChapters.slice(0, 10);
-        completedSection = recentCompleted.map((c: { subject: string; chapter: string; completedAt?: string }) => {
+        completedSection = userContext.completedChapters.map((c: { subject: string; chapter: string; completedAt?: string }) => {
           const date = c.completedAt ? new Date(c.completedAt).toLocaleDateString() : "";
           return `- ${c.subject}: ${c.chapter}${date ? ` (completed ${date})` : ""}`;
         }).join("\n");
       }
 
+      let recentActivitySection = "";
+      if (userContext.recentActivities && userContext.recentActivities.length > 0) {
+        recentActivitySection = userContext.recentActivities.map((a: { subject: string; chapter: string; activity: string; status: string; updatedAt?: string }) => {
+          const date = a.updatedAt ? new Date(a.updatedAt).toLocaleDateString() : "";
+          return `- ${a.subject} > ${a.chapter} > ${a.activity}: ${a.status}${date ? ` (${date})` : ""}`;
+        }).join("\n");
+      }
+
+      let resourcesSection = "";
+      if (userContext.resources && userContext.resources.length > 0) {
+        resourcesSection = userContext.resources.map((r: { subject: string; chapter: string; title: string }) =>
+          `- ${r.subject} > ${r.chapter}: ${r.title}`
+        ).join("\n");
+      }
+
       userDataContext = `
 
-=== STUDENT'S DATA ===
+=== STUDENT'S COMPLETE DATABASE ===
+--- Profile Info ---
 ${profileSection}
 
+--- Overall Stats ---
 Overall Progress: ${userContext.overallProgress}%
 Total Chapters Completed: ${userContext.totalCompletedChapters || 0}
 Chapters Planned This Month: ${userContext.totalPlannedThisMonth || 0}
+Total Resources Saved: ${userContext.totalResources || 0}
 
 --- Subject Progress ---
 ${subjectProgress}
 
 ${monthlyPlanSection ? `--- This Month's Study Plan ---\n${monthlyPlanSection}\n` : ""}
-${completedSection ? `--- Recently Completed Chapters ---\n${completedSection}\n` : ""}
-===`;
+${completedSection ? `--- Completed Chapters ---\n${completedSection}\n` : ""}
+${recentActivitySection ? `--- Recent Study Activities ---\n${recentActivitySection}\n` : ""}
+${resourcesSection ? `--- Saved Resources ---\n${resourcesSection}\n` : ""}
+${userContext.userPreferences ? `--- User Preferences ---
+Class: ${userContext.userPreferences.currentClass || "N/A"}
+Weak Subjects: ${userContext.userPreferences.weakSubjects?.join(", ") || "N/A"}
+Study Hours: ${userContext.userPreferences.studyHours || "N/A"}
+Main Goal: ${userContext.userPreferences.mainGoal || "N/A"}
+` : ""}===`;
     }
 
     const systemPrompt = `You are a helpful AI study assistant for HSC (Higher Secondary Certificate) students in Bangladesh.
 
-You have access to this student's study data shown below. Reference their specific progress when giving advice.
+You have FULL access to this student's complete study database shown below. You MUST proactively reference their specific data when giving advice. Never say you don't have access to their data.
 
 You help students with:
-- Study tips and strategies
+- Study tips and strategies based on their actual progress
 - Subject-specific guidance for Physics, Chemistry, Biology, Higher Math, ICT, English, and Bangla
-- Motivation and study planning
+- Motivation and study planning using their real data
 - Answering academic questions
 - Exam preparation tips
 - Analyzing images of textbook pages, notes, problems, or diagrams
@@ -171,10 +175,11 @@ Be friendly, encouraging, and supportive. Keep responses concise but helpful.
 You can respond in both Bengali and English based on the user's language preference.
 Always be positive and motivating to help students succeed in their HSC exams.
 
-When giving advice, reference their specific data:
+When giving advice, ALWAYS reference their specific data:
 - Mention their actual progress percentages
 - Reference specific chapters they've completed or planned
 - Note which subjects need more attention based on their data
+- Use their profile info to personalize responses
 ${userDataContext}`;
 
     // Transform messages for multimodal content
@@ -207,21 +212,20 @@ ${userDataContext}`;
       return { role: msg.role, content: textContent };
     });
 
-    // Truncate messages to prevent token overflow
     const truncatedMessages = transformedMessages.length > MAX_MESSAGES 
       ? transformedMessages.slice(-MAX_MESSAGES)
       : transformedMessages;
     
-    console.log("Sending", truncatedMessages.length, "messages to OpenAI");
+    console.log("Sending", truncatedMessages.length, "messages to Groq");
 
-    const response = await fetchWithRetry("https://api.openai.com/v1/chat/completions", {
+    const response = await fetchWithRetry("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${GROQ_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "meta-llama/llama-4-scout-17b-16e-instruct",
         messages: [
           { role: "system", content: systemPrompt },
           ...truncatedMessages,
@@ -231,25 +235,9 @@ ${userDataContext}`;
     });
 
     if (!response.ok) {
-      console.error("OpenAI API error:", response.status);
+      console.error("Groq API error:", response.status);
       
       if (response.status === 429) {
-        // Read error body to determine if it's billing or rate limit
-        const errorText = await response.text();
-        console.error("OpenAI 429 error body:", errorText);
-        
-        if (isBillingOrQuotaError(errorText)) {
-          // Billing/quota issue - return 402
-          return new Response(
-            JSON.stringify({ 
-              error: "OpenAI billing/credits not enabled. Please add credits to your OpenAI account.",
-              type: "billing"
-            }),
-            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-        
-        // True rate limit
         return new Response(
           JSON.stringify({ 
             error: "Too many requests. Please wait 30-60 seconds and try again.",
@@ -259,25 +247,25 @@ ${userDataContext}`;
         );
       }
       
-      if (response.status === 402) {
+      if (response.status === 401 || response.status === 403) {
         return new Response(
           JSON.stringify({ 
-            error: "OpenAI billing/credits not enabled. Please add credits to your OpenAI account.",
-            type: "billing"
+            error: "Groq API key is invalid or expired.",
+            type: "auth"
           }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
       const errorText = await response.text();
-      console.error("OpenAI API error response:", errorText);
+      console.error("Groq API error response:", errorText);
       return new Response(
         JSON.stringify({ error: "AI service error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Streaming response from OpenAI");
+    console.log("Streaming response from Groq");
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });

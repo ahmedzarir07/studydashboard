@@ -26,19 +26,37 @@ type Message = {
 interface UserContext {
   overallProgress: number;
   subjects: Array<{ name: string; progress: number }>;
-  profile?: { displayName?: string; email?: string; lastActive?: string };
+  profile?: {
+    displayName?: string;
+    email?: string;
+    lastActive?: string;
+    fullName?: string;
+    phone?: string;
+    batch?: string;
+    groupName?: string;
+    boardName?: string;
+    studyType?: string;
+    gender?: string;
+    address?: string;
+    passingYear?: number;
+    dateOfBirth?: string;
+    boardRoll?: string;
+    registrationNumber?: string;
+    optionalSubjects?: string[];
+  };
   coachSettings?: {
     batch?: string;
     monthsRemaining?: number;
     riskLevel?: string;
+    completionPercentage?: number;
   };
-  // Comprehensive data
   monthlyPlans?: Array<{ subject: string; chapter: string; activities: string[]; goals?: string }>;
   completedChapters?: Array<{ subject: string; chapter: string; completedAt?: string }>;
   recentActivities?: Array<{ subject: string; chapter: string; activity: string; status: string; updatedAt?: string }>;
+  resources?: Array<{ subject: string; chapter: string; title: string }>;
   totalCompletedChapters?: number;
   totalPlannedThisMonth?: number;
-  // User preferences from questionnaire
+  totalResources?: number;
   userPreferences?: {
     currentClass?: string;
     weakSubjects?: string[];
@@ -255,15 +273,15 @@ export function AIChatBox() {
         const currentMonthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
         // Fetch all data in parallel
-        const [profileRes, coachRes, plansRes, completionsRes, activitiesRes] = await Promise.all([
+        const [profileRes, coachRes, plansRes, completionsRes, activitiesRes, resourcesRes] = await Promise.all([
           supabase
             .from("profiles")
-            .select("display_name, email, last_active_at")
+            .select("display_name, email, last_active_at, full_name, phone_number, batch, group_name, board_name, study_type, gender, address, passing_year, date_of_birth, board_roll, registration_number, optional_subjects")
             .eq("user_id", user.id)
             .single(),
           supabase
             .from("study_coach_settings")
-            .select("batch, months_remaining, risk_level")
+            .select("batch, months_remaining, risk_level, completion_percentage")
             .eq("user_id", user.id)
             .single(),
           supabase
@@ -276,14 +294,17 @@ export function AIChatBox() {
             .select("subject, chapter, completed_at")
             .eq("user_id", user.id)
             .eq("completed", true)
-            .order("completed_at", { ascending: false })
-            .limit(30),
+            .order("completed_at", { ascending: false }),
           supabase
             .from("study_records")
             .select("subject, chapter, activity, status, updated_at")
             .eq("user_id", user.id)
             .order("updated_at", { ascending: false })
-            .limit(50),
+            .limit(100),
+          supabase
+            .from("chapter_resources")
+            .select("subject, chapter, title")
+            .eq("user_id", user.id),
         ]);
 
         // Transform monthly plans
@@ -312,6 +333,13 @@ export function AIChatBox() {
             updatedAt: a.updated_at ?? undefined,
           })) || [];
 
+        // Transform resources
+        const resources = resourcesRes.data?.map((r) => ({
+          subject: r.subject,
+          chapter: r.chapter,
+          title: r.title,
+        })) || [];
+
         // Load saved preferences
         const savedPrefs = localStorage.getItem("ai-chat-preferences");
         let userPreferences: UserPreferences | undefined;
@@ -323,14 +351,29 @@ export function AIChatBox() {
           }
         }
 
+        const profileData = profileRes.data;
+
         setUserContext({
           overallProgress,
           subjects: subjects.map((s) => ({ name: s.name, progress: s.progress })),
-          profile: profileRes.data
+          profile: profileData
             ? {
-                displayName: profileRes.data.display_name ?? undefined,
-                email: profileRes.data.email ?? undefined,
-                lastActive: profileRes.data.last_active_at ?? undefined,
+                displayName: profileData.display_name ?? undefined,
+                email: profileData.email ?? undefined,
+                lastActive: profileData.last_active_at ?? undefined,
+                fullName: profileData.full_name ?? undefined,
+                phone: profileData.phone_number ?? undefined,
+                batch: profileData.batch ?? undefined,
+                groupName: profileData.group_name ?? undefined,
+                boardName: profileData.board_name ?? undefined,
+                studyType: profileData.study_type ?? undefined,
+                gender: profileData.gender ?? undefined,
+                address: profileData.address ?? undefined,
+                passingYear: profileData.passing_year ?? undefined,
+                dateOfBirth: profileData.date_of_birth ?? undefined,
+                boardRoll: profileData.board_roll ?? undefined,
+                registrationNumber: profileData.registration_number ?? undefined,
+                optionalSubjects: profileData.optional_subjects ?? undefined,
               }
             : undefined,
           coachSettings: coachRes.data
@@ -338,13 +381,16 @@ export function AIChatBox() {
                 batch: coachRes.data.batch,
                 monthsRemaining: coachRes.data.months_remaining,
                 riskLevel: coachRes.data.risk_level,
+                completionPercentage: coachRes.data.completion_percentage,
               }
             : undefined,
           monthlyPlans,
           completedChapters,
           recentActivities,
+          resources,
           totalCompletedChapters: completedChapters.length,
           totalPlannedThisMonth: monthlyPlans.length,
+          totalResources: resources.length,
           userPreferences,
         });
       } catch (error) {
