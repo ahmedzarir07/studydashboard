@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { LogIn, LogOut, Menu, Users, Settings, Info, HelpCircle, ShieldCheck, Mail } from "lucide-react";
+import { LogIn, LogOut, Menu, Users, Settings, Info, HelpCircle, ShieldCheck, Mail, MessageCircleQuestion } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -56,6 +56,12 @@ export function MobileHeader({ title = "Study Progress" }: MobileHeaderProps) {
               <Button variant="ghost" className="w-full justify-start min-h-[44px] hover:bg-primary/10 hover:text-primary transition-all duration-300">
                 <Users className="h-4 w-4 mr-2" />
                 Leaderboard
+              </Button>
+            </Link>
+            <Link to="/doubts" className="block" onClick={() => setMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start min-h-[44px] hover:bg-primary/10 hover:text-primary transition-all duration-300">
+                <MessageCircleQuestion className="h-4 w-4 mr-2" />
+                Community Doubts
               </Button>
             </Link>
             <div className="border-t border-primary/10 pt-3 mt-1">
