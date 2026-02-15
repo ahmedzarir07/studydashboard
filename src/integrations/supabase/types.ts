@@ -38,6 +38,66 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_chat_preferences: {
+        Row: {
+          ai_behavior: string | null
+          ai_expectation: string[] | null
+          biggest_problem: string | null
+          college_name: string | null
+          completed: boolean
+          created_at: string
+          current_class: string | null
+          help_type: string[] | null
+          id: string
+          main_goal: string | null
+          preferred_language: string | null
+          student_level: string | null
+          student_name: string | null
+          study_hours: string | null
+          updated_at: string
+          user_id: string
+          weak_subjects: string[] | null
+        }
+        Insert: {
+          ai_behavior?: string | null
+          ai_expectation?: string[] | null
+          biggest_problem?: string | null
+          college_name?: string | null
+          completed?: boolean
+          created_at?: string
+          current_class?: string | null
+          help_type?: string[] | null
+          id?: string
+          main_goal?: string | null
+          preferred_language?: string | null
+          student_level?: string | null
+          student_name?: string | null
+          study_hours?: string | null
+          updated_at?: string
+          user_id: string
+          weak_subjects?: string[] | null
+        }
+        Update: {
+          ai_behavior?: string | null
+          ai_expectation?: string[] | null
+          biggest_problem?: string | null
+          college_name?: string | null
+          completed?: boolean
+          created_at?: string
+          current_class?: string | null
+          help_type?: string[] | null
+          id?: string
+          main_goal?: string | null
+          preferred_language?: string | null
+          student_level?: string | null
+          student_name?: string | null
+          study_hours?: string | null
+          updated_at?: string
+          user_id?: string
+          weak_subjects?: string[] | null
+        }
+        Relationships: []
+      }
       chapter_completions: {
         Row: {
           chapter: string

@@ -62,6 +62,14 @@ interface UserContext {
     weakSubjects?: string[];
     studyHours?: string;
     mainGoal?: string;
+    studentName?: string;
+    collegeName?: string;
+    helpType?: string[];
+    preferredLanguage?: string;
+    biggestProblem?: string;
+    aiExpectation?: string[];
+    studentLevel?: string;
+    aiBehavior?: string;
   };
 }
 
@@ -346,15 +354,30 @@ export function AIChatBox() {
           title: r.title,
         })) || [];
 
-        // Load saved preferences
-        const savedPrefs = localStorage.getItem("ai-chat-preferences");
-        let userPreferences: UserPreferences | undefined;
-        if (savedPrefs) {
-          try {
-            userPreferences = JSON.parse(savedPrefs);
-          } catch {
-            // ignore
-          }
+        // Load questionnaire preferences from DB
+        const { data: prefsData } = await supabase
+          .from("ai_chat_preferences" as any)
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+
+        let userPreferences: UserContext["userPreferences"] | undefined;
+        if (prefsData) {
+          const p = prefsData as any;
+          userPreferences = {
+            currentClass: p.current_class || undefined,
+            weakSubjects: p.weak_subjects || undefined,
+            studyHours: p.study_hours || undefined,
+            mainGoal: p.main_goal || undefined,
+            studentName: p.student_name || undefined,
+            collegeName: p.college_name || undefined,
+            helpType: p.help_type || undefined,
+            preferredLanguage: p.preferred_language || undefined,
+            biggestProblem: p.biggest_problem || undefined,
+            aiExpectation: p.ai_expectation || undefined,
+            studentLevel: p.student_level || undefined,
+            aiBehavior: p.ai_behavior || undefined,
+          };
         }
 
         const profileData = profileRes.data;

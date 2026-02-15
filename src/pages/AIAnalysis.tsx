@@ -1,14 +1,31 @@
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
-import { AlertCircle, GraduationCap, MessageCircle } from "lucide-react";
+import { AlertCircle, GraduationCap, MessageCircle, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { StudyCoach } from "@/components/StudyCoach";
 import { AIChatBox } from "@/components/AIChatBox";
+import { PreChatQuestionnaire } from "@/components/PreChatQuestionnaire";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AIAnalysis() {
   const { user } = useAuth();
+  const [questionnaireCompleted, setQuestionnaireCompleted] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const check = async () => {
+      const { data } = await supabase
+        .from("ai_chat_preferences" as any)
+        .select("completed")
+        .eq("user_id", user.id)
+        .single();
+      setQuestionnaireCompleted(!!(data as any)?.completed);
+    };
+    check();
+  }, [user]);
 
   if (!user) {
     return (
@@ -24,6 +41,16 @@ export default function AIAnalysis() {
               <Button>লগইন করুন</Button>
             </Link>
           </div>
+        </main>
+      </AppLayout>
+    );
+  }
+
+  if (questionnaireCompleted === null) {
+    return (
+      <AppLayout title="AI বিশ্লেষণ">
+        <main className="px-4 py-6 max-w-2xl mx-auto flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </main>
       </AppLayout>
     );
@@ -45,7 +72,11 @@ export default function AIAnalysis() {
           </TabsList>
 
           <TabsContent value="chat" className="space-y-4">
-            <AIChatBox />
+            {questionnaireCompleted ? (
+              <AIChatBox />
+            ) : (
+              <PreChatQuestionnaire onComplete={() => setQuestionnaireCompleted(true)} />
+            )}
           </TabsContent>
           
           <TabsContent value="coach" className="space-y-4">

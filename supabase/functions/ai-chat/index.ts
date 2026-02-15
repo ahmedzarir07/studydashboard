@@ -151,17 +151,51 @@ ${monthlyPlanSection ? `--- This Month's Study Plan ---\n${monthlyPlanSection}\n
 ${completedSection ? `--- Completed Chapters ---\n${completedSection}\n` : ""}
 ${recentActivitySection ? `--- Recent Study Activities ---\n${recentActivitySection}\n` : ""}
 ${resourcesSection ? `--- Saved Resources ---\n${resourcesSection}\n` : ""}
-${userContext.userPreferences ? `--- User Preferences ---
+${userContext.userPreferences ? `--- User Preferences (from questionnaire) ---
 Class: ${userContext.userPreferences.currentClass || "N/A"}
+Name: ${userContext.userPreferences.studentName || "N/A"}
+College: ${userContext.userPreferences.collegeName || "N/A"}
 Weak Subjects: ${userContext.userPreferences.weakSubjects?.join(", ") || "N/A"}
 Study Hours: ${userContext.userPreferences.studyHours || "N/A"}
 Main Goal: ${userContext.userPreferences.mainGoal || "N/A"}
+Help Type Needed: ${userContext.userPreferences.helpType?.join(", ") || "N/A"}
+Preferred Language: ${userContext.userPreferences.preferredLanguage || "N/A"}
+Biggest Problem: ${userContext.userPreferences.biggestProblem || "N/A"}
+AI Expectation: ${userContext.userPreferences.aiExpectation?.join(", ") || "N/A"}
+Student Level: ${userContext.userPreferences.studentLevel || "N/A"}
+AI Behavior Style: ${userContext.userPreferences.aiBehavior || "N/A"}
 ` : ""}===`;
+    }
+
+    // Determine AI behavior style
+    const behaviorStyle = userContext?.userPreferences?.aiBehavior;
+    let behaviorInstruction = "";
+    if (behaviorStyle === "teacher") {
+      behaviorInstruction = "\n\nIMPORTANT: Act like a beloved teacher (প্রিয় শিক্ষক). Explain calmly, step by step. Be patient and nurturing. Use formal but warm tone.";
+    } else if (behaviorStyle === "friend") {
+      behaviorInstruction = "\n\nIMPORTANT: Act like a close friend (বন্ধু). Use casual, friendly tone. Say 'তুই/তোর' style. Be motivating and fun. Use emojis occasionally.";
+    } else if (behaviorStyle === "coach") {
+      behaviorInstruction = "\n\nIMPORTANT: Act like a strict coach/mentor. Be direct, give reality checks. Push the student to do better. No sugarcoating.";
+    } else if (behaviorStyle === "mixed") {
+      behaviorInstruction = "\n\nIMPORTANT: Mix teacher + friend + coach styles. Be warm but also give reality checks when needed. Balance encouragement with directness.";
+    }
+
+    // Determine preferred language
+    const prefLang = userContext?.userPreferences?.preferredLanguage;
+    let langInstruction = "";
+    if (prefLang === "Bangla") {
+      langInstruction = "\n\nIMPORTANT: Always respond in Bengali (বাংলা). Do not use English unless explaining technical terms.";
+    } else if (prefLang === "English") {
+      langInstruction = "\n\nIMPORTANT: Always respond in English.";
+    } else if (prefLang === "Mixed") {
+      langInstruction = "\n\nIMPORTANT: Respond in a mix of Bengali and English (Banglish), as is common among Bangladeshi students.";
     }
 
     const systemPrompt = `You are a helpful AI study assistant for HSC (Higher Secondary Certificate) students in Bangladesh.
 
 You have FULL access to this student's complete study database shown below. You MUST proactively reference their specific data when giving advice. Never say you don't have access to their data.
+
+${userContext?.userPreferences?.studentName ? `The student's name is ${userContext.userPreferences.studentName}. Address them by name.` : ""}
 
 You help students with:
 - Study tips and strategies based on their actual progress
@@ -172,7 +206,6 @@ You help students with:
 - Analyzing images of textbook pages, notes, problems, or diagrams
 
 Be friendly, encouraging, and supportive. Keep responses concise but helpful.
-You can respond in both Bengali and English based on the user's language preference.
 Always be positive and motivating to help students succeed in their HSC exams.
 
 When giving advice, ALWAYS reference their specific data:
@@ -180,6 +213,7 @@ When giving advice, ALWAYS reference their specific data:
 - Reference specific chapters they've completed or planned
 - Note which subjects need more attention based on their data
 - Use their profile info to personalize responses
+${behaviorInstruction}${langInstruction}
 ${userDataContext}`;
 
     // Transform messages for multimodal content
