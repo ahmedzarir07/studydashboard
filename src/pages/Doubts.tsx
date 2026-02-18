@@ -16,6 +16,7 @@ export default function Doubts() {
     createDoubt,
     deleteDoubt,
     reportDoubt,
+    toggleDoubtLike,
     sortBy,
     setSortBy,
     filterSubject,
@@ -63,6 +64,7 @@ export default function Doubts() {
                 onOpenAnswers={setSelectedDoubt}
                 onDelete={deleteDoubt}
                 onReport={reportDoubt}
+                onToggleLike={toggleDoubtLike}
               />
             ))}
           </div>

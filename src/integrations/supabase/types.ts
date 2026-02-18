@@ -173,6 +173,7 @@ export type Database = {
           created_at: string
           doubt_id: string
           id: string
+          image_url: string | null
           updated_at: string
           user_id: string
         }
@@ -181,6 +182,7 @@ export type Database = {
           created_at?: string
           doubt_id: string
           id?: string
+          image_url?: string | null
           updated_at?: string
           user_id: string
         }
@@ -189,12 +191,42 @@ export type Database = {
           created_at?: string
           doubt_id?: string
           id?: string
+          image_url?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "doubt_answers_doubt_id_fkey"
+            columns: ["doubt_id"]
+            isOneToOne: false
+            referencedRelation: "doubts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doubt_likes: {
+        Row: {
+          created_at: string
+          doubt_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          doubt_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          doubt_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doubt_likes_doubt_id_fkey"
             columns: ["doubt_id"]
             isOneToOne: false
             referencedRelation: "doubts"

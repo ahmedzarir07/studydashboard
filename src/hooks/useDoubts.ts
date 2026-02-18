@@ -14,6 +14,8 @@ export interface Doubt {
   created_at: string;
   profile?: { display_name: string | null; avatar_url: string | null };
   answer_count: number;
+  like_count: number;
+  user_liked: boolean;
 }
 
 export interface DoubtAnswer {
@@ -21,6 +23,7 @@ export interface DoubtAnswer {
   doubt_id: string;
   user_id: string;
   answer_text: string;
+  image_url: string | null;
   created_at: string;
   profile?: { display_name: string | null; avatar_url: string | null };
   vote_count: number;
@@ -51,6 +54,11 @@ export function useDoubts() {
         .from("doubt_answers")
         .select("doubt_id");
 
+      // Fetch likes
+      const { data: likesData } = await supabase
+        .from("doubt_likes")
+        .select("doubt_id, user_id");
+
       // Fetch profiles for display names
       const userIds = [...new Set((doubtsData || []).map(d => d.user_id))];
       const { data: profiles } = await supabase
@@ -67,10 +75,19 @@ export function useDoubts() {
         answerCountMap.set(a.doubt_id, (answerCountMap.get(a.doubt_id) || 0) + 1);
       });
 
+      const likeCountMap = new Map<string, number>();
+      const userLikeSet = new Set<string>();
+      (likesData || []).forEach(l => {
+        likeCountMap.set(l.doubt_id, (likeCountMap.get(l.doubt_id) || 0) + 1);
+        if (user && l.user_id === user.id) userLikeSet.add(l.doubt_id);
+      });
+
       const enriched: Doubt[] = (doubtsData || []).map(d => ({
         ...d,
         profile: profileMap.get(d.user_id) || { display_name: null, avatar_url: null },
         answer_count: answerCountMap.get(d.id) || 0,
+        like_count: likeCountMap.get(d.id) || 0,
+        user_liked: userLikeSet.has(d.id),
       }));
 
       setDoubts(enriched);
@@ -79,7 +96,7 @@ export function useDoubts() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, user]);
 
   useEffect(() => {
     fetchDoubts();
@@ -88,6 +105,7 @@ export function useDoubts() {
       .channel("doubts-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "doubts" }, () => fetchDoubts())
       .on("postgres_changes", { event: "*", schema: "public", table: "doubt_answers" }, () => fetchDoubts())
+      .on("postgres_changes", { event: "*", schema: "public", table: "doubt_likes" }, () => fetchDoubts())
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -125,6 +143,16 @@ export function useDoubts() {
     else toast({ title: "Reported", description: "Thank you for reporting." });
   };
 
+  const toggleDoubtLike = async (doubtId: string, currentlyLiked: boolean) => {
+    if (!user) return;
+    if (currentlyLiked) {
+      await supabase.from("doubt_likes").delete().eq("doubt_id", doubtId).eq("user_id", user.id);
+    } else {
+      await supabase.from("doubt_likes").insert({ doubt_id: doubtId, user_id: user.id });
+    }
+    fetchDoubts();
+  };
+
   // Filtered & sorted
   const filteredDoubts = doubts
     .filter(d => filterSubject === "all" || d.subject === filterSubject)
@@ -139,6 +167,7 @@ export function useDoubts() {
     createDoubt,
     deleteDoubt,
     reportDoubt,
+    toggleDoubtLike,
     sortBy,
     setSortBy,
     filterSubject,
@@ -209,12 +238,13 @@ export function useDoubtAnswers(doubtId: string | null) {
     fetchAnswers();
   }, [fetchAnswers]);
 
-  const postAnswer = async (answerText: string) => {
+  const postAnswer = async (answerText: string, imageUrl?: string) => {
     if (!user || !doubtId) return;
     const { error } = await supabase.from("doubt_answers").insert({
       doubt_id: doubtId,
       user_id: user.id,
       answer_text: answerText,
+      image_url: imageUrl || null,
     });
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else {
