@@ -2,9 +2,10 @@ import { Doubt } from "@/hooks/useDoubts";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, ThumbsUp, Trash2, Flag, Clock } from "lucide-react";
+import { MessageSquare, Heart, Trash2, Flag, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ALL_SUBJECTS } from "@/hooks/useProgressSnapshot";
+import { cn } from "@/lib/utils";
 
 const SUBJECT_OPTIONS = ALL_SUBJECTS.map(s => ({ id: s.data.id, name: s.displayName }));
 
@@ -14,9 +15,10 @@ interface DoubtFeedCardProps {
   onOpenAnswers: (d: Doubt) => void;
   onDelete: (id: string) => void;
   onReport: (id: string) => void;
+  onToggleLike: (id: string, currentlyLiked: boolean) => void;
 }
 
-export function DoubtFeedCard({ doubt, userId, onOpenAnswers, onDelete, onReport }: DoubtFeedCardProps) {
+export function DoubtFeedCard({ doubt, userId, onOpenAnswers, onDelete, onReport, onToggleLike }: DoubtFeedCardProps) {
   const subjectMeta = SUBJECT_OPTIONS.find(s => s.id === doubt.subject);
   const displayName = doubt.profile?.display_name || "Anonymous";
   const initials = displayName.slice(0, 2).toUpperCase();
@@ -73,6 +75,20 @@ export function DoubtFeedCard({ doubt, userId, onOpenAnswers, onDelete, onReport
 
       {/* Engagement Bar */}
       <div className="flex items-center gap-1 pt-1 border-t border-border/20" onClick={e => e.stopPropagation()}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "text-xs gap-1.5 h-8 px-3 rounded-lg",
+            doubt.user_liked ? "text-red-500 bg-red-500/10" : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+          )}
+          onClick={() => onToggleLike(doubt.id, doubt.user_liked)}
+          disabled={!userId}
+        >
+          <Heart className={cn("h-3.5 w-3.5", doubt.user_liked && "fill-red-500")} />
+          {doubt.like_count > 0 && doubt.like_count}
+        </Button>
+
         <Button
           variant="ghost"
           size="sm"
