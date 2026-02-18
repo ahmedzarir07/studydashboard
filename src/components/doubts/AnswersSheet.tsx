@@ -43,7 +43,7 @@ export function AnswersSheet({ doubt, open, onClose }: AnswersSheetProps) {
     <Sheet open={open} onOpenChange={onClose}>
       <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl p-0 flex flex-col border-t border-border/30">
         {/* Drag Handle */}
-        <div className="flex justify-center pt-3 pb-1">
+        <div className="flex justify-center pt-3 pb-1 px-px">
           <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
         </div>
 
@@ -143,7 +143,7 @@ export function AnswersSheet({ doubt, open, onClose }: AnswersSheetProps) {
 
         {/* Answer Input */}
         {user ?
-        <div className="p-3 border-t border-border/20 flex gap-2 bg-background/80 backdrop-blur-sm">
+        <div className="p-3 border-t border-border/20 flex gap-2 bg-background/80 backdrop-blur-sm px-[150px] py-[100px]">
             <Textarea
             placeholder="Write your answer..."
             value={newAnswer}
