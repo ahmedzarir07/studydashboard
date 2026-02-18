@@ -54,7 +54,7 @@ export function AnswersSheet({ doubt, open, onClose }: AnswersSheetProps) {
           </SheetTitle>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+        <div className="flex-1 overflow-y-auto space-y-4 px-[160px] py-[12px]">
           {/* Original Question */}
           <div className="bg-muted/30 rounded-xl p-3.5 space-y-2 border border-border/20 px-[120px] py-[50px]">
             <div className="flex items-center gap-2">
