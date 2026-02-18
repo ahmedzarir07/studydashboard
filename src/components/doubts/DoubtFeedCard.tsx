@@ -27,67 +27,80 @@ export function DoubtFeedCard({ doubt, userId, onOpenAnswers, onDelete, onReport
 
   return (
     <article
-      className="bg-card/60 backdrop-blur-sm border border-border/30 rounded-xl p-4 space-y-3 hover:border-primary/20 transition-all duration-200 cursor-pointer"
+      className="glass-card p-0 overflow-hidden hover:border-primary/30 transition-all duration-300 cursor-pointer group"
       onClick={() => onOpenAnswers(doubt)}
     >
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Avatar className="h-9 w-9 flex-shrink-0 ring-2 ring-primary/10">
-          <AvatarFallback className="bg-primary/15 text-primary text-xs font-medium">
+      <div className="flex items-center gap-3 px-4 pt-4 pb-2">
+        <Avatar className="h-10 w-10 flex-shrink-0 ring-2 ring-primary/15 ring-offset-2 ring-offset-background">
+          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-primary text-xs font-semibold">
             {initials}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-sm text-foreground truncate">{displayName}</span>
-            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-              <Clock className="h-3 w-3" />
+            <span className="font-semibold text-sm text-foreground truncate">{displayName}</span>
+            <span className="text-[10px] text-muted-foreground/70 flex items-center gap-0.5 flex-shrink-0">
+              <Clock className="h-2.5 w-2.5" />
               {timeAgo}
             </span>
           </div>
           <div className="flex items-center gap-1.5 mt-0.5">
             <Badge
               variant="secondary"
-              className="text-[10px] px-2 py-0 bg-primary/10 text-primary border-primary/20 font-medium"
+              className="text-[10px] px-2 py-0 h-[18px] bg-primary/10 text-primary border-primary/20 font-medium rounded-md"
             >
               {subjectMeta?.name || doubt.subject}
             </Badge>
             {doubt.chapter && (
-              <span className="text-[10px] text-muted-foreground">· {doubt.chapter}</span>
+              <span className="text-[10px] text-muted-foreground/60 truncate max-w-[150px]">· {doubt.chapter}</span>
             )}
           </div>
         </div>
       </div>
 
       {/* Question Body */}
-      <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap break-words">
-        {doubt.question}
-      </p>
+      <div className="px-4 py-2">
+        <p className="text-[13px] text-foreground/90 leading-relaxed whitespace-pre-wrap break-words line-clamp-4">
+          {doubt.question}
+        </p>
+      </div>
 
       {/* Image */}
       {doubt.image_url && (
-        <img
-          src={doubt.image_url}
-          alt="Doubt attachment"
-          className="rounded-lg max-h-52 object-cover w-full border border-border/20"
-        />
+        <div className="px-4 pb-2">
+          <div className="rounded-xl overflow-hidden border border-border/20">
+            <img
+              src={doubt.image_url}
+              alt="Doubt attachment"
+              className="max-h-56 object-cover w-full"
+            />
+          </div>
+        </div>
       )}
 
       {/* Engagement Bar */}
-      <div className="flex items-center gap-1 pt-1 border-t border-border/20" onClick={e => e.stopPropagation()}>
+      <div
+        className="flex items-center px-2 py-1.5 mx-3 mb-3 rounded-xl bg-muted/30 border border-border/15"
+        onClick={e => e.stopPropagation()}
+      >
         <Button
           variant="ghost"
           size="sm"
           className={cn(
-            "text-xs gap-1.5 h-8 px-3 rounded-lg",
-            doubt.user_liked ? "text-red-500 bg-red-500/10" : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+            "text-xs gap-1.5 h-8 px-3 rounded-lg transition-all",
+            doubt.user_liked
+              ? "text-destructive bg-destructive/10 hover:bg-destructive/15 hover:text-destructive"
+              : "text-muted-foreground hover:text-destructive hover:bg-destructive/10"
           )}
           onClick={() => onToggleLike(doubt.id, doubt.user_liked)}
           disabled={!userId}
         >
-          <Heart className={cn("h-3.5 w-3.5", doubt.user_liked && "fill-red-500")} />
-          {doubt.like_count > 0 && doubt.like_count}
+          <Heart className={cn("h-3.5 w-3.5 transition-all", doubt.user_liked && "fill-current scale-110")} />
+          {doubt.like_count > 0 && <span className="font-medium">{doubt.like_count}</span>}
         </Button>
+
+        <div className="w-px h-4 bg-border/30 mx-1" />
 
         <Button
           variant="ghost"
@@ -96,8 +109,11 @@ export function DoubtFeedCard({ doubt, userId, onOpenAnswers, onDelete, onReport
           onClick={() => onOpenAnswers(doubt)}
         >
           <MessageSquare className="h-3.5 w-3.5" />
-          {doubt.answer_count} {doubt.answer_count === 1 ? "Answer" : "Answers"}
+          <span className="font-medium">{doubt.answer_count}</span>
+          <span className="hidden sm:inline">{doubt.answer_count === 1 ? "Answer" : "Answers"}</span>
         </Button>
+
+        <div className="w-px h-4 bg-border/30 mx-1" />
 
         {isOwn ? (
           <Button
