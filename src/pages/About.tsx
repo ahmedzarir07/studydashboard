@@ -57,7 +57,7 @@ export default function About() {
                     HSC Tracker
                   </h1>
                   <p className="text-primary mt-1 font-medium">
-                    by Mohammad Monir Hossen
+                    by MMAB for FREE
                   </p>
                   <p className="text-muted-foreground mt-3 leading-relaxed">
                     A personal project for HSC students to organize tasks, track study progress, and maintain consistency. Built with focus on clean UI, speed, and practical features.
