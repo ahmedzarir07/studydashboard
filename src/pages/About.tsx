@@ -132,7 +132,9 @@ export default function About() {
                   <div className="flex-1">
                     <p className="font-medium text-foreground">Admin Website
                     </p>
-                    <p className="text-xs text-muted-foreground">trackinger.lovable.app</p>
+                    <p className="text-xs text-muted-foreground">ahmedzarir.great-site.net
+
+                    </p>
                   </div>
                 </a>
 
@@ -155,5 +157,4 @@ export default function About() {
           </Card>
         </main>
       </div>
-    </AppLayout>);
-}
+    </AppLayout>);}
