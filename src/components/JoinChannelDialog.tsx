@@ -45,7 +45,7 @@ export const JoinChannelDialog = () => {
             onClick={handleJoin}
             className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
 
-            
+            <MessageCircle className="mr-2 h-4 w-4" />
             Let's Go!
           </Button>
           <Button
