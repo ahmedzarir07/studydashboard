@@ -266,15 +266,6 @@ export default function Auth() {
                     </span>
                   </div>
                 </div>
-{/* Toggle */}
-          {mode !== "forgot" && (
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => setMode(mode === "login" ? "signup" : "login")}
-                className="text-sm text-primary font-medium min-h-[44px] px-4"
-                disabled={loading}
-              >
                 {mode === "login"
                   ? "Don't have an account? Sign up"
                   : "Already have an account? Sign in"}
