@@ -24,7 +24,7 @@ export const JoinChannelDialog = () => {
   };
 
   const handleJoin = () => {
-    window.open("https://t.me/trackingerweb", "_blank");
+    window.open("https://eduforfree.vercel.app/", "_blank");
     setOpen(false);
   };
 
@@ -35,9 +35,9 @@ export const JoinChannelDialog = () => {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
             <MessageCircle className="h-8 w-8 text-white" />
           </div>
-          <DialogTitle className="text-xl">Join Our Telegram Channel</DialogTitle>
+          <DialogTitle className="text-xl">GET FREE STUDY RESOURCES</DialogTitle>
           <DialogDescription className="text-center">
-            Stay updated with the latest features, tips, and connect with other HSC students!
+            Education is,was,will be freed completely!
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex-col items-center justify-center gap-[5px] flex sm:flex-row">
