@@ -8,7 +8,7 @@ const contactMethods = [
   {
     icon: Mail,
     label: "Email",
-    value: "hscstudypdf@gmail.com",
+    value: "https://www.example.com/",
     url: "mailto:hscstudypdf@gmail.com",
     note: "Best for detailed inquiries",
   },
@@ -16,24 +16,24 @@ const contactMethods = [
     icon: Send,
     label: "Telegram",
     value: "@md_monir01",
-    url: "https://t.me/md_monir01",
+    url: "https://www.example.com/",
     note: "Quick responses",
   },
   {
     icon: Facebook,
     label: "Facebook",
     value: "Mohammad Monir Hossen",
-    url: "https://www.facebook.com/md.monir.hossen.414752/",
+    url: "https://www.example.com/",
     note: "Connect on social",
   },
 ];
 
 const socialLinks = [
-  { name: "Facebook", icon: Facebook, url: "https://www.facebook.com/md.monir.hossen.414752/" },
-  { name: "Instagram", icon: Instagram, url: "https://www.instagram.com/monir_.hossen/" },
-  { name: "Telegram", icon: Send, url: "https://t.me/md_monir01" },
-  { name: "GitHub", icon: Github, url: "https://github.com/mdmonirhossen6" },
-  { name: "YouTube", icon: Youtube, url: "https://www.youtube.com/@MonirHossen-i6j" },
+  { name: "Facebook", icon: Facebook, url: "https://www.example.com/" },
+  { name: "Instagram", icon: Instagram, url: "https://www.example.com/" },
+  { name: "Telegram", icon: Send, url: "https://www.example.com/" },
+  { name: "GitHub", icon: Github, url: "https://www.example.com/" },
+  { name: "YouTube", icon: Youtube, url: "https://www.example.com/" },
 ];
 
 export default function Contact() {
