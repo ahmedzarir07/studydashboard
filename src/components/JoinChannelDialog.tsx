@@ -40,7 +40,7 @@ export const JoinChannelDialog = () => {
             Stay updated with the latest features, tips, and connect with other HSC students!
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex flex-col gap-2 sm:flex-col">
+        <DialogFooter className="flex-col items-center justify-center gap-[5px] flex sm:flex-row">
           <Button
             onClick={handleJoin}
             className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
