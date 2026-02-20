@@ -5,8 +5,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter } from
-"@/components/ui/dialog";
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 
@@ -41,22 +41,22 @@ export const JoinChannelDialog = () => {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex flex-col gap-2 sm:flex-col">
-          <Button
-            onClick={handleJoin}
-            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
-
+          <Button 
+            onClick={handleJoin} 
+            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+          >
             <MessageCircle className="mr-2 h-4 w-4" />
             Join Channel
           </Button>
-          <Button
-            variant="ghost"
+          <Button 
+            variant="ghost" 
             onClick={handleDismiss}
-            className="w-full text-muted-foreground text-center">
-
+            className="w-full text-muted-foreground"
+          >
             Maybe Later
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>);
-
+    </Dialog>
+  );
 };
