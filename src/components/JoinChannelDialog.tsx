@@ -43,10 +43,8 @@ export const JoinChannelDialog = () => {
         <DialogFooter className="flex-col items-center justify-center gap-[5px] flex sm:flex-row">
           <Button
             onClick={handleJoin}
-            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
-
-            <MessageCircle className="mr-2 h-4 w-4" />
-            Join Channel
+            
+            Let's Go!
           </Button>
           <Button
             variant="ghost"
