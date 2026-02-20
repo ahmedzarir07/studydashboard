@@ -121,7 +121,7 @@ export default function About() {
               <h2 className="text-lg font-semibold text-foreground mb-4">🔗 Quick Links</h2>
               <div className="space-y-3">
                 <a
-                  href="https://www.example.com/"
+                  href="https://eduforfree.vercel.app/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
@@ -132,11 +132,11 @@ export default function About() {
                   <div className="flex-1">
                     <p className="font-medium text-foreground">EduPlatform
                     </p>
-                    <p className="text-xs text-muted-foreground">trackinger.lovable.app</p>
+                    <p className="text-xs text-muted-foreground">eduforfree.vercel.app</p>
                   </div>
                 </a>
 
-                <a href="https://www.example.com/"
+                <a href="https://ahmedzarir.great-site.net/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
@@ -146,7 +146,7 @@ export default function About() {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-foreground">Admin Contact</p>
-                    <p className="text-xs text-muted-foreground">t.me/trackingerapp</p>
+                    <p className="text-xs text-muted-foreground">ahmedzarir.great-site.net</p>
                   </div>
                 </a>
               </div>
