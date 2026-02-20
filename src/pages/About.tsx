@@ -76,25 +76,25 @@ export default function About() {
                   </div>
 
                   {/* Social Links */}
-                  <div className="flex flex-wrap gap-2 mt-6">
-                    {socialLinks.map((link) =>
-                    <a
-                      key={link.name}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer">
+                  
 
-                        <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 border-border/50 hover:border-primary/50 hover:text-primary">
 
-                          <link.icon className="h-4 w-4" />
-                          {link.name}
-                        </Button>
-                      </a>
-                    )}
-                  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 </div>
               </div>
             </CardContent>
