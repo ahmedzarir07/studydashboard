@@ -253,7 +253,7 @@ export default function Auth() {
                 Back to Sign In
               </Button>
             )}
-            
+
             {mode !== "forgot" && (
               <>
                 {/* Divider */}
@@ -309,19 +309,6 @@ export default function Auth() {
                 className="text-sm text-primary font-medium min-h-[44px] px-4"
                 disabled={loading}
               >
-
-            {mode !== "forgot" && (
-              <>
-                {/* Divider */}
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                    </span>
-                  </div>
-                </div>
                 {mode === "login"
                   ? "Don't have an account? Sign up"
                   : "Already have an account? Sign in"}
