@@ -6,12 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AppLayout } from "@/components/AppLayout";
 
 const socialLinks = [
-  { name: "Facebook", icon: Facebook, url: "https://www.facebook.com/md.monir.hossen.414752/" },
-  { name: "Instagram", icon: Instagram, url: "https://www.instagram.com/monir_.hossen/" },
-  { name: "Telegram", icon: Send, url: "https://t.me/md_monir01" },
-  { name: "GitHub", icon: Github, url: "https://github.com/mdmonirhossen6" },
-  { name: "YouTube", icon: Youtube, url: "https://www.youtube.com/@MonirHossen-i6j" },
-  { name: "Email", icon: Mail, url: "mailto:hscstudypdf@gmail.com" },
+  { name: "Facebook", icon: Facebook, url: "https://www.example.com/" },
+  { name: "Instagram", icon: Instagram, url: "https://www.example.com/" },
+  { name: "Telegram", icon: Send, url: "https://www.example.com/" },
+  { name: "GitHub", icon: Github, url: "https://www.example.com/" },
+  { name: "YouTube", icon: Youtube, url: "https://www.example.com/" },
+  { name: "Email", icon: Mail, url: "mailto:https://www.example.com/" },
 ];
 
 const features = [
@@ -121,7 +121,7 @@ export default function About() {
               <h2 className="text-lg font-semibold text-foreground mb-4">🔗 Quick Links</h2>
               <div className="space-y-3">
                 <a 
-                  href="https://trackinger.lovable.app" 
+                  href="https://www.example.com/" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
@@ -136,7 +136,7 @@ export default function About() {
                 </a>
 
                 <a 
-                  href="https://t.me/trackingerapp" 
+                  href="https://www.example.com/" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
