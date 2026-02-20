@@ -43,6 +43,8 @@ export const JoinChannelDialog = () => {
         <DialogFooter className="flex-col items-center justify-center gap-[5px] flex sm:flex-row">
           <Button
             onClick={handleJoin}
+            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
+
             
             Let's Go!
           </Button>
