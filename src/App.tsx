@@ -18,7 +18,7 @@ import Admin from "./pages/Admin";
 import MonthlyPlanning from "./pages/MonthlyPlanning";
 import Settings from "./pages/Settings";
 import Community from "./pages/Community";
-import AIAnalysis from "./pages/AIAnalysis";
+
 import ResetPassword from "./pages/ResetPassword";
 import Doubts from "./pages/Doubts";
 import NotFound from "./pages/NotFound";
@@ -50,7 +50,7 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/community" element={<Community />} />
-            <Route path="/ai-analysis" element={<AIAnalysis />} />
+            
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/doubts" element={<Doubts />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

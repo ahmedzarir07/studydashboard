@@ -9,7 +9,6 @@ import {
   Home,
   BookOpen,
   BarChart3,
-  Sparkles,
   Users,
   CalendarDays,
   Download,
@@ -35,7 +34,7 @@ const mainNavItems: NavItem[] = [
   { path: "/", icon: Home, label: "Home", section: "Main" },
   { path: "/tracker", icon: BookOpen, label: "Tracker", section: "Main" },
   { path: "/overview", icon: BarChart3, label: "Overview", section: "Main" },
-  { path: "/ai-analysis", icon: Sparkles, label: "AI", section: "Main" },
+  
   { path: "/community", icon: Users, label: "Leaderboard", section: "Main" },
   { path: "/doubts", icon: MessageCircleQuestion, label: "Doubts", section: "Main" },
   { path: "/planning", icon: CalendarDays, label: "Planning", section: "Main" },
