@@ -28,20 +28,16 @@ export function BottomNav() {
         setIsAdmin(false);
         return;
       }
-
       const { data } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
         .maybeSingle();
-
       setIsAdmin(data?.role === "admin");
     };
-
     checkAdmin();
   }, [user]);
 
-  // Build nav items: add auth if not logged in, add admin if admin
   const allNavItems = [
     ...navItems,
     ...(isAdmin ? [{ path: "/admin", icon: Shield, label: "Admin" }] : []),
@@ -58,14 +54,22 @@ export function BottomNav() {
               key={item.path}
               to={item.path}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 py-2 px-1 min-h-[52px] min-w-[44px] transition-all",
+                "flex flex-col items-center justify-center gap-0.5 py-2 px-1 min-h-[52px] min-w-[44px] transition-all duration-300",
                 isActive 
                   ? "text-primary" 
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <item.icon className={cn("h-5 w-5", isActive && "drop-shadow-[0_0_6px_hsl(var(--primary))]")} />
-              <span className={cn("text-[9px] font-medium leading-tight", isActive && "text-primary")}>{item.label}</span>
+              <item.icon className={cn(
+                "h-5 w-5 transition-all duration-300",
+                isActive && "drop-shadow-[0_0_8px_hsl(var(--primary)/0.6)]"
+              )} />
+              <span className={cn(
+                "text-[9px] font-medium leading-tight",
+                isActive && "text-primary"
+              )}>
+                {item.label}
+              </span>
             </Link>
           );
         })}

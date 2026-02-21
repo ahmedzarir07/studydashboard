@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { BookOpen, Mail, Lock, Loader2, ArrowLeft } from "lucide-react";
+import { BookOpen, Mail, Lock, Loader2, ArrowLeft, Sparkles } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -125,23 +125,17 @@ export default function Auth() {
 
   const getTitle = () => {
     switch (mode) {
-      case "login":
-        return "Welcome Back";
-      case "signup":
-        return "Create Account";
-      case "forgot":
-        return "Reset Password";
+      case "login": return "Welcome Back";
+      case "signup": return "Create Account";
+      case "forgot": return "Reset Password";
     }
   };
 
   const getSubtitle = () => {
     switch (mode) {
-      case "login":
-        return "Sign in to track your study progress";
-      case "signup":
-        return "Sign up to start tracking your studies";
-      case "forgot":
-        return "Enter your email to receive a reset link";
+      case "login": return "Sign in to track your study progress";
+      case "signup": return "Sign up to start tracking your studies";
+      case "forgot": return "Enter your email to receive a reset link";
     }
   };
 
@@ -149,12 +143,14 @@ export default function Auth() {
     <AppLayout title="Sign In">
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-sm space-y-8">
-          {/* Logo */}
+          {/* Logo & Header */}
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
-              <BookOpen className="w-8 h-8 text-primary" />
+            <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 mb-5 shadow-[0_0_30px_hsl(var(--primary)/0.2)]">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 animate-pulse" />
+              <BookOpen className="w-9 h-9 text-primary relative" />
+              <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-accent" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">{getTitle()}</h1>
+            <h1 className="text-2xl font-bold gradient-text">{getTitle()}</h1>
             <p className="text-sm text-muted-foreground mt-2">{getSubtitle()}</p>
           </div>
 
@@ -168,7 +164,7 @@ export default function Auth() {
                   placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 pl-12 text-base"
+                  className="h-12 pl-12 text-base rounded-xl bg-muted/30 border-border/50 focus:border-primary/50 focus:shadow-[0_0_10px_hsl(var(--primary)/0.15)] transition-all"
                   disabled={loading}
                 />
               </div>
@@ -186,7 +182,7 @@ export default function Auth() {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 pl-12 text-base"
+                    className="h-12 pl-12 text-base rounded-xl bg-muted/30 border-border/50 focus:border-primary/50 focus:shadow-[0_0_10px_hsl(var(--primary)/0.15)] transition-all"
                     disabled={loading}
                   />
                 </div>
@@ -196,7 +192,6 @@ export default function Auth() {
               </div>
             )}
 
-            {/* Forgot Password Link */}
             {mode === "login" && (
               <div className="text-right">
                 <button
@@ -212,32 +207,22 @@ export default function Auth() {
 
             <Button
               type="submit"
-              className="w-full h-12 text-base font-medium"
+              className="w-full h-12 text-base font-medium rounded-xl bg-gradient-to-r from-primary to-secondary hover:shadow-[0_0_25px_hsl(var(--primary)/0.4)] transition-all duration-300"
               disabled={loading}
             >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  {mode === "login"
-                    ? "Signing in..."
-                    : mode === "signup"
-                    ? "Creating account..."
-                    : "Sending..."}
+                  {mode === "login" ? "Signing in..." : mode === "signup" ? "Creating account..." : "Sending..."}
                 </>
-              ) : mode === "login" ? (
-                "Sign In"
-              ) : mode === "signup" ? (
-                "Sign Up"
-              ) : (
-                "Send Reset Link"
-              )}
+              ) : mode === "login" ? "Sign In" : mode === "signup" ? "Sign Up" : "Send Reset Link"}
             </Button>
 
             {mode === "forgot" && (
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full h-12"
+                className="w-full h-12 rounded-xl"
                 onClick={() => setMode("login")}
                 disabled={loading}
               >
@@ -253,7 +238,7 @@ export default function Auth() {
               <button
                 type="button"
                 onClick={() => setMode(mode === "login" ? "signup" : "login")}
-                className="text-sm text-primary font-medium min-h-[44px] px-4"
+                className="text-sm text-primary font-medium min-h-[44px] px-4 hover:underline"
                 disabled={loading}
               >
                 {mode === "login"
