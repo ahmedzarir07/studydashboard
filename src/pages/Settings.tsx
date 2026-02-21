@@ -8,6 +8,7 @@ import { PersonalInfoSection } from "@/components/settings/PersonalInfoSection";
 import { AcademicInfoSection } from "@/components/settings/AcademicInfoSection";
 import { ContactInfoSection } from "@/components/settings/ContactInfoSection";
 import { SecuritySection } from "@/components/settings/SecuritySection";
+import { IntegrationsSection } from "@/components/settings/IntegrationsSection";
 import { Button } from "@/components/ui/button";
 import { Loader2, Settings as SettingsIcon, Save, LogOut } from "lucide-react";
 import { toast } from "sonner";
@@ -67,7 +68,7 @@ export default function Settings() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 shadow-[0_0_15px_hsl(var(--primary)/0.15)]">
+            <div className="p-2.5 rounded-xl bg-primary/10">
               <SettingsIcon className="h-6 w-6 text-primary" />
             </div>
             <div>
@@ -78,29 +79,41 @@ export default function Settings() {
         </div>
 
         <div className="space-y-6">
+          {/* Profile Card */}
           <ProfileCard
             profile={profile}
             avatarUploading={avatarUploading}
             onAvatarUpload={uploadAvatar}
           />
+
+          {/* Personal Information */}
           <PersonalInfoSection profile={profile} onChange={handleProfileChange} />
+
+          {/* Academic Information */}
           <AcademicInfoSection profile={profile} onChange={handleProfileChange} />
+
+          {/* Contact Information */}
           <ContactInfoSection
             profile={profile}
             onChange={handleProfileChange}
             isGoogleUser={isGoogleUser}
           />
+
+          {/* Security */}
           <SecuritySection
             onPasswordUpdate={updatePassword}
             isGoogleUser={isGoogleUser}
           />
+
+          {/* Integrations */}
+          <IntegrationsSection />
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button
               onClick={handleSave}
               disabled={saving || !hasChanges}
-              className="flex-1 sm:flex-none rounded-xl"
+              className="flex-1 sm:flex-none"
               size="lg"
             >
               {saving ? (
@@ -119,7 +132,7 @@ export default function Settings() {
             <Button
               variant="destructive"
               onClick={handleSignOut}
-              className="flex-1 sm:flex-none rounded-xl"
+              className="flex-1 sm:flex-none"
               size="lg"
             >
               <LogOut className="h-4 w-4 mr-2" />

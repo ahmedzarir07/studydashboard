@@ -25,19 +25,6 @@ export function AppLayout({ children, title = "Study Progress", showMobileHeader
           </div>
         )}
 
-        {/* Desktop Top Bar */}
-        <div className="hidden md:block sticky top-0 z-30">
-          <div className="relative">
-            <div className="absolute inset-0 bg-card/40 backdrop-blur-2xl border-b border-border/20" />
-            <div className="relative flex items-center justify-between px-6 h-14 max-w-7xl mx-auto">
-              <h1 className="text-lg font-bold gradient-text">{title}</h1>
-              <div className="flex items-center gap-3">
-                {/* Can add desktop notification bell or actions here */}
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Page Content */}
         <div className="flex-1 w-full max-w-full">
           {children}

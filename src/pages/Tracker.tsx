@@ -56,9 +56,9 @@ export default function Tracker() {
     <AppLayout title={activeSubject.data.name}>
       <main className="flex-1 min-h-0 overflow-y-auto scrollbar-thin px-4 py-4 pb-8">
         <div className="max-w-5xl mx-auto">
-          {/* Subject Pills */}
+          {/* Subject Pills - Horizontal scroll */}
           <div className="mb-4 -mx-4 px-4 md:mx-0 md:px-0">
-            <div className="flex gap-2 overflow-x-auto scroll-smooth-touch pb-2 scrollbar-hide">
+            <div className="flex gap-2 overflow-x-auto scroll-smooth-touch pb-2">
               {subjects.map((subject, index) => {
                 const isActive = index === activeIndex;
                 const Icon = subject.icon;
@@ -67,13 +67,13 @@ export default function Tracker() {
                     key={subject.data.id}
                     onClick={() => setActiveIndex(index)}
                     className={cn(
-                      "flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 min-h-[40px] border",
+                      "flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all min-h-[40px]",
                       isActive 
-                        ? "bg-primary/15 text-primary border-primary/30 shadow-[0_0_12px_hsl(var(--primary)/0.15)]" 
-                        : "bg-card/40 backdrop-blur-sm text-muted-foreground active:bg-card border-transparent hover:border-border/50"
+                        ? "bg-primary text-primary-foreground" 
+                        : "bg-card/60 text-muted-foreground active:bg-card"
                     )}
                   >
-                    <Icon className={cn("h-4 w-4", isActive && "drop-shadow-[0_0_4px_hsl(var(--primary)/0.5)]")} />
+                    <Icon className="h-4 w-4" />
                     <span>{subject.label}</span>
                   </button>
                 );
@@ -92,10 +92,7 @@ export default function Tracker() {
           {/* Chapter List */}
           <Suspense fallback={
             <div className="flex items-center justify-center py-12">
-              <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
-                <Loader2 className="h-8 w-8 animate-spin text-primary relative" />
-              </div>
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           }>
             <ProgressTracker 
