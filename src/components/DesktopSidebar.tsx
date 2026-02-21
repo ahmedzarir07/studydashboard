@@ -1,10 +1,9 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfileDisplay } from "@/components/UserProfileDisplay";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Home,
@@ -22,10 +21,8 @@ import {
   ChevronLeft,
   ChevronRight,
   HelpCircle,
-  HardDrive,
   MessageCircleQuestion,
 } from "lucide-react";
-import { useEffect } from "react";
 
 interface NavItem {
   path: string;
@@ -42,7 +39,6 @@ const mainNavItems: NavItem[] = [
   { path: "/community", icon: Users, label: "Leaderboard", section: "Main" },
   { path: "/doubts", icon: MessageCircleQuestion, label: "Doubts", section: "Main" },
   { path: "/planning", icon: CalendarDays, label: "Planning", section: "Main" },
-  { path: "/drive", icon: HardDrive, label: "Drive", section: "Main" },
   { path: "/downloads", icon: Download, label: "Downloads", section: "Main" },
   { path: "/about", icon: Info, label: "About", section: "Main" },
 ];
@@ -89,15 +85,15 @@ export function DesktopSidebar() {
       key={item.path}
       to={item.path}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+        "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative overflow-hidden",
         isActive(item.path)
-          ? "bg-primary/15 text-primary border border-primary/30"
+          ? "bg-primary/15 text-primary border border-primary/30 shadow-[0_0_15px_hsl(var(--primary)/0.15)]"
           : "text-muted-foreground hover:bg-primary/10 hover:text-foreground border border-transparent"
       )}
     >
       <item.icon className={cn(
-        "h-5 w-5 flex-shrink-0 transition-colors",
-        isActive(item.path) ? "text-primary" : "text-muted-foreground group-hover:text-primary"
+        "h-5 w-5 flex-shrink-0 transition-all duration-300",
+        isActive(item.path) ? "text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.6)]" : "text-muted-foreground group-hover:text-primary"
       )} />
       {!collapsed && (
         <span className="text-sm font-medium truncate">{item.label}</span>
@@ -108,13 +104,14 @@ export function DesktopSidebar() {
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col h-screen bg-card/80 backdrop-blur-xl border-r border-primary/10 transition-all duration-300 sticky top-0",
-        collapsed ? "w-16" : "w-56"
+        "hidden md:flex flex-col h-screen border-r border-border/50 transition-all duration-300 sticky top-0",
+        "bg-card/40 backdrop-blur-xl",
+        collapsed ? "w-16" : "w-60"
       )}
     >
       {/* Header / User Profile */}
-      <div className="p-4 border-b border-primary/10">
-      {user && !loading ? (
+      <div className="p-4 border-b border-border/30">
+        {user && !loading ? (
           <Link to="/settings" className="block hover:opacity-90 transition-opacity">
             <div className={cn(
               "flex items-center gap-3",
@@ -145,7 +142,7 @@ export function DesktopSidebar() {
       {/* Collapse Toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-20 z-50 p-1 rounded-full bg-card border border-primary/20 shadow-md hover:bg-primary/10 transition-colors"
+        className="absolute -right-3 top-20 z-50 p-1 rounded-full bg-card border border-border/50 shadow-md hover:bg-primary/10 hover:border-primary/30 transition-all duration-300"
       >
         {collapsed ? (
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -160,7 +157,7 @@ export function DesktopSidebar() {
           {/* Main Section */}
           <div className="space-y-1">
             {!collapsed && (
-              <p className="px-3 py-1.5 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
+              <p className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.15em]">
                 Main
               </p>
             )}
@@ -171,7 +168,7 @@ export function DesktopSidebar() {
           {user && (
             <div className="space-y-1">
               {!collapsed && (
-                <p className="px-3 py-1.5 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
+                <p className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.15em]">
                   Account
                 </p>
               )}
@@ -183,11 +180,11 @@ export function DesktopSidebar() {
       </ScrollArea>
 
       {/* Footer Actions */}
-      <div className="p-3 border-t border-primary/10 space-y-1">
+      <div className="p-3 border-t border-border/30 space-y-1">
         <Link
           to="/about"
           className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-muted-foreground hover:bg-primary/10 hover:text-foreground",
+            "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 text-muted-foreground hover:bg-primary/10 hover:text-foreground",
             collapsed && "justify-center"
           )}
         >
@@ -200,7 +197,7 @@ export function DesktopSidebar() {
             <button
               onClick={handleSignOut}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-muted-foreground hover:bg-destructive/10 hover:text-destructive w-full",
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 text-muted-foreground hover:bg-destructive/10 hover:text-destructive w-full",
                 collapsed && "justify-center"
               )}
             >
@@ -211,7 +208,7 @@ export function DesktopSidebar() {
             <Link
               to="/auth"
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 bg-primary/10 text-primary hover:bg-primary/20",
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 bg-primary/10 text-primary hover:bg-primary/20",
                 collapsed && "justify-center"
               )}
             >
